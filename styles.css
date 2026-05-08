@@ -12,6 +12,10 @@
   --charcoal: #232629;
   --accent: #b11f2a;
   --accent-soft: #f7d9dc;
+  --brand: #b11f2a;
+  --brand-ink: #232629;
+  --brand-soft: #f7d9dc;
+  --brand-paper: #f3f2ee;
   --gold: #b08b2e;
   --green: #156b56;
   --blue: #24476f;
@@ -26,8 +30,46 @@
 body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f3f2ee;
+  background:
+    radial-gradient(circle at top right, var(--brand-soft) 0, rgba(255,255,255,0) 34%),
+    linear-gradient(180deg, var(--brand-paper), #f7f6f2 44%, #efeee9);
   color: var(--ink);
+  transition: background 220ms ease;
+}
+
+body[data-platform="blinkit"] {
+  --brand: #f2c200;
+  --brand-ink: #111111;
+  --brand-soft: #fff3b8;
+  --brand-paper: #fffdf1;
+}
+
+body[data-platform="instamart"] {
+  --brand: #f36f21;
+  --brand-ink: #1f2226;
+  --brand-soft: #ffe2ce;
+  --brand-paper: #fff8f3;
+}
+
+body[data-platform="zepto"] {
+  --brand: #6f2dbd;
+  --brand-ink: #271936;
+  --brand-soft: #eee2ff;
+  --brand-paper: #fbf8ff;
+}
+
+body[data-platform="bigbasket_now"] {
+  --brand: #c7202f;
+  --brand-ink: #145a32;
+  --brand-soft: #e7f4e8;
+  --brand-paper: #fffafa;
+}
+
+body[data-platform="dunzo"] {
+  --brand: #c58a1f;
+  --brand-ink: #4b4e52;
+  --brand-soft: #ece8df;
+  --brand-paper: #f7f7f5;
 }
 
 .app-shell {
@@ -38,16 +80,19 @@ body {
 
 .topbar {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 380px);
   gap: 28px;
   align-items: end;
-  padding: 22px 0 18px;
-  border-bottom: 1px solid var(--charcoal);
+  padding: 30px;
+  border: 1px solid rgba(255,255,255,0.68);
+  background: rgba(255,255,255,0.74);
+  box-shadow: var(--soft-shadow);
+  backdrop-filter: blur(14px);
 }
 
 .eyebrow {
   margin: 0 0 8px;
-  color: var(--accent);
+  color: var(--brand);
   text-transform: uppercase;
   letter-spacing: 0.13em;
   font-size: 11px;
@@ -86,7 +131,7 @@ h3 {
 }
 
 .status-card {
-  min-width: 255px;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -106,15 +151,36 @@ h3 {
   width: 13px;
   height: 13px;
   border-radius: 999px;
-  background: var(--green);
-  box-shadow: 0 0 0 6px rgba(21, 107, 86, 0.12);
+  background: var(--brand);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand) 18%, transparent);
+}
+
+.hero-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.platform-switcher {
+  background: var(--brand-ink);
+  color: white;
+  padding: 16px;
+  box-shadow: var(--soft-shadow);
+}
+
+.platform-switcher select {
+  margin-top: 8px;
+  border-color: transparent;
+}
+
+.hero-pipeline {
+  max-width: 980px;
 }
 
 .disclaimer {
   margin: 24px 0;
   padding: 16px 20px;
   background: #fff7df;
-  border-left: 5px solid var(--gold);
+  border-left: 5px solid var(--brand);
   color: #46390e;
   line-height: 1.45;
 }
@@ -145,9 +211,9 @@ h3 {
 }
 
 .tab.active, .mini-tab.active {
-  background: var(--charcoal);
+  background: var(--brand-ink);
   color: white;
-  border-color: var(--charcoal);
+  border-color: var(--brand-ink);
 }
 
 .panel {
@@ -192,12 +258,12 @@ h3 {
   flex-direction: column;
   justify-content: space-between;
   border: 1px solid var(--line);
-  border-top: 4px solid var(--charcoal);
+  border-top: 4px solid var(--brand-ink);
   box-shadow: var(--soft-shadow);
 }
 
 .kpi-card:nth-child(even) {
-  border-top-color: var(--accent);
+  border-top-color: var(--brand);
 }
 
 .kpi-label {
@@ -241,10 +307,19 @@ h3 {
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.84);
+  border: 1px solid rgba(255,255,255,0.68);
   padding: 22px;
   box-shadow: var(--soft-shadow);
+  backdrop-filter: blur(10px);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.card:hover,
+.recommendation-card:hover,
+.flow-step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.09);
 }
 
 .wide-card {
@@ -294,7 +369,7 @@ h3 {
   grid-template-columns: repeat(5, minmax(150px, 1fr));
   gap: 14px;
   padding: 18px;
-  background: var(--charcoal);
+  background: var(--brand-ink);
   color: white;
   margin-bottom: 16px;
 }
@@ -336,7 +411,7 @@ select[multiple] {
 }
 
 .score-card {
-  border-top: 6px solid var(--accent);
+  border-top: 6px solid var(--brand);
 }
 
 .score-main {
@@ -380,7 +455,7 @@ select[multiple] {
 
 .bar-fill {
   height: 100%;
-  background: var(--accent);
+  background: var(--brand);
 }
 
 .body-copy {
@@ -398,7 +473,7 @@ select[multiple] {
 .guardrail {
   padding: 12px;
   background: #f8f8f7;
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid var(--brand);
   color: #42474f;
 }
 
@@ -438,15 +513,15 @@ th {
 
 .primary-btn {
   padding: 10px 14px;
-  background: var(--accent);
+  background: var(--brand-ink);
   color: white;
-  border-color: var(--accent);
+  border-color: var(--brand-ink);
 }
 
 .secondary-btn {
-  border: 1px solid var(--charcoal);
+  border: 1px solid var(--brand-ink);
   background: var(--card);
-  color: var(--charcoal);
+  color: var(--brand-ink);
   cursor: pointer;
   font-weight: 750;
   padding: 10px 14px;
@@ -504,7 +579,7 @@ th {
   margin-top: 26px;
   padding: 16px 18px;
   background: #f4f6f8;
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid var(--brand);
   color: #2f353c;
   font-size: 15px;
   line-height: 1.55;
@@ -513,7 +588,7 @@ th {
 
 .hero-data-card {
   padding: 24px;
-  border-top: 5px solid var(--gold);
+  border-top: 5px solid var(--brand);
 }
 
 .hero-data-card dl,
@@ -560,7 +635,7 @@ th {
 
 .flow-step span {
   display: block;
-  color: var(--accent);
+  color: var(--brand);
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.1em;
@@ -583,7 +658,7 @@ th {
 .manager-note {
   margin: 20px 0;
   padding: 16px 18px;
-  border-left: 5px solid var(--gold);
+  border-left: 5px solid var(--brand);
   color: #46390e;
   line-height: 1.5;
 }
@@ -615,7 +690,7 @@ th {
 .recommendation-card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-top: 4px solid var(--charcoal);
+  border-top: 4px solid var(--brand);
   padding: 18px;
   box-shadow: var(--soft-shadow);
 }
@@ -645,7 +720,7 @@ th {
 .platform-card,
 .status-panel,
 .market-command-card {
-  border-top: 5px solid var(--charcoal);
+  border-top: 5px solid var(--brand);
 }
 
 .compact-label {
@@ -678,7 +753,7 @@ th {
   min-height: 30px;
   padding: 6px 10px;
   border: 1px solid var(--line);
-  background: #f7f8f9;
+  background: color-mix(in srgb, var(--brand-soft) 72%, white);
   color: #3f4752;
   font-size: 12px;
   font-weight: 850;
@@ -706,7 +781,7 @@ th {
 .platform-metrics h4,
 .decision-columns h4 {
   margin: 0 0 10px;
-  color: var(--charcoal);
+  color: var(--brand-ink);
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -782,7 +857,7 @@ th {
 
 .insight-label {
   margin: 18px 0 4px;
-  color: var(--accent);
+  color: var(--brand);
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
@@ -876,7 +951,7 @@ th {
   height: 36px;
   align-items: center;
   justify-content: center;
-  background: var(--charcoal);
+  background: var(--brand-ink);
   color: white;
   margin-bottom: 18px;
   font-weight: 800;

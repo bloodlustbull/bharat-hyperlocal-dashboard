@@ -90,8 +90,6 @@ Confidence: **B**
 The dashboard includes qualitative platform lenses for:
 
 - BigBasket Now
-- Flipkart Minutes
-- Amazon Now
 - Dunzo - historical failure case
 
 These are intentionally marked **D / needs source** for public metrics. Do not use exact public numbers for these platforms until source-backed entries are added to `data/public_market_data.json`.

@@ -93,6 +93,14 @@ let selectedMetric = "gov";
 let pilotCampaignUploaded = false;
 let reportExportReady = false;
 
+const PLATFORM_THEMES = {
+  blinkit: { className: "blinkit", chartColor: "#111111" },
+  instamart: { className: "instamart", chartColor: "#f36f21" },
+  zepto: { className: "zepto", chartColor: "#6f2dbd" },
+  bigbasket_now: { className: "bigbasket_now", chartColor: "#145a32" },
+  dunzo: { className: "dunzo", chartColor: "#4b4e52" }
+};
+
 const DEFAULT_PLATFORM_INTELLIGENCE = [
   {
     id: "blinkit",
@@ -143,30 +151,6 @@ const DEFAULT_PLATFORM_INTELLIGENCE = [
     sourceId: "needs_source"
   },
   {
-    id: "flipkart_minutes",
-    name: "Flipkart Minutes",
-    currentRole: "Emerging quick-commerce participant; exact public metrics are not loaded in this project.",
-    publicMetrics: ["needs source"],
-    strengths: ["E-commerce parent brand recall", "Potential fit for electronics accessories and non-grocery convenience"],
-    risks: ["No sourced metrics currently loaded", "Needs category and city footprint validation"],
-    gtmImplication: "Treat as a scenario lens for marketplace-style quick commerce until sourced data is added.",
-    sourceQuality: "D",
-    sourceNote: "Needs source in this project file before public metric claims.",
-    sourceId: "needs_source"
-  },
-  {
-    id: "amazon_now",
-    name: "Amazon Now",
-    currentRole: "Potential/limited quick-commerce lens; exact public metrics are not loaded in this project.",
-    publicMetrics: ["needs source"],
-    strengths: ["Trust and Prime-style convenience association", "Potential fit for high-trust replenishment categories"],
-    risks: ["No sourced metrics currently loaded", "Do not use as active benchmark without source confirmation"],
-    gtmImplication: "Use only as a placeholder benchmark until a current source is added.",
-    sourceQuality: "D",
-    sourceNote: "Needs source in this project file before public metric claims.",
-    sourceId: "needs_source"
-  },
-  {
     id: "dunzo",
     name: "Dunzo - historical failure case",
     currentRole: "Historical cautionary case.",
@@ -192,6 +176,24 @@ function $(id) {
 // Make big numbers easier to read in the dashboard.
 function formatNumber(value) {
   return new Intl.NumberFormat("en-IN").format(value);
+}
+
+function selectedPlatform() {
+  return getPlatformById($("platformSelect")?.value);
+}
+
+function selectedTheme() {
+  const platform = selectedPlatform();
+  return PLATFORM_THEMES[platform?.id] || PLATFORM_THEMES.blinkit;
+}
+
+function applyPlatformTheme() {
+  const platform = selectedPlatform();
+  const theme = selectedTheme();
+  document.body.dataset.platform = theme.className;
+  if ($("selectedPlatformName")) {
+    $("selectedPlatformName").textContent = platform.name;
+  }
 }
 
 // Escape text before putting it into HTML. This prevents weird CSV text from breaking the page.
@@ -223,6 +225,7 @@ async function loadJson(path, fallback) {
 
 function drawBarChart(containerId, data, options) {
   const container = $(containerId);
+  if (!container) return;
   const width = container.clientWidth || 600;
   const height = options.height || 280;
   const margin = { top: 24, right: 24, bottom: 54, left: 64 };
@@ -238,7 +241,7 @@ function drawBarChart(containerId, data, options) {
     const y = margin.top + innerHeight - barHeight;
     const label = options.prefix ? `${options.prefix}${formatNumber(d.value)}` : formatNumber(d.value);
     return `
-      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" fill="#232629"></rect>
+      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" fill="${escapeHtml(options.color || "#232629")}"></rect>
       <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" font-size="12" font-weight="700" fill="#151515">${label}</text>
       <text x="${x + barWidth / 2}" y="${height - 20}" text-anchor="middle" font-size="12" fill="#5f6673">${escapeHtml(d.period)}</text>
     `;
@@ -255,6 +258,7 @@ function drawBarChart(containerId, data, options) {
 
 function drawLineChart(containerId, data, options) {
   const container = $(containerId);
+  if (!container) return;
   const width = container.clientWidth || 800;
   const height = options.height || 360;
   const margin = { top: 26, right: 34, bottom: 58, left: 68 };
@@ -271,7 +275,7 @@ function drawLineChart(containerId, data, options) {
 
   const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
   const circles = points.map(p => `
-    <circle cx="${p.x}" cy="${p.y}" r="5" fill="#b11f2a"></circle>
+    <circle cx="${p.x}" cy="${p.y}" r="5" fill="${escapeHtml(options.color || "#b11f2a")}"></circle>
     <text x="${p.x}" y="${p.y - 12}" text-anchor="middle" font-size="12" font-weight="700" fill="#151515">${options.valueFormatter(p.value)}</text>
     <text x="${p.x}" y="${height - 24}" text-anchor="middle" font-size="12" fill="#5f6673">${escapeHtml(p.period)}</text>
   `).join("");
@@ -279,7 +283,7 @@ function drawLineChart(containerId, data, options) {
   container.innerHTML = `
     <svg width="100%" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(options.title || "Line chart")}">
       <line x1="${margin.left}" y1="${margin.top + innerHeight}" x2="${width - margin.right}" y2="${margin.top + innerHeight}" stroke="#d7dce2" />
-      <path d="${path}" fill="none" stroke="#b11f2a" stroke-width="3"></path>
+      <path d="${path}" fill="none" stroke="${escapeHtml(options.color || "#b11f2a")}" stroke-width="3"></path>
       ${circles}
       <text x="${margin.left}" y="18" font-size="12" fill="#5f6673">${escapeHtml(options.unit || "")}</text>
     </svg>
@@ -309,7 +313,9 @@ function listMarkup(items) {
 }
 
 function getPlatforms() {
-  return marketData.platformIntelligence?.length ? marketData.platformIntelligence : DEFAULT_PLATFORM_INTELLIGENCE;
+  const allowed = ["blinkit", "instamart", "zepto", "bigbasket_now", "dunzo"];
+  const platforms = marketData.platformIntelligence?.length ? marketData.platformIntelligence : DEFAULT_PLATFORM_INTELLIGENCE;
+  return allowed.map(id => platforms.find(platform => platform.id === id)).filter(Boolean);
 }
 
 function getPlatformById(id) {
@@ -346,7 +352,8 @@ function renderExecutiveRecommendations() {
 }
 
 function renderPlatformIntelligence() {
-  const platform = getPlatformById($("platformSelect").value);
+  applyPlatformTheme();
+  const platform = selectedPlatform();
   $("platformIntelligence").innerHTML = `
     <div class="platform-title-row">
       <h3>${escapeHtml(platform.name)}</h3>
@@ -404,6 +411,35 @@ function renderCampaignStatus() {
 function renderMarketPulse() {
   const metric = $("marketMetricSelect").value;
   const view = $("marketViewSelect").value;
+  const platform = selectedPlatform();
+  const theme = selectedTheme();
+  const platformLens = {
+    blinkit: {
+      insight: "Blinkit lens: market leadership makes it a benchmark, not automatically the easiest entry wedge.",
+      soWhat: "A growth manager should avoid head-on saturation and test sharper local language/category pockets.",
+      nextAction: "Run a vernacular first-order test in a less saturated city-language wedge."
+    },
+    instamart: {
+      insight: "Instamart lens: official operating metrics make it the cleanest public benchmark in this dashboard.",
+      soWhat: "A growth manager should use store density, MTU, and AOV context to shape category tests.",
+      nextAction: "Run a store-density-aligned pilot for grocery, dairy, or snacks with clear repeat-order tracking."
+    },
+    zepto: {
+      insight: "Zepto lens: challenger energy supports urgency-led creative, but platform-level metrics do not prove campaign lift.",
+      soWhat: "A growth manager should test youth-heavy, impulse-led hooks before scaling spend.",
+      nextAction: "Run an urgent Reels plus WhatsApp test for snacks, beverages, or personal care."
+    },
+    bigbasket_now: {
+      insight: "BigBasket Now lens: grocery trust is useful, but exact quick-commerce metrics need source support.",
+      soWhat: "A growth manager should treat it as a qualitative grocery-replenishment lens until sources are added.",
+      nextAction: "Run a household replenishment hypothesis with clear serviceability and stock guardrails."
+    },
+    dunzo: {
+      insight: "Dunzo lens: this is a historical cautionary case, not an active competitor benchmark.",
+      soWhat: "A growth manager should not copy growth mechanics without unit-economics and operations guardrails.",
+      nextAction: "Run a small pilot with strict CAC, repeat order, and serviceability gates before expansion."
+    }
+  }[platform.id];
   const configs = {
     gov: {
       data: marketData.govSeries,
@@ -473,9 +509,9 @@ function renderMarketPulse() {
   };
   const config = configs[metric];
 
-  $("marketInsightHeadline").textContent = config.headline;
-  $("marketSoWhat").textContent = `${config.soWhat} ${viewNotes[view]}`;
-  $("marketNextAction").textContent = config.nextAction;
+  $("marketInsightHeadline").textContent = `${config.headline} ${platformLens.insight}`;
+  $("marketSoWhat").textContent = `${config.soWhat} ${platformLens.soWhat} ${viewNotes[view]}`;
+  $("marketNextAction").textContent = platformLens.nextAction || config.nextAction;
   $("marketInsightBadges").innerHTML = `
     <span class="confidence-badge">Source: ${escapeHtml(config.source)}</span>
     <span class="confidence-badge">Confidence: ${escapeHtml(config.confidence)}</span>
@@ -484,9 +520,9 @@ function renderMarketPulse() {
   `;
 
   if (config.chart === "bar") {
-    drawBarChart("marketDynamicChart", config.data, { title: config.headline, unit: config.unit, prefix: config.prefix, height: 330 });
+    drawBarChart("marketDynamicChart", config.data, { title: config.headline, unit: config.unit, prefix: config.prefix, height: 330, color: theme.chartColor });
   } else {
-    drawLineChart("marketDynamicChart", config.data, { title: config.headline, unit: config.unit, valueFormatter: config.formatter, height: 330 });
+    drawLineChart("marketDynamicChart", config.data, { title: config.headline, unit: config.unit, valueFormatter: config.formatter, height: 330, color: theme.chartColor });
   }
 }
 
@@ -908,17 +944,20 @@ function renderCampaignData(rows) {
 // element IDs, so the older charts and CSV upload continue to work.
 
 function renderMarketCharts() {
+  const theme = selectedTheme();
   drawBarChart("govChart", marketData.govSeries, {
     title: "India Q-commerce GOV",
     unit: "Gross order value, INR crore",
     prefix: "INR ",
-    height: 300
+    height: 300,
+    color: theme.chartColor
   });
 
   drawBarChart("darkStoreChart", marketData.darkStoreSeries, {
     title: "India dark stores",
     unit: "Number of dark stores",
-    height: 300
+    height: 300,
+    color: theme.chartColor
   });
 
   renderInstamartChart();
@@ -926,6 +965,7 @@ function renderMarketCharts() {
 }
 
 function renderInstamartChart() {
+  const theme = selectedTheme();
   const labels = {
     gov: { unit: "GOV, INR crore", formatter: value => `INR ${formatNumber(value)}` },
     orders: { unit: "Total orders, million", formatter: value => `${value}M` },
@@ -939,7 +979,8 @@ function renderInstamartChart() {
     title: "Swiggy Instamart quarterly operating metric",
     unit: labels[selectedMetric].unit,
     valueFormatter: labels[selectedMetric].formatter,
-    height: 360
+    height: 360,
+    color: theme.chartColor
   });
 }
 
@@ -1311,7 +1352,11 @@ function attachEvents() {
   $("categorySelect").addEventListener("change", renderScore);
   $("scorerPlatformSelect").addEventListener("change", renderScore);
   $("objectiveSelect").addEventListener("change", renderScore);
-  $("platformSelect").addEventListener("change", renderPlatformIntelligence);
+  $("platformSelect").addEventListener("change", () => {
+    renderPlatformIntelligence();
+    renderMarketPulse();
+    renderMarketCharts();
+  });
   $("marketMetricSelect").addEventListener("change", renderMarketPulse);
   $("marketViewSelect").addEventListener("change", renderMarketPulse);
 
@@ -1372,10 +1417,10 @@ async function init() {
   seedData = await loadJson("data/city_language_seed.json", FALLBACK_SEED_DATA);
 
   renderKpis();
-  renderMarketCharts();
   populateControls();
-  renderScore();
   renderPlatformIntelligence();
+  renderMarketCharts();
+  renderScore();
   renderCampaignStatus();
   renderMarketPulse();
   renderReport();

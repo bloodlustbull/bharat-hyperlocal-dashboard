@@ -154,30 +154,6 @@
       "sourceId": "needs_source"
     },
     {
-      "id": "flipkart_minutes",
-      "name": "Flipkart Minutes",
-      "currentRole": "Emerging quick-commerce participant; exact public metrics are not loaded in this project.",
-      "publicMetrics": ["needs source"],
-      "strengths": ["E-commerce parent brand recall", "Potential fit for electronics accessories and non-grocery convenience"],
-      "risks": ["No sourced metrics currently loaded", "Needs category and city footprint validation"],
-      "gtmImplication": "Treat as a scenario lens for marketplace-style quick commerce until sourced data is added.",
-      "sourceQuality": "D",
-      "sourceNote": "Needs source in this project file before public metric claims.",
-      "sourceId": "needs_source"
-    },
-    {
-      "id": "amazon_now",
-      "name": "Amazon Now",
-      "currentRole": "Potential/limited quick-commerce lens; exact public metrics are not loaded in this project.",
-      "publicMetrics": ["needs source"],
-      "strengths": ["Trust and Prime-style convenience association", "Potential fit for high-trust replenishment categories"],
-      "risks": ["No sourced metrics currently loaded", "Do not use as active benchmark without source confirmation"],
-      "gtmImplication": "Use only as a placeholder benchmark until a current source is added.",
-      "sourceQuality": "D",
-      "sourceNote": "Needs source in this project file before public metric claims.",
-      "sourceId": "needs_source"
-    },
-    {
       "id": "dunzo",
       "name": "Dunzo - historical failure case",
       "currentRole": "Historical cautionary case.",

@@ -16,17 +16,28 @@
     <!-- Top bar: persistent dashboard identity and local-status signal. -->
     <header class="topbar">
       <div>
-        <p class="eyebrow">Executive dashboard</p>
+        <p class="eyebrow">GTM Command Center</p>
         <h1>Bharat Hyperlocal GTM Machine</h1>
         <p class="subhead">
           AI-powered city-language growth engine for Indian quick-commerce brands.
         </p>
+        <div class="pipeline-strip hero-pipeline" aria-label="Operating pipeline">
+          city-language scorer &rarr; ICP selector &rarr; trend scraper &rarr; content brief generator &rarr;
+          WhatsApp funnel &rarr; experiment tracker &rarr; weekly optimization dashboard
+        </div>
       </div>
-      <div class="status-card">
-        <span class="status-dot"></span>
-        <div>
-          <strong>Local offline dashboard</strong>
-          <small>Open with VS Code Live Server or browser</small>
+      <div class="hero-controls">
+        <!-- Main platform switcher: app.js uses this to update theme, intelligence, and market recommendations. -->
+        <label class="compact-label platform-switcher">
+          Platform
+          <select id="platformSelect"></select>
+        </label>
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="selectedPlatformName">Platform command center</strong>
+            <small>Local static dashboard</small>
+          </div>
         </div>
       </div>
     </header>
@@ -62,10 +73,6 @@
                 <p class="eyebrow">Platform benchmark</p>
                 <h2>Platform intelligence</h2>
               </div>
-              <label class="compact-label">
-                Platform
-                <select id="platformSelect"></select>
-              </label>
             </div>
             <div id="platformIntelligence" class="platform-intelligence"></div>
           </article>
