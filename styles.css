@@ -16,6 +16,11 @@
   --brand-ink: #232629;
   --brand-soft: #f7d9dc;
   --brand-paper: #f3f2ee;
+  --brand-panel: rgba(255,255,255,0.84);
+  --brand-card: rgba(255,255,255,0.84);
+  --brand-contrast: #ffffff;
+  --brand-glow: rgba(177,31,42,0.16);
+  --brand-divider: rgba(177,31,42,0.34);
   --gold: #b08b2e;
   --green: #156b56;
   --blue: #24476f;
@@ -42,6 +47,11 @@ body[data-platform="blinkit"] {
   --brand-ink: #111111;
   --brand-soft: #fff3b8;
   --brand-paper: #fffdf1;
+  --brand-panel: linear-gradient(135deg, #111111 0%, #232323 58%, #f2c200 59%, #ffd928 100%);
+  --brand-card: linear-gradient(180deg, rgba(17,17,17,0.96), rgba(39,39,39,0.92));
+  --brand-contrast: #fff7c5;
+  --brand-glow: rgba(242,194,0,0.34);
+  --brand-divider: rgba(242,194,0,0.78);
 }
 
 body[data-platform="instamart"] {
@@ -49,6 +59,11 @@ body[data-platform="instamart"] {
   --brand-ink: #1f2226;
   --brand-soft: #ffe2ce;
   --brand-paper: #fff8f3;
+  --brand-panel: linear-gradient(135deg, #ffffff 0%, #fff0e5 42%, #f36f21 100%);
+  --brand-card: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,241,231,0.9));
+  --brand-contrast: #2b1b13;
+  --brand-glow: rgba(243,111,33,0.28);
+  --brand-divider: rgba(243,111,33,0.64);
 }
 
 body[data-platform="zepto"] {
@@ -56,6 +71,11 @@ body[data-platform="zepto"] {
   --brand-ink: #271936;
   --brand-soft: #eee2ff;
   --brand-paper: #fbf8ff;
+  --brand-panel: linear-gradient(135deg, #1d102c 0%, #5b21a6 54%, #a275ff 100%);
+  --brand-card: linear-gradient(180deg, rgba(39,25,54,0.92), rgba(94,45,158,0.78));
+  --brand-contrast: #ffffff;
+  --brand-glow: rgba(111,45,189,0.32);
+  --brand-divider: rgba(162,117,255,0.72);
 }
 
 body[data-platform="bigbasket_now"] {
@@ -63,6 +83,11 @@ body[data-platform="bigbasket_now"] {
   --brand-ink: #145a32;
   --brand-soft: #e7f4e8;
   --brand-paper: #fffafa;
+  --brand-panel: linear-gradient(135deg, #ffffff 0%, #eff8ef 48%, #145a32 49%, #c7202f 100%);
+  --brand-card: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(239,248,239,0.92));
+  --brand-contrast: #173d27;
+  --brand-glow: rgba(20,90,50,0.24);
+  --brand-divider: rgba(199,32,47,0.54);
 }
 
 body[data-platform="dunzo"] {
@@ -70,6 +95,11 @@ body[data-platform="dunzo"] {
   --brand-ink: #4b4e52;
   --brand-soft: #ece8df;
   --brand-paper: #f7f7f5;
+  --brand-panel: linear-gradient(135deg, #34383d 0%, #5c6065 62%, #c58a1f 100%);
+  --brand-card: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(236,232,223,0.88));
+  --brand-contrast: #ffffff;
+  --brand-glow: rgba(197,138,31,0.25);
+  --brand-divider: rgba(197,138,31,0.7);
 }
 
 .app-shell {
@@ -84,10 +114,70 @@ body[data-platform="dunzo"] {
   gap: 28px;
   align-items: end;
   padding: 30px;
-  border: 1px solid rgba(255,255,255,0.68);
-  background: rgba(255,255,255,0.74);
-  box-shadow: var(--soft-shadow);
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 55%, white);
+  background: var(--brand-panel);
+  box-shadow: 0 28px 90px var(--brand-glow);
   backdrop-filter: blur(14px);
+  overflow: hidden;
+  position: relative;
+  transition: background 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
+}
+
+.topbar::after {
+  content: "";
+  position: absolute;
+  inset: auto 24px 18px auto;
+  width: 180px;
+  height: 180px;
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 50%, transparent);
+  transform: rotate(18deg);
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+body[data-platform="blinkit"] .topbar,
+body[data-platform="zepto"] .topbar,
+body[data-platform="dunzo"] .topbar {
+  color: var(--brand-contrast);
+}
+
+body[data-platform="blinkit"] .topbar .subhead,
+body[data-platform="zepto"] .topbar .subhead,
+body[data-platform="dunzo"] .topbar .subhead {
+  color: color-mix(in srgb, var(--brand-contrast) 78%, transparent);
+}
+
+body[data-platform="blinkit"] .topbar .eyebrow,
+body[data-platform="zepto"] .topbar .eyebrow,
+body[data-platform="dunzo"] .topbar .eyebrow {
+  color: var(--brand);
+}
+
+body[data-platform="blinkit"] .topbar {
+  border-radius: 0;
+}
+
+body[data-platform="instamart"] .topbar,
+body[data-platform="instamart"] .card,
+body[data-platform="instamart"] .recommendation-card {
+  border-radius: 18px;
+}
+
+body[data-platform="zepto"] .topbar,
+body[data-platform="zepto"] .card,
+body[data-platform="zepto"] .recommendation-card {
+  border-radius: 6px 26px 6px 26px;
+}
+
+body[data-platform="bigbasket_now"] .topbar {
+  border-top: 6px solid #c7202f;
+  border-bottom: 6px solid #145a32;
+}
+
+body[data-platform="dunzo"] .topbar,
+body[data-platform="dunzo"] .platform-card,
+body[data-platform="dunzo"] .market-command-card {
+  border-style: dashed;
 }
 
 .eyebrow {
@@ -165,6 +255,25 @@ h3 {
   color: white;
   padding: 16px;
   box-shadow: var(--soft-shadow);
+  transition: background 220ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+
+body[data-platform="blinkit"] .platform-switcher {
+  background: #f2c200;
+  color: #111111;
+}
+
+body[data-platform="zepto"] .platform-switcher {
+  background: linear-gradient(135deg, #271936, #6f2dbd);
+}
+
+body[data-platform="bigbasket_now"] .platform-switcher {
+  background: linear-gradient(135deg, #145a32 0 52%, #c7202f 52% 100%);
+}
+
+body[data-platform="dunzo"] .platform-switcher {
+  background: #34383d;
+  color: #f6e5bd;
 }
 
 .platform-switcher select {
@@ -174,6 +283,53 @@ h3 {
 
 .hero-pipeline {
   max-width: 980px;
+}
+
+.hero-brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.platform-hero-badge,
+.platform-posture {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 62%, white);
+  background: color-mix(in srgb, var(--brand-soft) 68%, white);
+  color: var(--brand-ink);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.platform-posture {
+  max-width: 760px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+body[data-platform="blinkit"] .platform-hero-badge,
+body[data-platform="blinkit"] .platform-posture,
+body[data-platform="zepto"] .platform-hero-badge,
+body[data-platform="zepto"] .platform-posture,
+body[data-platform="dunzo"] .platform-hero-badge,
+body[data-platform="dunzo"] .platform-posture {
+  background: rgba(255,255,255,0.13);
+  color: var(--brand-contrast);
+  border-color: color-mix(in srgb, var(--brand-divider) 70%, white);
+}
+
+body[data-platform="dunzo"] .platform-hero-badge::before,
+body[data-platform="dunzo"] .confidence-badge:first-child::before {
+  content: "CAUTION ";
 }
 
 .disclaimer {
@@ -190,15 +346,17 @@ h3 {
   flex-wrap: wrap;
   gap: 10px;
   margin: 18px 0 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--brand-divider);
 }
 
 .tab, .mini-tab, .primary-btn {
   border: 1px solid var(--line);
-  background: var(--card);
+  background: color-mix(in srgb, white 86%, var(--brand-soft));
   color: var(--ink);
   cursor: pointer;
   font-weight: 750;
-  transition: 180ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 220ms ease, border-color 220ms ease;
 }
 
 .tab {
@@ -207,7 +365,8 @@ h3 {
 
 .tab:hover, .mini-tab:hover, .primary-btn:hover, .secondary-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 12px 28px var(--brand-glow);
+  border-color: var(--brand-divider);
 }
 
 .tab.active, .mini-tab.active {
@@ -230,6 +389,8 @@ h3 {
   gap: 20px;
   align-items: end;
   margin: 34px 0 18px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--brand-divider) 42%, transparent);
 }
 
 .compact-heading {
@@ -250,16 +411,31 @@ h3 {
 }
 
 .kpi-card {
-  background: var(--card);
+  background: var(--brand-card);
   color: var(--ink);
   padding: 20px;
   min-height: 154px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 34%, white);
   border-top: 4px solid var(--brand-ink);
   box-shadow: var(--soft-shadow);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 240ms ease;
+}
+
+body[data-platform="blinkit"] .kpi-card,
+body[data-platform="zepto"] .kpi-card {
+  color: var(--brand-contrast);
+}
+
+body[data-platform="blinkit"] .kpi-card .kpi-label,
+body[data-platform="blinkit"] .kpi-card .kpi-caption,
+body[data-platform="blinkit"] .kpi-card .kpi-source,
+body[data-platform="zepto"] .kpi-card .kpi-label,
+body[data-platform="zepto"] .kpi-card .kpi-caption,
+body[data-platform="zepto"] .kpi-card .kpi-source {
+  color: color-mix(in srgb, var(--brand-contrast) 72%, transparent);
 }
 
 .kpi-card:nth-child(even) {
@@ -307,12 +483,12 @@ h3 {
 }
 
 .card {
-  background: rgba(255,255,255,0.84);
-  border: 1px solid rgba(255,255,255,0.68);
+  background: var(--brand-card);
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 32%, white);
   padding: 22px;
   box-shadow: var(--soft-shadow);
   backdrop-filter: blur(10px);
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 240ms ease;
 }
 
 .card:hover,
@@ -320,6 +496,19 @@ h3 {
 .flow-step:hover {
   transform: translateY(-2px);
   box-shadow: 0 18px 48px rgba(0,0,0,0.09);
+  border-color: var(--brand-divider);
+}
+
+body[data-platform="blinkit"] .platform-card,
+body[data-platform="zepto"] .platform-card {
+  color: var(--brand-contrast);
+}
+
+body[data-platform="blinkit"] .platform-card .body-copy,
+body[data-platform="blinkit"] .platform-card .source-note,
+body[data-platform="zepto"] .platform-card .body-copy,
+body[data-platform="zepto"] .platform-card .source-note {
+  color: color-mix(in srgb, var(--brand-contrast) 78%, transparent);
 }
 
 .wide-card {
@@ -472,7 +661,7 @@ select[multiple] {
 
 .guardrail {
   padding: 12px;
-  background: #f8f8f7;
+  background: color-mix(in srgb, white 78%, var(--brand-soft));
   border-left: 4px solid var(--brand);
   color: #42474f;
 }
@@ -516,6 +705,29 @@ th {
   background: var(--brand-ink);
   color: white;
   border-color: var(--brand-ink);
+  box-shadow: 0 10px 24px var(--brand-glow);
+}
+
+body[data-platform="blinkit"] .primary-btn {
+  background: #111111;
+  color: #f2c200;
+}
+
+body[data-platform="instamart"] .primary-btn {
+  background: linear-gradient(135deg, #f36f21, #c84f12);
+}
+
+body[data-platform="zepto"] .primary-btn {
+  background: linear-gradient(135deg, #271936, #6f2dbd);
+}
+
+body[data-platform="bigbasket_now"] .primary-btn {
+  background: linear-gradient(135deg, #145a32, #c7202f);
+}
+
+body[data-platform="dunzo"] .primary-btn {
+  background: #34383d;
+  color: #f6e5bd;
 }
 
 .secondary-btn {
@@ -578,12 +790,19 @@ th {
 .pipeline-strip {
   margin-top: 26px;
   padding: 16px 18px;
-  background: #f4f6f8;
+  background: color-mix(in srgb, var(--brand-soft) 48%, white);
   border-left: 4px solid var(--brand);
   color: #2f353c;
   font-size: 15px;
   line-height: 1.55;
   font-weight: 750;
+}
+
+body[data-platform="blinkit"] .topbar .pipeline-strip,
+body[data-platform="zepto"] .topbar .pipeline-strip,
+body[data-platform="dunzo"] .topbar .pipeline-strip {
+  background: rgba(255,255,255,0.12);
+  color: var(--brand-contrast);
 }
 
 .hero-data-card {
@@ -629,8 +848,9 @@ th {
 .flow-step {
   min-width: 130px;
   padding: 16px;
-  background: #f8f8f7;
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, white 82%, var(--brand-soft));
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 34%, white);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 220ms ease;
 }
 
 .flow-step span {
@@ -659,7 +879,7 @@ th {
   margin: 20px 0;
   padding: 16px 18px;
   border-left: 5px solid var(--brand);
-  color: #46390e;
+  color: var(--brand-ink);
   line-height: 1.5;
 }
 
@@ -688,11 +908,12 @@ th {
 }
 
 .recommendation-card {
-  background: var(--card);
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, white 84%, var(--brand-soft));
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 28%, white);
   border-top: 4px solid var(--brand);
   padding: 18px;
   box-shadow: var(--soft-shadow);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 240ms ease;
 }
 
 .recommendation-card strong {
@@ -752,7 +973,7 @@ th {
   align-items: center;
   min-height: 30px;
   padding: 6px 10px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 44%, white);
   background: color-mix(in srgb, var(--brand-soft) 72%, white);
   color: #3f4752;
   font-size: 12px;
@@ -760,6 +981,11 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   white-space: nowrap;
+  transition: background 220ms ease, border-color 220ms ease, color 220ms ease, transform 180ms ease;
+}
+
+.confidence-badge:hover {
+  transform: translateY(-1px);
 }
 
 .platform-grid {
@@ -772,9 +998,36 @@ th {
 .platform-grid > div,
 .platform-metrics,
 .status-item {
-  background: #f8f8f7;
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, white 78%, var(--brand-soft));
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 30%, white);
   padding: 14px;
+}
+
+.platform-cue-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+
+.platform-cue-row span {
+  padding: 7px 10px;
+  background: var(--brand-ink);
+  color: white;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+body[data-platform="blinkit"] .platform-cue-row span {
+  background: var(--brand);
+  color: #111111;
+}
+
+body[data-platform="dunzo"] .platform-cue-row span {
+  background: #34383d;
+  color: #f6e5bd;
 }
 
 .platform-grid h4,
@@ -866,8 +1119,8 @@ th {
 
 .integrated-chart {
   min-height: 330px;
-  background: #fbfbfa;
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, white 84%, var(--brand-soft));
+  border: 1px solid color-mix(in srgb, var(--brand-divider) 34%, white);
 }
 
 .legacy-market-grid {

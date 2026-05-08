@@ -94,11 +94,41 @@ let pilotCampaignUploaded = false;
 let reportExportReady = false;
 
 const PLATFORM_THEMES = {
-  blinkit: { className: "blinkit", chartColor: "#111111" },
-  instamart: { className: "instamart", chartColor: "#f36f21" },
-  zepto: { className: "zepto", chartColor: "#6f2dbd" },
-  bigbasket_now: { className: "bigbasket_now", chartColor: "#145a32" },
-  dunzo: { className: "dunzo", chartColor: "#4b4e52" }
+  blinkit: {
+    className: "blinkit",
+    chartColor: "#111111",
+    badge: "Reported market leader",
+    posture: "Benchmark against the leader; avoid saturated wedges and find faster local demand pockets.",
+    cues: ["10-min density", "Dark-store velocity", "Instant demand"]
+  },
+  instamart: {
+    className: "instamart",
+    chartColor: "#f36f21",
+    badge: "Official public operating metrics available",
+    posture: "Compare operating scale, store density, MTU growth, and category expansion before piloting.",
+    cues: ["Store density", "MTU growth", "Category expansion"]
+  },
+  zepto: {
+    className: "zepto",
+    chartColor: "#6f2dbd",
+    badge: "High-growth challenger",
+    posture: "Study youth, impulse, and high-frequency growth without inferring campaign lift.",
+    cues: ["Impulse growth", "Youthful wedge", "Fast cockpit"]
+  },
+  bigbasket_now: {
+    className: "bigbasket_now",
+    chartColor: "#145a32",
+    badge: "Retail-backed grocery platform",
+    posture: "Study grocery trust, replenishment behavior, and retail reliability; exact metrics need source.",
+    cues: ["Grocery trust", "Basket depth", "Retail reliability"]
+  },
+  dunzo: {
+    className: "dunzo",
+    chartColor: "#4b4e52",
+    badge: "Historical cautionary case",
+    posture: "Study failure modes, operational sustainability, and unit-economics risks before scale.",
+    cues: ["Historical case", "Risk review", "Unit economics"]
+  }
 };
 
 const DEFAULT_PLATFORM_INTELLIGENCE = [
@@ -193,6 +223,12 @@ function applyPlatformTheme() {
   document.body.dataset.platform = theme.className;
   if ($("selectedPlatformName")) {
     $("selectedPlatformName").textContent = platform.name;
+  }
+  if ($("platformHeroBadge")) {
+    $("platformHeroBadge").textContent = theme.badge;
+  }
+  if ($("platformGtmPosture")) {
+    $("platformGtmPosture").textContent = theme.posture;
   }
 }
 
@@ -360,9 +396,13 @@ function renderPlatformIntelligence() {
       <span class="confidence-badge">Confidence ${escapeHtml(platform.sourceQuality)}</span>
     </div>
     <div class="badge-row source-badge-row">
+      <span class="confidence-badge">${escapeHtml(selectedTheme().badge)}</span>
       <span class="confidence-badge">Source: ${escapeHtml(sourceShortName(platform.sourceId))}</span>
       <span class="confidence-badge">Status: ${platform.sourceQuality === "D" ? "Needs source" : "Public data"}</span>
       <span class="confidence-badge">Pilot data: ${pilotCampaignUploaded ? "Uploaded" : "Not uploaded"}</span>
+    </div>
+    <div class="platform-cue-row">
+      ${selectedTheme().cues.map(cue => `<span>${escapeHtml(cue)}</span>`).join("")}
     </div>
     <div class="platform-grid">
       <div><h4>Role</h4><p>${escapeHtml(platform.currentRole)}</p></div>
