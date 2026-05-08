@@ -1,0 +1,108 @@
+{
+  "kpis": [
+    {
+      "label": "India Q-commerce GOV FY25",
+      "value": "₹64,000 Cr",
+      "caption": "CareEdge estimate for FY25 gross order value",
+      "sourceId": "careedge_2025"
+    },
+    {
+      "label": "Projected GOV FY28",
+      "value": "₹2,00,000 Cr",
+      "caption": "CareEdge projection: market nearly triples by FY28",
+      "sourceId": "careedge_2025"
+    },
+    {
+      "label": "Instamart Q4FY25 GOV",
+      "value": "₹4,670 Cr",
+      "caption": "Swiggy Q4FY25 shareholder letter",
+      "sourceId": "swiggy_q4fy25"
+    },
+    {
+      "label": "Instamart active dark stores",
+      "value": "1,021",
+      "caption": "Exit count as of March 2025",
+      "sourceId": "swiggy_q4fy25"
+    },
+    {
+      "label": "Blinkit market share",
+      "value": ">50%",
+      "caption": "BofA note cited by Economic Times",
+      "sourceId": "et_blinkit_2025"
+    },
+    {
+      "label": "Zepto valuation",
+      "value": "$7B",
+      "caption": "Reuters: $450M funding round in 2025",
+      "sourceId": "reuters_zepto_2025"
+    },
+    {
+      "label": "India dark stores FY25",
+      "value": "3,072",
+      "caption": "Major three players: Blinkit, Instamart, Zepto",
+      "sourceId": "careedge_2025"
+    },
+    {
+      "label": "Instamart MTUs Q4FY25",
+      "value": "9.8M",
+      "caption": "Average monthly transacting users",
+      "sourceId": "swiggy_q4fy25"
+    }
+  ],
+  "govSeries": [
+    { "period": "FY22", "value": 4500 },
+    { "period": "FY23", "value": 16800 },
+    { "period": "FY24", "value": 30000 },
+    { "period": "FY25(E)", "value": 64000 },
+    { "period": "FY28P", "value": 200000 }
+  ],
+  "darkStoreSeries": [
+    { "period": "FY23", "value": 1400 },
+    { "period": "FY24", "value": 1800 },
+    { "period": "FY25", "value": 3072 }
+  ],
+  "instamartSeries": [
+    { "period": "Q4FY24", "gov": 2323, "orders": 50.0, "aov": 465, "mtu": 4.7, "stores": 523 },
+    { "period": "Q1FY25", "gov": 2724, "orders": 55.9, "aov": 487, "mtu": 5.2, "stores": 557 },
+    { "period": "Q2FY25", "gov": 3382, "orders": 67.8, "aov": 499, "mtu": 6.2, "stores": 609 },
+    { "period": "Q3FY25", "gov": 3907, "orders": 73.2, "aov": 534, "mtu": 7.0, "stores": 705 },
+    { "period": "Q4FY25", "gov": 4670, "orders": 88.6, "aov": 527, "mtu": 9.8, "stores": 1021 }
+  ],
+  "sources": [
+    {
+      "id": "careedge_2025",
+      "name": "CareEdge Advisory — India's Rapid Delivery Race: Q-Commerce set to Triple by 2028",
+      "type": "B",
+      "usedFor": "Q-commerce GOV FY22-FY28P, dark stores FY23-FY25, average per-store revenue, market overview",
+      "url": "https://www.careratings.com/uploads/newsfiles/1752146049_India%E2%80%99s%20Q-commerce%20Market%20-%20CareEdge%20Advisory%20Report.pdf"
+    },
+    {
+      "id": "swiggy_q4fy25",
+      "name": "Swiggy Q4 FY2025 Shareholder Letter",
+      "type": "A",
+      "usedFor": "Instamart GOV, AOV, total orders, MTUs, dark stores, city footprint",
+      "url": "https://www.swiggy.com/corporate/wp-content/uploads/2025/05/Q4-FY2025-Shareholder-letter.pdf"
+    },
+    {
+      "id": "et_blinkit_2025",
+      "name": "Economic Times — Blinkit tops quick commerce with over 50% market share, citing BofA",
+      "type": "B",
+      "usedFor": "Blinkit market share context",
+      "url": "https://m.economictimes.com/tech/technology/blinkit-tops-quick-commerce-with-over-50-market-share-set-to-gain-more-bofa/articleshow/124061833.cms"
+    },
+    {
+      "id": "reuters_zepto_2025",
+      "name": "Reuters — India's Zepto raises $450 million at $7 billion valuation",
+      "type": "B",
+      "usedFor": "Zepto funding and valuation context",
+      "url": "https://www.reuters.com/world/india/indian-quick-commerce-platform-zepto-raises-450-million-7-billion-valuation-2025-10-16/"
+    },
+    {
+      "id": "model_assumption",
+      "name": "Internal transparent model assumption",
+      "type": "D",
+      "usedFor": "City-language-category opportunity scores until replaced with live campaign or primary city data",
+      "url": ""
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "allowedLanguages": [
+    "English",
+    "Telugu",
+    "Tamil",
+    "Hindi",
+    "Marathi",
+    "Kannada",
+    "Malayalam",
+    "Odia",
+    "Punjabi",
+    "Haryanvi"
+  ],
+  "categories": [
+    "Grocery",
+    "Snacks & Beverages",
+    "Dairy & Breakfast",
+    "Personal Care",
+    "Household Essentials",
+    "Pet Food",
+    "Beauty",
+    "Baby Care",
+    "Electronics Accessories"
+  ],
+  "weights": {
+    "quickCommerceDensity": 0.2,
+    "categoryPurchaseFrequency": 0.15,
+    "vernacularContentGap": 0.15,
+    "platformMaturity": 0.15,
+    "whatsappConversionFit": 0.1,
+    "creatorSupply": 0.1,
+    "paymentLogisticsReadiness": 0.1,
+    "competitiveGap": 0.05
+  },
+  "cities": [
+    {
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "languages": ["English", "Kannada", "Hindi"],
+      "quickCommerceDensity": 10,
+      "platformMaturity": 10,
+      "creatorSupply": 9,
+      "paymentLogisticsReadiness": 10,
+      "competitiveGap": 3,
+      "notes": "High-density quick-commerce market; strong control market for English and Kannada tests. Competitive gap is lower because saturation is high.",
+      "confidence": "D"
+    },
+    {
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "languages": ["Telugu", "English", "Hindi"],
+      "quickCommerceDensity": 9,
+      "platformMaturity": 9,
+      "creatorSupply": 9,
+      "paymentLogisticsReadiness": 9,
+      "competitiveGap": 5,
+      "notes": "Strong Telugu + English quick-commerce wedge; useful for snack, grocery, beauty, and personal-care pilots.",
+      "confidence": "D"
+    },
+    {
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "languages": ["Tamil", "English", "Hindi"],
+      "quickCommerceDensity": 9,
+      "platformMaturity": 9,
+      "creatorSupply": 8,
+      "paymentLogisticsReadiness": 9,
+      "competitiveGap": 5,
+      "notes": "Tamil-first market with strong urban quick-commerce relevance.",
+      "confidence": "D"
+    },
+    {
+      "city": "Pune",
+      "state": "Maharashtra",
+      "languages": ["Marathi", "English", "Hindi"],
+      "quickCommerceDensity": 9,
+      "platformMaturity": 9,
+      "creatorSupply": 8,
+      "paymentLogisticsReadiness": 9,
+      "competitiveGap": 5,
+      "notes": "High-income urban market; good for Marathi vs English conversion testing.",
+      "confidence": "D"
+    },
+    {
+      "city": "Gurgaon",
+      "state": "Haryana",
+      "languages": ["English", "Hindi", "Haryanvi"],
+      "quickCommerceDensity": 9,
+      "platformMaturity": 9,
+      "creatorSupply": 8,
+      "paymentLogisticsReadiness": 9,
+      "competitiveGap": 4,
+      "notes": "NCR-adjacent high-spend market. Haryanvi should be used carefully as cultural localization, not forced translation.",
+      "confidence": "D"
+    },
+    {
+      "city": "Vizag",
+      "state": "Andhra Pradesh",
+      "languages": ["Telugu", "English", "Hindi"],
+      "quickCommerceDensity": 7,
+      "platformMaturity": 7,
+      "creatorSupply": 7,
+      "paymentLogisticsReadiness": 8,
+      "competitiveGap": 7,
+      "notes": "Emerging Telugu quick-commerce market; useful for lower-competition pilots.",
+      "confidence": "D"
+    },
+    {
+      "city": "Coimbatore",
+      "state": "Tamil Nadu",
+      "languages": ["Tamil", "English"],
+      "quickCommerceDensity": 7,
+      "platformMaturity": 7,
+      "creatorSupply": 7,
+      "paymentLogisticsReadiness": 8,
+      "competitiveGap": 7,
+      "notes": "Tamil city cluster candidate. Avoid unsupported claim that zero Tamil digital marketing exists.",
+      "confidence": "D"
+    },
+    {
+      "city": "Nagpur",
+      "state": "Maharashtra",
+      "languages": ["Marathi", "Hindi", "English"],
+      "quickCommerceDensity": 7,
+      "platformMaturity": 7,
+      "creatorSupply": 6,
+      "paymentLogisticsReadiness": 8,
+      "competitiveGap": 7,
+      "notes": "Marathi/Hindi testing wedge for non-metro expansion.",
+      "confidence": "D"
+    },
+    {
+      "city": "Kochi",
+      "state": "Kerala",
+      "languages": ["Malayalam", "English", "Hindi"],
+      "quickCommerceDensity": 7,
+      "platformMaturity": 7,
+      "creatorSupply": 7,
+      "paymentLogisticsReadiness": 8,
+      "competitiveGap": 7,
+      "notes": "Malayalam market candidate for urban pocket testing.",
+      "confidence": "D"
+    },
+    {
+      "city": "Bhubaneswar",
+      "state": "Odisha",
+      "languages": ["Odia", "Hindi", "English"],
+      "quickCommerceDensity": 6,
+      "platformMaturity": 6,
+      "creatorSupply": 6,
+      "paymentLogisticsReadiness": 7,
+      "competitiveGap": 8,
+      "notes": "Emerging Odia test market; lower density but possibly less saturation.",
+      "confidence": "D"
+    },
+    {
+      "city": "Ludhiana",
+      "state": "Punjab",
+      "languages": ["Punjabi", "Hindi", "English"],
+      "quickCommerceDensity": 6,
+      "platformMaturity": 7,
+      "creatorSupply": 7,
+      "paymentLogisticsReadiness": 8,
+      "competitiveGap": 7,
+      "notes": "Punjabi premium/high-consumption pocket candidate.",
+      "confidence": "D"
+    },
+    {
+      "city": "Mysuru",
+      "state": "Karnataka",
+      "languages": ["Kannada", "English", "Hindi"],
+      "quickCommerceDensity": 6,
+      "platformMaturity": 6,
+      "creatorSupply": 6,
+      "paymentLogisticsReadiness": 7,
+      "competitiveGap": 8,
+      "notes": "Kannada expansion candidate after Bengaluru learning.",
+      "confidence": "D"
+    }
+  ],
+  "categoryScores": {
+    "Grocery": { "categoryPurchaseFrequency": 10, "whatsappConversionFit": 8, "risk": "Low differentiation; offer and delivery promise must be sharp." },
+    "Snacks & Beverages": { "categoryPurchaseFrequency": 9, "whatsappConversionFit": 9, "risk": "Highly impulse-driven; timing matters more than generic brand messaging." },
+    "Dairy & Breakfast": { "categoryPurchaseFrequency": 10, "whatsappConversionFit": 8, "risk": "Morning stock reliability matters; do not overpromise delivery slots." },
+    "Personal Care": { "categoryPurchaseFrequency": 7, "whatsappConversionFit": 7, "risk": "Needs trust and SKU clarity; avoid vague claims." },
+    "Household Essentials": { "categoryPurchaseFrequency": 8, "whatsappConversionFit": 8, "risk": "Urgency is real, but basket value can be low." },
+    "Pet Food": { "categoryPurchaseFrequency": 6, "whatsappConversionFit": 7, "risk": "Smaller audience; useful in high-income pin codes." },
+    "Beauty": { "categoryPurchaseFrequency": 6, "whatsappConversionFit": 6, "risk": "Needs influencer proof and product trust; high return/friction risk." },
+    "Baby Care": { "categoryPurchaseFrequency": 7, "whatsappConversionFit": 8, "risk": "High trust category; avoid aggressive discount-only copy." },
+    "Electronics Accessories": { "categoryPurchaseFrequency": 5, "whatsappConversionFit": 6, "risk": "Urgency-based but lower repeat rate." }
+  }
+}

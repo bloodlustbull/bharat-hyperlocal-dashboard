@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Imagine this file is the front door of a house.
+    The browser opens this door first, then it loads styles.css for design
+    and app.js for all the moving/interacting parts.
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bharat Hyperlocal GTM Machine</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top bar: like the name board outside your project. -->
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Bharat Hyperlocal GTM Machine</p>
+        <h1>AI-powered city-language growth dashboard for Indian quick commerce</h1>
+        <p class="subhead">
+          Public market data + transparent scoring model + upload-ready campaign tracker.
+        </p>
+      </div>
+      <div class="status-card">
+        <span class="status-dot"></span>
+        <div>
+          <strong>Local offline dashboard</strong>
+          <small>Open with VS Code Live Server or browser</small>
+        </div>
+      </div>
+    </header>
+
+    <!-- Executive caveat: this protects you from overclaiming in front of your manager. -->
+    <section class="disclaimer">
+      <strong>Manager-safe note:</strong>
+      Market and competitor metrics use public sources. City-language opportunity scores are a transparent model layer,
+      not external facts. Campaign performance remains empty until you upload your own pilot CSV.
+    </section>
+
+    <!-- Navigation buttons: these switch what part of the dashboard is visible. -->
+    <nav class="tabbar" aria-label="Dashboard sections">
+      <button class="tab active" data-tab="market">1. Market Pulse</button>
+      <button class="tab" data-tab="scorer">2. City-Language Scorer</button>
+      <button class="tab" data-tab="briefs">3. Content Brief Generator</button>
+      <button class="tab" data-tab="funnel">4. WhatsApp Funnel</button>
+      <button class="tab" data-tab="experiments">5. Experiment Tracker</button>
+      <button class="tab" data-tab="sources">6. Sources</button>
+    </nav>
+
+    <main>
+      <!-- MARKET SECTION -->
+      <section id="market" class="panel active-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Public data layer</p>
+            <h2>Quick commerce market pulse</h2>
+          </div>
+          <p class="section-note">Used for context, not for claiming your own campaign performance.</p>
+        </div>
+
+        <div id="kpiGrid" class="kpi-grid"></div>
+
+        <div class="grid two-col">
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">CareEdge Research</p>
+                <h3>India Q-commerce GOV growth</h3>
+              </div>
+              <span class="pill">FY22–FY28P</span>
+            </div>
+            <div id="govChart" class="chart"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">CareEdge Research</p>
+                <h3>Dark-store infrastructure scale-up</h3>
+              </div>
+              <span class="pill">FY23–FY25</span>
+            </div>
+            <div id="darkStoreChart" class="chart"></div>
+          </article>
+        </div>
+
+        <article class="card wide-card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Swiggy shareholder letter</p>
+              <h3>Instamart operating trajectory</h3>
+            </div>
+            <span class="pill">Q4FY24–Q4FY25</span>
+          </div>
+          <div class="metric-toggle">
+            <button class="mini-tab active" data-metric="gov">GOV</button>
+            <button class="mini-tab" data-metric="orders">Orders</button>
+            <button class="mini-tab" data-metric="mtu">MTUs</button>
+            <button class="mini-tab" data-metric="stores">Dark stores</button>
+            <button class="mini-tab" data-metric="aov">AOV</button>
+          </div>
+          <div id="instamartChart" class="chart tall-chart"></div>
+        </article>
+      </section>
+
+      <!-- SCORER SECTION -->
+      <section id="scorer" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Model layer</p>
+            <h2>City-language-category scorer</h2>
+          </div>
+          <p class="section-note">This is a decision model. Scores are editable and auditable.</p>
+        </div>
+
+        <div class="control-strip">
+          <label>
+            City
+            <select id="citySelect"></select>
+          </label>
+          <label>
+            Language
+            <select id="languageSelect"></select>
+          </label>
+          <label>
+            Category
+            <select id="categorySelect"></select>
+          </label>
+        </div>
+
+        <div class="grid two-col">
+          <article class="card score-card">
+            <p class="eyebrow">Opportunity score</p>
+            <div class="score-main"><span id="scoreValue">--</span><small>/100</small></div>
+            <p id="scoreVerdict" class="verdict"></p>
+            <div id="scoreBreakdown" class="breakdown"></div>
+          </article>
+
+          <article class="card">
+            <p class="eyebrow">Why this wedge matters</p>
+            <h3 id="wedgeTitle">Select a city-language-category wedge</h3>
+            <p id="wedgeNarrative" class="body-copy"></p>
+            <div id="guardrails" class="guardrail-list"></div>
+          </article>
+        </div>
+
+        <article class="card wide-card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Ranked opportunities</p>
+              <h3>Top city-language wedges from the current seed model</h3>
+            </div>
+            <span class="pill">Editable in data/city_language_seed.json</span>
+          </div>
+          <div id="rankingTable" class="table-wrap"></div>
+        </article>
+      </section>
+
+      <!-- BRIEFS SECTION -->
+      <section id="briefs" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Operating layer</p>
+            <h2>Content brief generator</h2>
+          </div>
+          <p class="section-note">Generates a manager-ready brief from selected city, language, and category.</p>
+        </div>
+
+        <article class="card wide-card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Generated output</p>
+              <h3 id="briefHeadline">Quick-commerce local campaign brief</h3>
+            </div>
+            <button id="copyBrief" class="primary-btn">Copy brief</button>
+          </div>
+          <pre id="briefOutput" class="brief-box"></pre>
+        </article>
+      </section>
+
+      <!-- FUNNEL SECTION -->
+      <section id="funnel" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Conversion layer</p>
+            <h2>WhatsApp funnel blueprint</h2>
+          </div>
+          <p class="section-note">Designed for pilot execution; native-language copy should be reviewed by a speaker.</p>
+        </div>
+
+        <div class="funnel">
+          <div class="funnel-step">
+            <span>01</span>
+            <h3>Local trigger</h3>
+            <p id="funnelTrigger">Evening snack / urgent household need / last-minute guest occasion.</p>
+          </div>
+          <div class="funnel-step">
+            <span>02</span>
+            <h3>WhatsApp touch</h3>
+            <p>Broadcast, apartment group, creator story, or society ambassador share.</p>
+          </div>
+          <div class="funnel-step">
+            <span>03</span>
+            <h3>Offer</h3>
+            <p id="funnelOffer">Pin-code limited offer with delivery promise and expiry window.</p>
+          </div>
+          <div class="funnel-step">
+            <span>04</span>
+            <h3>Conversion</h3>
+            <p>App open → add to cart → first order → repeat purchase within 7 days.</p>
+          </div>
+        </div>
+
+        <article class="card wide-card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Copy skeleton</p>
+              <h3>WhatsApp message template</h3>
+            </div>
+            <button id="copyWhatsapp" class="primary-btn">Copy WhatsApp copy</button>
+          </div>
+          <pre id="whatsappOutput" class="brief-box"></pre>
+        </article>
+      </section>
+
+      <!-- EXPERIMENT SECTION -->
+      <section id="experiments" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Pilot layer</p>
+            <h2>Experiment tracker</h2>
+          </div>
+          <p class="section-note">Upload your campaign CSV later; the dashboard will compute performance live in-browser.</p>
+        </div>
+
+        <article class="card wide-card">
+          <div class="upload-box">
+            <div>
+              <h3>Upload your pilot campaign CSV</h3>
+              <p>Use the included <code>data/campaign_template.csv</code>. Keep the same column names.</p>
+            </div>
+            <input id="campaignUpload" type="file" accept=".csv" />
+          </div>
+        </article>
+
+        <div id="campaignEmpty" class="empty-state">
+          <h3>No campaign data uploaded yet</h3>
+          <p>This is intentional. We will not fake CTR, CAC, conversion, or repeat rate. Once you run a small pilot, upload the CSV here.</p>
+        </div>
+
+        <div id="campaignDashboard" class="hidden">
+          <div id="campaignKpis" class="kpi-grid"></div>
+          <div class="grid two-col">
+            <article class="card">
+              <h3>Spend vs conversions</h3>
+              <div id="campaignChart" class="chart"></div>
+            </article>
+            <article class="card">
+              <h3>Best performing experiments</h3>
+              <div id="campaignTable" class="table-wrap"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- SOURCES SECTION -->
+      <section id="sources" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Audit trail</p>
+            <h2>Sources and confidence levels</h2>
+          </div>
+          <p class="section-note">Everything should be either sourced or clearly marked as a model assumption.</p>
+        </div>
+        <article class="card wide-card">
+          <div id="sourceTable" class="table-wrap"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <!-- app.js is the brain: it fills the dashboard with data and makes buttons work. -->
+  <script src="app.js"></script>
+</body>
+</html>
