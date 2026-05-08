@@ -2,51 +2,75 @@
   "kpis": [
     {
       "label": "India Q-commerce GOV FY25",
-      "value": "₹64,000 Cr",
+      "value": "INR 64,000 Cr",
       "caption": "CareEdge estimate for FY25 gross order value",
-      "sourceId": "careedge_2025"
+      "sourceId": "careedge_2025",
+      "metric": "India quick-commerce gross order value",
+      "year": "FY25",
+      "confidence": "B"
     },
     {
       "label": "Projected GOV FY28",
-      "value": "₹2,00,000 Cr",
+      "value": "INR 2,00,000 Cr",
       "caption": "CareEdge projection: market nearly triples by FY28",
-      "sourceId": "careedge_2025"
+      "sourceId": "careedge_2025",
+      "metric": "Projected India quick-commerce gross order value",
+      "year": "FY28P",
+      "confidence": "B"
     },
     {
       "label": "Instamart Q4FY25 GOV",
-      "value": "₹4,670 Cr",
+      "value": "INR 4,670 Cr",
       "caption": "Swiggy Q4FY25 shareholder letter",
-      "sourceId": "swiggy_q4fy25"
+      "sourceId": "swiggy_q4fy25",
+      "metric": "Swiggy Instamart quarterly GOV",
+      "year": "Q4FY25",
+      "confidence": "A"
     },
     {
       "label": "Instamart active dark stores",
       "value": "1,021",
       "caption": "Exit count as of March 2025",
-      "sourceId": "swiggy_q4fy25"
+      "sourceId": "swiggy_q4fy25",
+      "metric": "Swiggy Instamart active dark stores",
+      "year": "Q4FY25",
+      "confidence": "A"
     },
     {
       "label": "Blinkit market share",
       "value": ">50%",
       "caption": "BofA note cited by Economic Times",
-      "sourceId": "et_blinkit_2025"
+      "sourceId": "et_blinkit_2025",
+      "metric": "Blinkit quick-commerce market share",
+      "year": "2025",
+      "confidence": "B"
     },
     {
       "label": "Zepto valuation",
       "value": "$7B",
       "caption": "Reuters: $450M funding round in 2025",
-      "sourceId": "reuters_zepto_2025"
+      "sourceId": "reuters_zepto_2025",
+      "metric": "Zepto valuation",
+      "year": "2025",
+      "confidence": "B"
     },
     {
       "label": "India dark stores FY25",
       "value": "3,072",
       "caption": "Major three players: Blinkit, Instamart, Zepto",
-      "sourceId": "careedge_2025"
+      "sourceId": "careedge_2025",
+      "metric": "India quick-commerce dark stores",
+      "year": "FY25",
+      "confidence": "B"
     },
     {
       "label": "Instamart MTUs Q4FY25",
       "value": "9.8M",
       "caption": "Average monthly transacting users",
-      "sourceId": "swiggy_q4fy25"
+      "sourceId": "swiggy_q4fy25",
+      "metric": "Swiggy Instamart average monthly transacting users",
+      "year": "Q4FY25",
+      "confidence": "A"
     }
   ],
   "govSeries": [
@@ -68,41 +92,152 @@
     { "period": "Q3FY25", "gov": 3907, "orders": 73.2, "aov": 534, "mtu": 7.0, "stores": 705 },
     { "period": "Q4FY25", "gov": 4670, "orders": 88.6, "aov": 527, "mtu": 9.8, "stores": 1021 }
   ],
+  "metricCatalog": [
+    { "metric": "India quick-commerce GOV", "value": "INR 64,000 Cr", "sourceId": "careedge_2025", "sourceType": "B", "dateOrYear": "FY25", "confidence": "B" },
+    { "metric": "Projected India quick-commerce GOV", "value": "INR 2,00,000 Cr", "sourceId": "careedge_2025", "sourceType": "B", "dateOrYear": "FY28P", "confidence": "B" },
+    { "metric": "India quick-commerce dark stores", "value": "3,072", "sourceId": "careedge_2025", "sourceType": "B", "dateOrYear": "FY25", "confidence": "B" },
+    { "metric": "Swiggy Instamart GOV", "value": "INR 4,670 Cr", "sourceId": "swiggy_q4fy25", "sourceType": "A", "dateOrYear": "Q4FY25", "confidence": "A" },
+    { "metric": "Swiggy Instamart orders", "value": "88.6M", "sourceId": "swiggy_q4fy25", "sourceType": "A", "dateOrYear": "Q4FY25", "confidence": "A" },
+    { "metric": "Swiggy Instamart AOV", "value": "INR 527", "sourceId": "swiggy_q4fy25", "sourceType": "A", "dateOrYear": "Q4FY25", "confidence": "A" },
+    { "metric": "Swiggy Instamart MTUs", "value": "9.8M", "sourceId": "swiggy_q4fy25", "sourceType": "A", "dateOrYear": "Q4FY25", "confidence": "A" },
+    { "metric": "Swiggy Instamart active dark stores", "value": "1,021", "sourceId": "swiggy_q4fy25", "sourceType": "A", "dateOrYear": "Q4FY25", "confidence": "A" },
+    { "metric": "Blinkit market share", "value": ">50%", "sourceId": "et_blinkit_2025", "sourceType": "B", "dateOrYear": "2025", "confidence": "B" },
+    { "metric": "Zepto valuation", "value": "$7B", "sourceId": "reuters_zepto_2025", "sourceType": "B", "dateOrYear": "2025", "confidence": "B" }
+  ],
+  "platformIntelligence": [
+    {
+      "id": "blinkit",
+      "name": "Blinkit",
+      "currentRole": "Reported market leader.",
+      "publicMetrics": ["Market share: >50%"],
+      "strengths": ["Scale, dark-store density, high-frequency grocery behavior"],
+      "risks": ["Higher competitive saturation"],
+      "gtmImplication": "Use as benchmark, not entry wedge.",
+      "sourceQuality": "B",
+      "sourceNote": "Economic Times article citing BofA market-share context.",
+      "sourceId": "et_blinkit_2025"
+    },
+    {
+      "id": "zepto",
+      "name": "Zepto",
+      "currentRole": "High-growth quick-commerce challenger with sourced funding and valuation context.",
+      "publicMetrics": ["Valuation: $7B", "Funding round: $450M"],
+      "strengths": ["Strong youth and convenience positioning", "Useful benchmark for fast-moving challenger GTM"],
+      "risks": ["City-level operating metrics need source", "Funding strength is not proof of campaign efficiency"],
+      "gtmImplication": "Benchmark Zepto for urgency-led creative and youth-heavy city pockets; do not infer conversion rates without pilot data.",
+      "sourceQuality": "B",
+      "sourceNote": "Reuters funding and valuation article.",
+      "sourceId": "reuters_zepto_2025"
+    },
+    {
+      "id": "instamart",
+      "name": "Swiggy Instamart",
+      "currentRole": "Scaled quick-commerce platform.",
+      "publicMetrics": ["Q4FY25 GOV: INR 4,670 Cr", "Q4FY25 MTUs: 9.8M", "Q4FY25 AOV: INR 527", "Active dark stores: 1,021"],
+      "strengths": ["Official public operating metrics available"],
+      "risks": ["Expansion burn and profitability pressure"],
+      "gtmImplication": "Useful benchmark for store density and MTU growth.",
+      "sourceQuality": "A",
+      "sourceNote": "Swiggy Q4 FY2025 shareholder letter.",
+      "sourceId": "swiggy_q4fy25"
+    },
+    {
+      "id": "bigbasket_now",
+      "name": "BigBasket Now",
+      "currentRole": "Quick-commerce participant; exact public metrics are not loaded in this project.",
+      "publicMetrics": ["needs source"],
+      "strengths": ["Grocery trust and replenishment association", "Potential fit for planned basket and household categories"],
+      "risks": ["No sourced quick-commerce metrics currently loaded", "Needs separate source validation before benchmarking"],
+      "gtmImplication": "Use as a qualitative platform lens only until sourced public metrics are added.",
+      "sourceQuality": "D",
+      "sourceNote": "Needs source in this project file before public metric claims.",
+      "sourceId": "needs_source"
+    },
+    {
+      "id": "flipkart_minutes",
+      "name": "Flipkart Minutes",
+      "currentRole": "Emerging quick-commerce participant; exact public metrics are not loaded in this project.",
+      "publicMetrics": ["needs source"],
+      "strengths": ["E-commerce parent brand recall", "Potential fit for electronics accessories and non-grocery convenience"],
+      "risks": ["No sourced metrics currently loaded", "Needs category and city footprint validation"],
+      "gtmImplication": "Treat as a scenario lens for marketplace-style quick commerce until sourced data is added.",
+      "sourceQuality": "D",
+      "sourceNote": "Needs source in this project file before public metric claims.",
+      "sourceId": "needs_source"
+    },
+    {
+      "id": "amazon_now",
+      "name": "Amazon Now",
+      "currentRole": "Potential/limited quick-commerce lens; exact public metrics are not loaded in this project.",
+      "publicMetrics": ["needs source"],
+      "strengths": ["Trust and Prime-style convenience association", "Potential fit for high-trust replenishment categories"],
+      "risks": ["No sourced metrics currently loaded", "Do not use as active benchmark without source confirmation"],
+      "gtmImplication": "Use only as a placeholder benchmark until a current source is added.",
+      "sourceQuality": "D",
+      "sourceNote": "Needs source in this project file before public metric claims.",
+      "sourceId": "needs_source"
+    },
+    {
+      "id": "dunzo",
+      "name": "Dunzo - historical failure case",
+      "currentRole": "Historical cautionary case.",
+      "publicMetrics": ["needs source"],
+      "strengths": ["Early hyperlocal brand recall"],
+      "risks": ["Execution, funding, operational sustainability"],
+      "gtmImplication": "Do not copy growth without unit-economics guardrails.",
+      "sourceQuality": "D",
+      "sourceNote": "Historical failure framing is intentionally marked needs source for public claims.",
+      "sourceId": "needs_source"
+    }
+  ],
   "sources": [
     {
       "id": "careedge_2025",
-      "name": "CareEdge Advisory — India's Rapid Delivery Race: Q-Commerce set to Triple by 2028",
+      "name": "CareEdge Advisory - India's Rapid Delivery Race: Q-Commerce set to Triple by 2028",
       "type": "B",
       "usedFor": "Q-commerce GOV FY22-FY28P, dark stores FY23-FY25, average per-store revenue, market overview",
-      "url": "https://www.careratings.com/uploads/newsfiles/1752146049_India%E2%80%99s%20Q-commerce%20Market%20-%20CareEdge%20Advisory%20Report.pdf"
+      "url": "https://www.careratings.com/uploads/newsfiles/1752146049_India%E2%80%99s%20Q-commerce%20Market%20-%20CareEdge%20Advisory%20Report.pdf",
+      "dateOrYear": "2025"
     },
     {
       "id": "swiggy_q4fy25",
       "name": "Swiggy Q4 FY2025 Shareholder Letter",
       "type": "A",
       "usedFor": "Instamart GOV, AOV, total orders, MTUs, dark stores, city footprint",
-      "url": "https://www.swiggy.com/corporate/wp-content/uploads/2025/05/Q4-FY2025-Shareholder-letter.pdf"
+      "url": "https://www.swiggy.com/corporate/wp-content/uploads/2025/05/Q4-FY2025-Shareholder-letter.pdf",
+      "dateOrYear": "FY2025"
     },
     {
       "id": "et_blinkit_2025",
-      "name": "Economic Times — Blinkit tops quick commerce with over 50% market share, citing BofA",
+      "name": "Economic Times - Blinkit tops quick commerce with over 50% market share, citing BofA",
       "type": "B",
       "usedFor": "Blinkit market share context",
-      "url": "https://m.economictimes.com/tech/technology/blinkit-tops-quick-commerce-with-over-50-market-share-set-to-gain-more-bofa/articleshow/124061833.cms"
+      "url": "https://m.economictimes.com/tech/technology/blinkit-tops-quick-commerce-with-over-50-market-share-set-to-gain-more-bofa/articleshow/124061833.cms",
+      "dateOrYear": "2025"
     },
     {
       "id": "reuters_zepto_2025",
-      "name": "Reuters — India's Zepto raises $450 million at $7 billion valuation",
+      "name": "Reuters - India's Zepto raises $450 million at $7 billion valuation",
       "type": "B",
       "usedFor": "Zepto funding and valuation context",
-      "url": "https://www.reuters.com/world/india/indian-quick-commerce-platform-zepto-raises-450-million-7-billion-valuation-2025-10-16/"
+      "url": "https://www.reuters.com/world/india/indian-quick-commerce-platform-zepto-raises-450-million-7-billion-valuation-2025-10-16/",
+      "dateOrYear": "2025"
     },
     {
       "id": "model_assumption",
       "name": "Internal transparent model assumption",
       "type": "D",
       "usedFor": "City-language-category opportunity scores until replaced with live campaign or primary city data",
-      "url": ""
+      "url": "",
+      "dateOrYear": "Current model"
+    },
+    {
+      "id": "needs_source",
+      "name": "Needs source",
+      "type": "D",
+      "usedFor": "Placeholder for platforms or metrics not yet supported by project source files",
+      "url": "",
+      "dateOrYear": "Not sourced"
     }
   ]
 }

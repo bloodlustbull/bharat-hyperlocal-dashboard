@@ -11,36 +11,49 @@
 - **C = Vendor/case-study source**  
   Example: marketing vendor case study. Use carefully.
 
-- **D = Internal model assumption**  
-  Example: city-language opportunity score until validated.
+- **D = Internal model assumption or needs source**  
+  Example: city-language opportunity score, platform placeholder, or unsourced benchmark idea.
 
----
+## Public metric register
+
+Every public metric shown in the dashboard should have metric, value, source, source type, date/year, and confidence label in `data/public_market_data.json`.
+
+| Metric | Value | Source | Source type | Date/year | Confidence |
+| --- | --- | --- | --- | --- | --- |
+| India quick-commerce GOV | INR 64,000 Cr | CareEdge Advisory | B | FY25 | B |
+| Projected India quick-commerce GOV | INR 2,00,000 Cr | CareEdge Advisory | B | FY28P | B |
+| India quick-commerce dark stores | 3,072 | CareEdge Advisory | B | FY25 | B |
+| Swiggy Instamart GOV | INR 4,670 Cr | Swiggy Q4 FY2025 shareholder letter | A | Q4FY25 | A |
+| Swiggy Instamart orders | 88.6M | Swiggy Q4 FY2025 shareholder letter | A | Q4FY25 | A |
+| Swiggy Instamart AOV | INR 527 | Swiggy Q4 FY2025 shareholder letter | A | Q4FY25 | A |
+| Swiggy Instamart MTUs | 9.8M | Swiggy Q4 FY2025 shareholder letter | A | Q4FY25 | A |
+| Swiggy Instamart active dark stores | 1,021 | Swiggy Q4 FY2025 shareholder letter | A | Q4FY25 | A |
+| Blinkit market share | >50% | Economic Times citing BofA | B | 2025 | B |
+| Zepto valuation | $7B | Reuters | B | 2025 | B |
 
 ## Sources used in dashboard
 
-### CareEdge Advisory — India's Rapid Delivery Race: Q-Commerce set to Triple by 2028
+### CareEdge Advisory - India's Rapid Delivery Race: Q-Commerce set to Triple by 2028
 
 Used for:
 
-- India Q-commerce GOV FY22–FY28P
-- FY25 estimate: ₹64,000 crore
-- FY28 projection: ₹2,00,000 crore
-- India dark stores FY23–FY25
+- India Q-commerce GOV FY22-FY28P
+- FY25 estimate: INR 64,000 crore
+- FY28 projection: INR 2,00,000 crore
+- India dark stores FY23-FY25
 
 Source URL:
 https://www.careratings.com/uploads/newsfiles/1752146049_India%E2%80%99s%20Q-commerce%20Market%20-%20CareEdge%20Advisory%20Report.pdf
 
 Confidence: **B**
 
----
-
 ### Swiggy Q4 FY2025 Shareholder Letter
 
 Used for Instamart:
 
-- Q4FY25 GOV: ₹4,670 crore
+- Q4FY25 GOV: INR 4,670 crore
 - Q4FY25 total orders: 88.6 million
-- Q4FY25 AOV: ₹527
+- Q4FY25 AOV: INR 527
 - Q4FY25 MTUs: 9.8 million
 - Q4FY25 active dark stores: 1,021
 - City footprint: 124 cities
@@ -50,9 +63,7 @@ https://www.swiggy.com/corporate/wp-content/uploads/2025/05/Q4-FY2025-Shareholde
 
 Confidence: **A**
 
----
-
-### Economic Times — Blinkit tops quick commerce with over 50% market share, citing BofA
+### Economic Times - Blinkit tops quick commerce with over 50% market share, citing BofA
 
 Used for:
 
@@ -63,9 +74,7 @@ https://m.economictimes.com/tech/technology/blinkit-tops-quick-commerce-with-ove
 
 Confidence: **B**
 
----
-
-### Reuters — India's Zepto raises $450 million at $7 billion valuation
+### Reuters - India's Zepto raises $450 million at $7 billion valuation
 
 Used for:
 
@@ -76,16 +85,25 @@ https://www.reuters.com/world/india/indian-quick-commerce-platform-zepto-raises-
 
 Confidence: **B**
 
----
+## Platform entries marked needs source
+
+The dashboard includes qualitative platform lenses for:
+
+- BigBasket Now
+- Flipkart Minutes
+- Amazon Now
+- Dunzo - historical failure case
+
+These are intentionally marked **D / needs source** for public metrics. Do not use exact public numbers for these platforms until source-backed entries are added to `data/public_market_data.json`.
 
 ## Claims we intentionally do not make
 
 The dashboard does **not** claim:
 
-- Our campaign reduced CAC by 30%.
-- Telugu/Tamil definitely beat Hindi for quick commerce.
-- WhatsApp definitely gives 3.2x forwards for this category.
+- Our campaign reduced CAC by any amount.
+- Telugu, Tamil, Hindi, or any language definitely beats another language.
+- WhatsApp, Reels, or push notifications definitely outperform.
 - Any city-language score is an external fact.
 - Any live pilot has been run.
 
-These claims require real pilot data.
+These claims require real pilot campaign data.

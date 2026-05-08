@@ -31,6 +31,9 @@
       </div>
     </header>
 
+    <!-- Executive recommendation strip: generated from the scoring model, not campaign performance. -->
+    <section id="recommendationStrip" class="recommendation-strip" aria-label="Executive recommendations"></section>
+
     <!-- Executive caveat: this protects the dashboard from overclaiming in reviews. -->
     <section class="disclaimer">
       <strong>Manager-safe note:</strong>
@@ -40,58 +43,88 @@
 
     <!-- Navigation buttons: these switch what part of the dashboard is visible. -->
     <nav class="tabbar" aria-label="Dashboard sections">
-      <button class="tab active" data-tab="market">1. Market Pulse</button>
-      <button class="tab" data-tab="scorer">2. City-Language Scorer</button>
-      <button class="tab" data-tab="briefs">3. Content Brief Generator</button>
-      <button class="tab" data-tab="funnel">4. WhatsApp Funnel</button>
-      <button class="tab" data-tab="experiments">5. Experiment Tracker</button>
-      <button class="tab" data-tab="sources">6. Sources</button>
+      <button class="tab active" data-tab="market">Market Intelligence</button>
+      <button class="tab" data-tab="scorer">GTM Engine</button>
+      <button class="tab" data-tab="briefs">Report Generator</button>
+      <button class="tab" data-tab="funnel">WhatsApp Funnel</button>
+      <button class="tab" data-tab="experiments">Experiment Tracker</button>
+      <button class="tab" data-tab="sources">Sources</button>
     </nav>
 
     <main>
       <!-- MARKET SECTION / HOMEPAGE -->
       <section id="market" class="panel active-panel">
-        <!-- Executive hero: explains the project, audience, data boundary, and operating pipeline. -->
-        <section class="executive-hero">
-          <div class="hero-copy">
-            <p class="eyebrow">For growth, category, and city-launch managers</p>
-            <h2>Bharat Hyperlocal GTM Machine</h2>
-            <p class="hero-subtitle">
-              AI-powered city-language growth engine for Indian quick-commerce brands.
-            </p>
-            <p class="hero-body">
-              The dashboard helps teams select city-language-category wedges, convert them into local content briefs,
-              plan WhatsApp funnel experiments, and track weekly optimization once real pilot campaign data is uploaded.
-            </p>
-            <div class="pipeline-strip" aria-label="Operating pipeline">
-              city-language scorer &rarr; ICP selector &rarr; trend scraper &rarr; content brief generator &rarr;
-              WhatsApp funnel &rarr; experiment tracker &rarr; weekly optimization dashboard
+        <!-- Platform switcher: updates the platform intelligence panel without external data calls. -->
+        <section class="command-grid">
+          <article class="card platform-card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Platform benchmark</p>
+                <h2>Platform intelligence</h2>
+              </div>
+              <label class="compact-label">
+                Platform
+                <select id="platformSelect"></select>
+              </label>
             </div>
-          </div>
-          <aside class="hero-data-card" aria-label="Data boundary">
-            <p class="eyebrow">Data boundary</p>
-            <dl>
+            <div id="platformIntelligence" class="platform-intelligence"></div>
+          </article>
+
+          <article class="card status-panel">
+            <div class="card-header">
               <div>
-                <dt>Real public data</dt>
-                <dd>Market size, dark stores, Instamart operating metrics, and competitor context from listed sources.</dd>
+                <p class="eyebrow">Data readiness</p>
+                <h2>Campaign data status</h2>
               </div>
-              <div>
-                <dt>Needs pilot data</dt>
-                <dd>CTR, CAC, conversions, repeat rate, revenue, and creative-level campaign performance.</dd>
-              </div>
-            </dl>
-          </aside>
+              <span id="pilotBadge" class="confidence-badge">No pilot CSV</span>
+            </div>
+            <div id="campaignStatusPanel" class="status-grid"></div>
+            <p id="campaignStatusMessage" class="body-copy"></p>
+          </article>
         </section>
 
-        <!-- Market proof cards: populated only from data/public_market_data.json. -->
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Market proof cards</p>
-            <h2>Public evidence for quick-commerce GTM planning</h2>
+        <!-- Interactive market pulse: one insight card responds to metric and view selectors. -->
+        <section class="card market-command-card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Market pulse</p>
+              <h2>Interactive market signal</h2>
+            </div>
+            <div class="inline-controls">
+              <label class="compact-label">
+                Metric
+                <select id="marketMetricSelect">
+                  <option value="gov">GOV</option>
+                  <option value="darkStores">Dark stores</option>
+                  <option value="instamartGov">Swiggy Instamart GOV</option>
+                  <option value="instamartMtu">Swiggy Instamart MTUs</option>
+                  <option value="instamartAov">Swiggy Instamart AOV</option>
+                </select>
+              </label>
+              <label class="compact-label">
+                View mode
+                <select id="marketViewSelect">
+                  <option value="growth">Market growth</option>
+                  <option value="infrastructure">Operating infrastructure</option>
+                  <option value="benchmark">Platform benchmark</option>
+                  <option value="gtm">GTM implication</option>
+                </select>
+              </label>
+            </div>
           </div>
-          <p class="section-note">Sourced market context only. No pilot performance is inferred.</p>
-        </div>
-        <div id="kpiGrid" class="kpi-grid"></div>
+          <div class="insight-grid">
+            <div>
+              <p class="eyebrow">Insight</p>
+              <h3 id="marketInsightHeadline">What the data says.</h3>
+              <p class="insight-label">So what</p>
+              <p id="marketSoWhat" class="body-copy">What a growth manager should do.</p>
+              <p class="insight-label">Next action</p>
+              <p id="marketNextAction" class="body-copy">What campaign to run.</p>
+              <div id="marketInsightBadges" class="badge-row"></div>
+            </div>
+            <div id="marketDynamicChart" class="chart integrated-chart"></div>
+          </div>
+        </section>
 
         <!-- Engine flow: maps the working system from market context to optimization. -->
         <section class="engine-section">
@@ -121,19 +154,28 @@
         <!-- CTA links: jump into existing dashboard tools without creating new routes. -->
         <section class="cta-section" aria-label="Dashboard shortcuts">
           <div>
-            <p class="eyebrow">Next actions</p>
-            <h2>Move from market context to pilot planning</h2>
+            <p class="eyebrow">Scorer + report generator</p>
+            <h2>Move from market context to manager-ready execution</h2>
           </div>
           <div class="cta-actions">
             <button class="primary-btn jump-link" data-tab="scorer">City-Language Scorer</button>
-            <button class="primary-btn jump-link" data-tab="briefs">Content Brief Generator</button>
+            <button class="primary-btn jump-link" data-tab="briefs">Generate Manager Report</button>
             <button class="primary-btn jump-link" data-tab="experiments">Experiment Tracker</button>
             <button class="secondary-btn jump-link" data-tab="sources">Sources</button>
           </div>
         </section>
 
-        <!-- Public market charts: retained from the original market dashboard. -->
-        <div class="grid two-col">
+        <!-- Market proof cards: populated only from data/public_market_data.json. -->
+        <div class="section-heading compact-proof-heading">
+          <div>
+            <p class="eyebrow">Source-backed market proof</p>
+            <h2>Public data register</h2>
+          </div>
+          <p class="section-note">Sourced context only. No pilot performance is inferred.</p>
+        </div>
+        <div id="kpiGrid" class="kpi-grid compact-kpis"></div>
+
+        <div class="grid two-col legacy-market-grid">
           <article class="card">
             <div class="card-header">
               <div>
@@ -180,10 +222,10 @@
       <section id="scorer" class="panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Model layer</p>
-            <h2>City-language-category scorer</h2>
+            <p class="eyebrow">GTM engine</p>
+            <h2>City-language-platform decision tool</h2>
           </div>
-          <p class="section-note">This is a decision model. Scores are editable and auditable.</p>
+          <p class="section-note">Scores are model assumptions until validated with uploaded pilot data.</p>
         </div>
 
         <div class="control-strip">
@@ -199,6 +241,19 @@
             Category
             <select id="categorySelect"></select>
           </label>
+          <label>
+            Platform
+            <select id="scorerPlatformSelect"></select>
+          </label>
+          <label>
+            Objective
+            <select id="objectiveSelect">
+              <option value="awareness">Awareness</option>
+              <option value="first_order">First order</option>
+              <option value="repeat_order">Repeat order</option>
+              <option value="category_expansion">Category expansion</option>
+            </select>
+          </label>
         </div>
 
         <div class="grid two-col">
@@ -210,9 +265,19 @@
           </article>
 
           <article class="card">
-            <p class="eyebrow">Why this wedge matters</p>
+            <p class="eyebrow">Decision readout</p>
             <h3 id="wedgeTitle">Select a city-language-category wedge</h3>
             <p id="wedgeNarrative" class="body-copy"></p>
+            <div class="decision-columns">
+              <div>
+                <h4>Top reasons</h4>
+                <div id="attractiveReasons" class="guardrail-list"></div>
+              </div>
+              <div>
+                <h4>Top risks</h4>
+                <div id="wedgeRisks" class="guardrail-list"></div>
+              </div>
+            </div>
             <div id="guardrails" class="guardrail-list"></div>
           </article>
         </div>
@@ -233,19 +298,59 @@
       <section id="briefs" class="panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Operating layer</p>
-            <h2>Content brief generator</h2>
+            <p class="eyebrow">Report generator</p>
+            <h2>Professional GTM content report</h2>
           </div>
-          <p class="section-note">Generates a manager-ready brief from selected city, language, and category.</p>
+          <p class="section-note">Produces an intern-readable report without claiming campaign performance.</p>
         </div>
+
+        <!-- Report inputs: these local controls generate the markdown report in-browser. -->
+        <article class="card wide-card">
+          <div class="report-form">
+            <label>Platform<select id="reportPlatformSelect"></select></label>
+            <label>City<select id="reportCitySelect"></select></label>
+            <label>Language<select id="reportLanguageSelect"></select></label>
+            <label>Category<select id="reportCategorySelect"></select></label>
+            <label>Target audience<input id="targetAudienceInput" type="text" value="Urban quick-commerce users in serviceable pin codes" /></label>
+            <label>Campaign objective<select id="reportObjectiveSelect">
+              <option value="awareness">Awareness</option>
+              <option value="first_order">First order</option>
+              <option value="repeat_order">Repeat order</option>
+              <option value="category_expansion">Category expansion</option>
+            </select></label>
+            <label>Offer<input id="offerInput" type="text" value="Pin-code limited launch offer with category deep link" /></label>
+            <label>Campaign duration<input id="durationInput" type="text" value="14 days" /></label>
+            <label>Channel mix<select id="channelMixSelect" multiple size="6">
+              <option selected>WhatsApp</option>
+              <option selected>Instagram Reels</option>
+              <option>YouTube Shorts</option>
+              <option selected>Push Notifications</option>
+              <option>In-app Banner</option>
+              <option>Society Ambassador</option>
+            </select></label>
+            <label>Tone<select id="toneSelect">
+              <option>premium</option>
+              <option selected>local</option>
+              <option>urgent</option>
+              <option>trust-building</option>
+              <option>festive</option>
+            </select></label>
+            <label class="span-two">Notes<textarea id="reportNotesInput" rows="4" placeholder="Add manager notes, category constraints, or neighborhood context."></textarea></label>
+          </div>
+        </article>
 
         <article class="card wide-card">
           <div class="card-header">
             <div>
-              <p class="eyebrow">Generated output</p>
-              <h3 id="briefHeadline">Quick-commerce local campaign brief</h3>
+              <p class="eyebrow">Generated markdown</p>
+              <h3 id="briefHeadline">Quick-commerce GTM content report</h3>
             </div>
-            <button id="copyBrief" class="primary-btn">Copy brief</button>
+            <div class="button-row">
+              <button id="generateReport" class="primary-btn">Generate Manager Report</button>
+              <button id="copyBrief" class="secondary-btn">Copy Report</button>
+              <button id="downloadReport" class="secondary-btn">Download as Markdown</button>
+              <button id="printReport" class="secondary-btn">Print / Save as PDF</button>
+            </div>
           </div>
           <pre id="briefOutput" class="brief-box"></pre>
         </article>
