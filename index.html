@@ -13,13 +13,13 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- Top bar: like the name board outside your project. -->
+    <!-- Top bar: persistent dashboard identity and local-status signal. -->
     <header class="topbar">
       <div>
-        <p class="eyebrow">Bharat Hyperlocal GTM Machine</p>
-        <h1>AI-powered city-language growth dashboard for Indian quick commerce</h1>
+        <p class="eyebrow">Executive dashboard</p>
+        <h1>Bharat Hyperlocal GTM Machine</h1>
         <p class="subhead">
-          Public market data + transparent scoring model + upload-ready campaign tracker.
+          AI-powered city-language growth engine for Indian quick-commerce brands.
         </p>
       </div>
       <div class="status-card">
@@ -31,7 +31,7 @@
       </div>
     </header>
 
-    <!-- Executive caveat: this protects you from overclaiming in front of your manager. -->
+    <!-- Executive caveat: this protects the dashboard from overclaiming in reviews. -->
     <section class="disclaimer">
       <strong>Manager-safe note:</strong>
       Market and competitor metrics use public sources. City-language opportunity scores are a transparent model layer,
@@ -49,18 +49,90 @@
     </nav>
 
     <main>
-      <!-- MARKET SECTION -->
+      <!-- MARKET SECTION / HOMEPAGE -->
       <section id="market" class="panel active-panel">
+        <!-- Executive hero: explains the project, audience, data boundary, and operating pipeline. -->
+        <section class="executive-hero">
+          <div class="hero-copy">
+            <p class="eyebrow">For growth, category, and city-launch managers</p>
+            <h2>Bharat Hyperlocal GTM Machine</h2>
+            <p class="hero-subtitle">
+              AI-powered city-language growth engine for Indian quick-commerce brands.
+            </p>
+            <p class="hero-body">
+              The dashboard helps teams select city-language-category wedges, convert them into local content briefs,
+              plan WhatsApp funnel experiments, and track weekly optimization once real pilot campaign data is uploaded.
+            </p>
+            <div class="pipeline-strip" aria-label="Operating pipeline">
+              city-language scorer &rarr; ICP selector &rarr; trend scraper &rarr; content brief generator &rarr;
+              WhatsApp funnel &rarr; experiment tracker &rarr; weekly optimization dashboard
+            </div>
+          </div>
+          <aside class="hero-data-card" aria-label="Data boundary">
+            <p class="eyebrow">Data boundary</p>
+            <dl>
+              <div>
+                <dt>Real public data</dt>
+                <dd>Market size, dark stores, Instamart operating metrics, and competitor context from listed sources.</dd>
+              </div>
+              <div>
+                <dt>Needs pilot data</dt>
+                <dd>CTR, CAC, conversions, repeat rate, revenue, and creative-level campaign performance.</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+
+        <!-- Market proof cards: populated only from data/public_market_data.json. -->
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Public data layer</p>
-            <h2>Quick commerce market pulse</h2>
+            <p class="eyebrow">Market proof cards</p>
+            <h2>Public evidence for quick-commerce GTM planning</h2>
           </div>
-          <p class="section-note">Used for context, not for claiming your own campaign performance.</p>
+          <p class="section-note">Sourced market context only. No pilot performance is inferred.</p>
         </div>
-
         <div id="kpiGrid" class="kpi-grid"></div>
 
+        <!-- Engine flow: maps the working system from market context to optimization. -->
+        <section class="engine-section">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">Engine flow</p>
+              <h2>How the GTM engine operates</h2>
+            </div>
+          </div>
+          <div class="engine-flow" aria-label="Bharat Hyperlocal GTM Machine operating flow">
+            <div class="flow-step"><span>01</span><strong>City-language scorer</strong><p>Ranks local opportunity wedges using the seed model.</p></div>
+            <div class="flow-step"><span>02</span><strong>ICP selector</strong><p>Frames the priority audience and category use case.</p></div>
+            <div class="flow-step"><span>03</span><strong>Trend scraper</strong><p>Placeholder operating stage for future local trend inputs.</p></div>
+            <div class="flow-step"><span>04</span><strong>Content brief generator</strong><p>Turns the selected wedge into a manager-ready brief.</p></div>
+            <div class="flow-step"><span>05</span><strong>WhatsApp funnel</strong><p>Structures trigger, message, offer, and conversion path.</p></div>
+            <div class="flow-step"><span>06</span><strong>Experiment tracker</strong><p>Reads uploaded pilot CSV data in-browser.</p></div>
+            <div class="flow-step"><span>07</span><strong>Weekly optimization</strong><p>Uses real pilot results once available.</p></div>
+          </div>
+        </section>
+
+        <!-- Manager demo note: clarifies what is live today and what waits for pilots. -->
+        <section class="manager-note">
+          <strong>Manager demo note:</strong>
+          Public market data is used for market and competitor context. Campaign performance metrics remain empty until real pilot data is uploaded.
+        </section>
+
+        <!-- CTA links: jump into existing dashboard tools without creating new routes. -->
+        <section class="cta-section" aria-label="Dashboard shortcuts">
+          <div>
+            <p class="eyebrow">Next actions</p>
+            <h2>Move from market context to pilot planning</h2>
+          </div>
+          <div class="cta-actions">
+            <button class="primary-btn jump-link" data-tab="scorer">City-Language Scorer</button>
+            <button class="primary-btn jump-link" data-tab="briefs">Content Brief Generator</button>
+            <button class="primary-btn jump-link" data-tab="experiments">Experiment Tracker</button>
+            <button class="secondary-btn jump-link" data-tab="sources">Sources</button>
+          </div>
+        </section>
+
+        <!-- Public market charts: retained from the original market dashboard. -->
         <div class="grid two-col">
           <article class="card">
             <div class="card-header">

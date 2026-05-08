@@ -202,6 +202,7 @@ function drawLineChart(containerId, data, options) {
 // -----------------------------------------------------------------------------
 
 function renderKpis() {
+  const sourceById = Object.fromEntries(marketData.sources.map(source => [source.id, source]));
   $("kpiGrid").innerHTML = marketData.kpis.map(kpi => `
     <div class="kpi-card">
       <div class="kpi-label">${escapeHtml(kpi.label)}</div>
@@ -209,6 +210,7 @@ function renderKpis() {
         <div class="kpi-value">${escapeHtml(kpi.value)}</div>
         <div class="kpi-caption">${escapeHtml(kpi.caption)}</div>
       </div>
+      <div class="kpi-source">Confidence ${escapeHtml(sourceById[kpi.sourceId]?.type ?? "listed")}</div>
     </div>
   `).join("");
 }
@@ -607,14 +609,27 @@ function renderCampaignData(rows) {
 // 9) EVENTS: WHAT HAPPENS WHEN USER CLICKS/CHANGES SOMETHING
 // -----------------------------------------------------------------------------
 
+// Keep navigation behavior in one place so top tabs and homepage CTA buttons
+// reveal the same existing dashboard panels.
+function showTab(tabId) {
+  document.querySelectorAll(".tab").forEach(button => {
+    button.classList.toggle("active", button.dataset.tab === tabId);
+  });
+  document.querySelectorAll(".panel").forEach(panel => {
+    panel.classList.toggle("active-panel", panel.id === tabId);
+  });
+  renderMarketCharts();
+}
+
 function attachEvents() {
   document.querySelectorAll(".tab").forEach(button => {
+    button.addEventListener("click", () => showTab(button.dataset.tab));
+  });
+
+  document.querySelectorAll(".jump-link").forEach(button => {
     button.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active-panel"));
-      button.classList.add("active");
-      $(button.dataset.tab).classList.add("active-panel");
-      renderMarketCharts();
+      showTab(button.dataset.tab);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   });
 
