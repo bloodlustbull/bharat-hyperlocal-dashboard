@@ -1,474 +1,589 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!--
-    Imagine this file is the front door of a house.
-    The browser opens this door first, then it loads styles.css for design
-    and app.js for all the moving/interacting parts.
-  -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bharat Hyperlocal GTM Machine</title>
+  <title>Bharat Hyperlocal - India Market Intelligence</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇮🇳</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <div class="app-shell">
-    <!-- Top bar: persistent dashboard identity and local-status signal. -->
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">GTM Command Center</p>
-        <h1>Bharat Hyperlocal GTM Machine</h1>
-        <p class="subhead">
-          AI-powered city-language growth engine for Indian quick-commerce brands.
-        </p>
-        <div class="hero-brand-row">
-          <span id="platformHeroBadge" class="platform-hero-badge">Platform mode</span>
-          <span id="platformGtmPosture" class="platform-posture">Select a platform to tune the GTM posture.</span>
+<body data-platform="blinkit">
+  <div class="ambient-field" aria-hidden="true"></div>
+  <div class="mesh-gradient" aria-hidden="true"></div>
+  <div class="floating-particles" id="floatingParticles" aria-hidden="true"></div>
+
+  <!-- Landing view: cinematic hero + storytelling sections -->
+  <section id="landingView" class="entry-view view-active">
+    <div class="hero-fullscreen">
+      <div class="landing-orb orb-a" aria-hidden="true"></div>
+      <div class="landing-orb orb-b" aria-hidden="true"></div>
+      <div class="landing-orb orb-c" aria-hidden="true"></div>
+      <div class="hero-grid-lines" aria-hidden="true"></div>
+      <div class="landing-card hero-content">
+        <div class="eyebrow-pill">
+          <span class="pulse-dot"></span>
+          Bharat Hyperlocal Intelligence Platform
         </div>
-        <div class="pipeline-strip hero-pipeline" aria-label="Operating pipeline">
-          city-language scorer &rarr; ICP selector &rarr; trend scraper &rarr; content brief generator &rarr;
-          WhatsApp funnel &rarr; experiment tracker &rarr; weekly optimization dashboard
+        <h1>Discover India's <span class="gradient-text">Local Market Intelligence</span></h1>
+        <p class="hero-subtitle">City-language opportunity wedges, quick-commerce benchmarks, and decision-grade campaign actions — built on auditable public sources.</p>
+        <div class="hero-cta-group">
+          <button id="enterWarRoom" class="primary-btn entry-btn glow-btn">
+            <span>Enter Command Center</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+          <a href="#discover" class="secondary-btn entry-btn scroll-link">See How It Works</a>
+        </div>
+        <div class="hero-trust-row">
+          <span class="trust-chip">CareEdge Advisory</span>
+          <span class="trust-chip">Swiggy FY25</span>
+          <span class="trust-chip">Economic Times</span>
+          <span class="trust-chip">Global Newswire</span>
         </div>
       </div>
-      <div class="hero-controls">
-        <!-- Main platform switcher: app.js uses this to update theme, intelligence, and market recommendations. -->
-        <label class="compact-label platform-switcher">
-          Platform
-          <select id="platformSelect"></select>
-        </label>
-        <div class="status-card">
-          <span class="status-dot"></span>
-          <div>
-            <strong id="selectedPlatformName">Platform command center</strong>
-            <small>Local static dashboard</small>
+      <div class="scroll-indicator" aria-hidden="true">
+        <div class="scroll-line"></div>
+      </div>
+    </div>
+
+    <!-- Storytelling sections -->
+    <div class="story-sections">
+      <!-- Step 1: Discover -->
+      <section class="story-section reveal-section" id="discover">
+        <div class="story-inner">
+          <div class="story-text">
+            <div class="story-step-indicator">
+              <span class="step-number">01</span>
+              <span class="step-line"></span>
+            </div>
+            <p class="eyebrow">Market Signal Discovery</p>
+            <h2>Grounded in verifiable public-market evidence</h2>
+            <p>INR 64,000 Cr in quick-commerce GOV, 3,000+ dark stores, and platform-specific benchmarks — structured from disclosed market and operator data.</p>
           </div>
+          <div class="story-visual">
+            <div class="story-metric-card glass-card">
+              <div class="metric-glow"></div>
+              <span class="metric-value">INR 64,000 Cr</span>
+              <span class="metric-label">India Q-Commerce GOV FY25</span>
+            </div>
+            <div class="story-metric-card glass-card">
+              <div class="metric-glow"></div>
+              <span class="metric-value">3,072</span>
+              <span class="metric-label">Active Dark Stores FY25</span>
+            </div>
+            <div class="story-metric-card glass-card">
+              <div class="metric-glow"></div>
+              <span class="metric-value">9.8M</span>
+              <span class="metric-label">Instamart MTUs Q4FY25</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: Compare Cities -->
+      <section class="story-section reveal-section" id="compare">
+        <div class="story-inner story-row">
+          <div class="story-text">
+            <div class="story-step-indicator">
+              <span class="step-number">02</span>
+              <span class="step-line"></span>
+            </div>
+            <p class="eyebrow">City Benchmarking</p>
+            <h2>Compare city-level market signals</h2>
+            <p>Benchmark 12 Indian cities on quick-commerce density, platform maturity, creator supply, and competitive gap. Identify where your category wedge is most viable.</p>
+          </div>
+          <div class="story-visual">
+            <div class="city-grid glass-card">
+              <div class="city-chip high"><span>Bengaluru</span><span>10/10</span></div>
+              <div class="city-chip high"><span>Hyderabad</span><span>9/10</span></div>
+              <div class="city-chip high"><span>Chennai</span><span>9/10</span></div>
+              <div class="city-chip mid"><span>Pune</span><span>9/10</span></div>
+              <div class="city-chip mid"><span>Vizag</span><span>7/10</span></div>
+              <div class="city-chip low"><span>Bhubaneswar</span><span>6/10</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3: Understand Language -->
+      <section class="story-section reveal-section" id="language">
+        <div class="story-inner">
+          <div class="story-text">
+            <div class="story-step-indicator">
+              <span class="step-number">03</span>
+              <span class="step-line"></span>
+            </div>
+            <p class="eyebrow">Language &amp; Culture Context</p>
+            <h2>Vernacular gaps reveal market opportunity</h2>
+            <p>Score language-market fit for Telugu, Tamil, Marathi, Kannada, Malayalam, Punjabi, and Odia. Greater vernacular content gaps indicate sharper entry points.</p>
+          </div>
+          <div class="story-visual">
+            <div class="language-bar-row">
+              <div class="language-bar glass-card"><span class="lang-name">Telugu</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><span class="lang-score">7/10</span></div>
+              <div class="language-bar glass-card"><span class="lang-name">Tamil</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><span class="lang-score">7/10</span></div>
+              <div class="language-bar glass-card"><span class="lang-name">Odia</span><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><span class="lang-score">8/10</span></div>
+              <div class="language-bar glass-card"><span class="lang-name">English</span><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><span class="lang-score">3/10</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 4: Score Opportunities -->
+      <section class="story-section reveal-section" id="score">
+        <div class="story-inner story-row">
+          <div class="story-text">
+            <div class="story-step-indicator">
+              <span class="step-number">04</span>
+              <span class="step-line"></span>
+            </div>
+            <p class="eyebrow">Opportunity Scoring</p>
+            <h2>Decision-grade wedge scores, not assumptions</h2>
+            <p>The city-language-category scorer weighs quick-commerce density, vernacular content gap, WhatsApp conversion fit, and five more factors to produce a weighted opportunity score out of 100.</p>
+          </div>
+          <div class="story-visual">
+            <div class="score-preview glass-card">
+              <div class="score-orb-mini">
+                <span class="score-value-mini">78</span>
+                <small>/100</small>
+              </div>
+              <div class="score-factors">
+                <div class="factor-row"><span>Quick-commerce density</span><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div></div>
+                <div class="factor-row"><span>Vernacular content gap</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div></div>
+                <div class="factor-row"><span>WhatsApp conversion fit</span><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div></div>
+                <div class="factor-row"><span>Competitive gap</span><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 5: Generate Actions -->
+      <section class="story-section reveal-section" id="actions">
+        <div class="story-inner">
+          <div class="story-text">
+            <div class="story-step-indicator">
+              <span class="step-number">05</span>
+              <span class="step-line"></span>
+            </div>
+            <p class="eyebrow">Campaign Action Builder</p>
+            <h2>From analysis to measured pilot execution</h2>
+            <p>Generate experiment plans, WhatsApp conversion rails, unit economics models, and stakeholder-ready executive reports. Every action is traceable to sourced market data.</p>
+          </div>
+          <div class="story-visual">
+            <div class="action-flow glass-card">
+              <div class="action-step"><span class="action-icon">1</span><span>Plan experiment</span></div>
+              <div class="action-connector"></div>
+              <div class="action-step"><span class="action-icon">2</span><span>Launch pilot</span></div>
+              <div class="action-connector"></div>
+              <div class="action-step"><span class="action-icon">3</span><span>Track metrics</span></div>
+              <div class="action-connector"></div>
+              <div class="action-step"><span class="action-icon">4</span><span>Generate report</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Final CTA -->
+      <section class="story-section story-cta reveal-section">
+        <div class="story-inner">
+          <h2>Ready to make local market decisions with confidence?</h2>
+          <p>Select a quick-commerce platform and enter the GTM command center — grounded in auditable public data.</p>
+          <button id="enterWarRoomBottom" class="primary-btn entry-btn glow-btn">
+            <span>Enter Command Center</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- Brand map view -->
+  <section id="brandMapView" class="entry-view">
+    <div class="brand-map-shell">
+      <button id="backToLanding" class="secondary-btn back-btn">Back</button>
+
+      <div id="benchmarkStart" class="benchmark-start">
+        <p class="eyebrow">Benchmark lens</p>
+        <h2>Platform Benchmark</h2>
+        <p class="benchmark-lead">Compare five quick-commerce platforms against public market data.</p>
+        <button id="startBenchmark" class="primary-btn start-btn glow-btn">
+          <span>Start</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div id="brandOrbit" class="brand-orbit hidden">
+        <div class="orbit-ambient-glow" aria-hidden="true"></div>
+        <div class="orbit-center-ring" aria-hidden="true"></div>
+        <div class="orbit-rings" aria-hidden="true">
+          <div class="orbit-ring ring-1"></div>
+          <div class="orbit-ring ring-2"></div>
+        </div>
+        <div id="brandTileGrid" class="brand-orbit-grid"></div>
+      </div>
+
+      <div id="bmDetailPanel" class="bm-detail-panel hidden"></div>
+
+      <div id="bmComparePanel" class="bm-compare-panel hidden">
+        <button id="bmCloseCompare" class="bm-close-btn" title="Close">&times;</button>
+        <div class="bm-section-title"><p class="eyebrow">Benchmark comparison</p><h3>Compare all platforms</h3></div>
+        <p class="bm-disclaimer">Directional framework — requires validation. Scores are qualitative assessments based on available public data.</p>
+        <div id="bmCompareGrid" class="bm-compare-grid"></div>
+      </div>
+
+      <div id="bmActionsBar" class="bm-actions-bar hidden">
+        <button id="bmCompareAll" class="secondary-btn">Compare all platforms</button>
+        <button id="bmResetView" class="secondary-btn">Reset benchmark view</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="dashboardView" class="app-shell dashboard-view">
+    <header class="hero command-panel">
+      <div class="hero-copy">
+        <p class="eyebrow">GTM Command Center · India Q-Commerce</p>
+        <h1>Bharat Hyperlocal Intelligence</h1>
+        <p class="hero-subtitle">City-language decision engine for Indian quick-commerce — discover opportunities, score wedges, build campaigns</p>
+        <p class="hero-pipeline">city-language scorer -> ICP selector -> market benchmark -> WhatsApp funnel -> experiment planner -> report generator -> pilot CSV tracker</p>
+        <div class="hero-badges">
+          <span id="platformHeroBadge" class="source-badge badge-primary">Reported market leader</span>
+          <span id="platformGtmPosture" class="muted-badge">Benchmark against the leader; identify sharper local demand pockets.</span>
+        </div>
+      </div>
+      <div class="hero-control-card">
+        <div class="button-row">
+          <button id="backToBrandMap" class="secondary-btn">Back to Brand Map</button>
+          <button id="changePlatform" class="secondary-btn">Change Platform</button>
+        </div>
+        <label class="field-label">Active platform</label>
+        <div id="platformButtons" class="platform-pills"></div>
+        <label class="field-label select-fallback">Platform dropdown<select id="platformSelect"></select></label>
+        <div class="local-status">
+          <span class="status-dot"></span>
+          <div><strong id="selectedPlatformName">Blinkit</strong><small>Local static dashboard - GitHub Pages ready</small></div>
         </div>
       </div>
     </header>
 
-    <!-- Executive recommendation strip: generated from the scoring model, not campaign performance. -->
-    <section id="recommendationStrip" class="recommendation-strip" aria-label="Executive recommendations"></section>
-
-    <!-- Executive caveat: this protects the dashboard from overclaiming in reviews. -->
-    <section class="disclaimer">
-      <strong>Manager-safe note:</strong>
-      Market and competitor metrics use public sources. City-language opportunity scores are a transparent model layer,
-      not external facts. Campaign performance remains empty until you upload your own pilot CSV.
-    </section>
-
-    <!-- Navigation buttons: these switch what part of the dashboard is visible. -->
     <nav class="tabbar" aria-label="Dashboard sections">
-      <button class="tab active" data-tab="market">Market Intelligence</button>
-      <button class="tab" data-tab="scorer">GTM Engine</button>
-      <button class="tab" data-tab="briefs">Report Generator</button>
-      <button class="tab" data-tab="funnel">WhatsApp Funnel</button>
-      <button class="tab" data-tab="experiments">Experiment Tracker</button>
+      <button class="tab active" data-tab="market">Market</button>
+      <button class="tab" data-tab="scorer">Opportunity Engine</button>
+      <button class="tab" data-tab="whatsapp">WhatsApp</button>
+      <button class="tab" data-tab="planner">Planner</button>
+      <button class="tab" data-tab="unit">Unit Economics</button>
+      <button class="tab" data-tab="report">Report</button>
+      <button class="tab" data-tab="experiments">Tracker</button>
       <button class="tab" data-tab="sources">Sources</button>
     </nav>
 
     <main>
-      <!-- MARKET SECTION / HOMEPAGE -->
       <section id="market" class="panel active-panel">
-        <!-- Platform switcher: updates the platform intelligence panel without external data calls. -->
-        <section class="command-grid">
-          <article class="card platform-card">
-            <div class="card-header">
-              <div>
-                <p class="eyebrow">Platform benchmark</p>
-                <h2>Platform intelligence</h2>
-              </div>
-            </div>
-            <div id="platformIntelligence" class="platform-intelligence"></div>
-          </article>
+        <section class="kpi-strip" id="kpiStrip" aria-label="KPI benchmark cards"></section>
+        <section id="kpiDetail" class="detail-drawer hidden"></section>
 
-          <article class="card status-panel">
-            <div class="card-header">
-              <div>
-                <p class="eyebrow">Data readiness</p>
-                <h2>Campaign data status</h2>
-              </div>
-              <span id="pilotBadge" class="confidence-badge">No pilot CSV</span>
-            </div>
+        <section class="grid two-col">
+          <article class="card platform-card">
+            <div class="section-title"><p class="eyebrow">Platform intelligence</p><h2>Benchmark lens readout</h2></div>
+            <label class="benchmark-lens">Benchmark Lens
+              <select id="benchmarkLensSelect">
+                <option>Market leader lens</option>
+                <option>Challenger lens</option>
+                <option>Operating scale lens</option>
+                <option>Failure-mode lens</option>
+                <option>Pilot-readiness lens</option>
+              </select>
+            </label>
+            <div id="platformIntelligence"></div>
+          </article>
+          <article class="card status-card">
+            <div class="section-title"><p class="eyebrow">Data readiness</p><h2>Source readiness console</h2></div>
             <div id="campaignStatusPanel" class="status-grid"></div>
-            <p id="campaignStatusMessage" class="body-copy"></p>
+            <p id="campaignStatusMessage" class="note"></p>
+            <button class="primary-btn jump-tab" data-tab="experiments">Go to Experiment Tracker</button>
           </article>
         </section>
 
-        <!-- Interactive market pulse: one insight card responds to metric and view selectors. -->
-        <section class="card market-command-card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Market pulse</p>
-              <h2>Interactive market signal</h2>
-            </div>
+        <section id="benchmarkCockpit" class="card bm-cockpit">
+          <div class="section-title"><p class="eyebrow">Benchmark Cockpit</p><h2>Quick-Commerce Benchmark Automation</h2></div>
+          <div id="bmRecommendation" class="bm-recommendation"></div>
+          <div id="bmCockpitGrid" class="bm-cockpit-grid"></div>
+          <div id="bmCockpitEvidence" class="bm-cockpit-evidence"></div>
+        </section>
+
+        <section class="card market-card">
+          <div class="card-top">
+            <div><p class="eyebrow">Interactive benchmark</p><h2>Market pulse</h2></div>
             <div class="inline-controls">
-              <label class="compact-label">
-                Metric
-                <select id="marketMetricSelect">
-                  <option value="gov">GOV</option>
-                  <option value="darkStores">Dark stores</option>
-                  <option value="instamartGov">Swiggy Instamart GOV</option>
-                  <option value="instamartMtu">Swiggy Instamart MTUs</option>
-                  <option value="instamartAov">Swiggy Instamart AOV</option>
-                </select>
-              </label>
-              <label class="compact-label">
-                View mode
-                <select id="marketViewSelect">
-                  <option value="growth">Market growth</option>
-                  <option value="infrastructure">Operating infrastructure</option>
-                  <option value="benchmark">Platform benchmark</option>
-                  <option value="gtm">GTM implication</option>
-                </select>
-              </label>
+              <label>Metric<select id="marketMetricSelect">
+                <option value="gov">GOV</option>
+                <option value="darkStores">Dark stores</option>
+                <option value="mtu">MTUs</option>
+                <option value="aov">AOV</option>
+                <option value="orders">Orders</option>
+                <option value="marketShare">Market share</option>
+                <option value="citiesCovered">Cities covered</option>
+              </select></label>
+              <label>View mode<select id="marketViewSelect">
+                <option value="growth">Market growth</option>
+                <option value="benchmark">Platform benchmark</option>
+                <option value="infrastructure">Operating infrastructure</option>
+                <option value="gtm">GTM implication</option>
+              </select></label>
             </div>
           </div>
           <div class="insight-grid">
-            <div>
-              <p class="eyebrow">Insight</p>
-              <h3 id="marketInsightHeadline">What the data says.</h3>
-              <p class="insight-label">So what</p>
-              <p id="marketSoWhat" class="body-copy">What a growth manager should do.</p>
-              <p class="insight-label">Next action</p>
-              <p id="marketNextAction" class="body-copy">What campaign to run.</p>
+            <div class="insight-stack">
+              <p class="eyebrow">Insight</p><h3 id="marketInsightHeadline">Loading market signal.</h3>
+              <p class="insight-label">So what</p><p id="marketSoWhat"></p>
+              <p class="insight-label">Next action</p><p id="marketNextAction"></p>
               <div id="marketInsightBadges" class="badge-row"></div>
             </div>
-            <div id="marketDynamicChart" class="chart integrated-chart"></div>
+            <div><div id="marketDynamicChart" class="chart"></div><p id="marketChartSource" class="chart-source"></p></div>
           </div>
         </section>
 
-        <!-- Engine flow: maps the working system from market context to optimization. -->
-        <section class="engine-section">
-          <div class="section-heading compact-heading">
-            <div>
-              <p class="eyebrow">Engine flow</p>
-              <h2>How the GTM engine operates</h2>
-            </div>
-          </div>
-          <div class="engine-flow" aria-label="Bharat Hyperlocal GTM Machine operating flow">
-            <div class="flow-step"><span>01</span><strong>City-language scorer</strong><p>Ranks local opportunity wedges using the seed model.</p></div>
-            <div class="flow-step"><span>02</span><strong>ICP selector</strong><p>Frames the priority audience and category use case.</p></div>
-            <div class="flow-step"><span>03</span><strong>Trend scraper</strong><p>Placeholder operating stage for future local trend inputs.</p></div>
-            <div class="flow-step"><span>04</span><strong>Content brief generator</strong><p>Turns the selected wedge into a manager-ready brief.</p></div>
-            <div class="flow-step"><span>05</span><strong>WhatsApp funnel</strong><p>Structures trigger, message, offer, and conversion path.</p></div>
-            <div class="flow-step"><span>06</span><strong>Experiment tracker</strong><p>Reads uploaded pilot CSV data in-browser.</p></div>
-            <div class="flow-step"><span>07</span><strong>Weekly optimization</strong><p>Uses real pilot results once available.</p></div>
-          </div>
+        <section class="section-block">
+          <div class="section-title"><p class="eyebrow">Source-backed proof</p><h2>Verified market data register</h2></div>
+          <div id="proofCards" class="proof-grid"></div>
         </section>
-
-        <!-- Manager demo note: clarifies what is live today and what waits for pilots. -->
-        <section class="manager-note">
-          <strong>Manager demo note:</strong>
-          Public market data is used for market and competitor context. Campaign performance metrics remain empty until real pilot data is uploaded.
-        </section>
-
-        <!-- CTA links: jump into existing dashboard tools without creating new routes. -->
-        <section class="cta-section" aria-label="Dashboard shortcuts">
-          <div>
-            <p class="eyebrow">Scorer + report generator</p>
-            <h2>Move from market context to manager-ready execution</h2>
-          </div>
-          <div class="cta-actions">
-            <button class="primary-btn jump-link" data-tab="scorer">City-Language Scorer</button>
-            <button class="primary-btn jump-link" data-tab="briefs">Generate Manager Report</button>
-            <button class="primary-btn jump-link" data-tab="experiments">Experiment Tracker</button>
-            <button class="secondary-btn jump-link" data-tab="sources">Sources</button>
-          </div>
-        </section>
-
-        <!-- Market proof cards: populated only from data/public_market_data.json. -->
-        <div class="section-heading compact-proof-heading">
-          <div>
-            <p class="eyebrow">Source-backed market proof</p>
-            <h2>Public data register</h2>
-          </div>
-          <p class="section-note">Sourced context only. No pilot performance is inferred.</p>
-        </div>
-        <div id="kpiGrid" class="kpi-grid compact-kpis"></div>
-
-        <div class="grid two-col legacy-market-grid">
-          <article class="card">
-            <div class="card-header">
-              <div>
-                <p class="eyebrow">CareEdge Research</p>
-                <h3>India Q-commerce GOV growth</h3>
-              </div>
-              <span class="pill">FY22–FY28P</span>
-            </div>
-            <div id="govChart" class="chart"></div>
-          </article>
-
-          <article class="card">
-            <div class="card-header">
-              <div>
-                <p class="eyebrow">CareEdge Research</p>
-                <h3>Dark-store infrastructure scale-up</h3>
-              </div>
-              <span class="pill">FY23–FY25</span>
-            </div>
-            <div id="darkStoreChart" class="chart"></div>
-          </article>
-        </div>
-
-        <article class="card wide-card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Swiggy shareholder letter</p>
-              <h3>Instamart operating trajectory</h3>
-            </div>
-            <span class="pill">Q4FY24–Q4FY25</span>
-          </div>
-          <div class="metric-toggle">
-            <button class="mini-tab active" data-metric="gov">GOV</button>
-            <button class="mini-tab" data-metric="orders">Orders</button>
-            <button class="mini-tab" data-metric="mtu">MTUs</button>
-            <button class="mini-tab" data-metric="stores">Dark stores</button>
-            <button class="mini-tab" data-metric="aov">AOV</button>
-          </div>
-          <div id="instamartChart" class="chart tall-chart"></div>
-        </article>
       </section>
 
-      <!-- SCORER SECTION -->
       <section id="scorer" class="panel">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">GTM engine</p>
-            <h2>City-language-platform decision tool</h2>
+        <div class="section-title"><p class="eyebrow">Opportunity Engine</p><h2>Automated hyperlocal decision workflow</h2></div>
+
+        <!-- Workflow timeline -->
+        <div class="oe-timeline" id="oeTimeline">
+          <div class="oe-step active" data-step="1" role="button" tabindex="0"><span class="oe-step-num">1</span><span class="oe-step-label">Select market</span></div>
+          <div class="oe-step" data-step="2" role="button" tabindex="0"><span class="oe-step-num">2</span><span class="oe-step-label">Score opportunity</span></div>
+          <div class="oe-step" data-step="3" role="button" tabindex="0"><span class="oe-step-num">3</span><span class="oe-step-label">Match benchmark</span></div>
+          <div class="oe-step" data-step="4" role="button" tabindex="0"><span class="oe-step-num">4</span><span class="oe-step-label">Generate brief</span></div>
+          <div class="oe-step" data-step="5" role="button" tabindex="0"><span class="oe-step-num">5</span><span class="oe-step-label">Track performance</span></div>
+          <div class="oe-step" data-step="6" role="button" tabindex="0"><span class="oe-step-num">6</span><span class="oe-step-label">Learn &amp; refine</span></div>
+        </div>
+        <p class="oe-timeline-hint">Click a step to jump through the workflow.</p>
+
+        <!-- Command Panel -->
+        <article class="card oe-command-panel">
+          <div class="form-grid">
+            <label>City<select id="citySelect"></select></label>
+            <label>Language<select id="languageSelect"></select></label>
+            <label>Category<select id="categorySelect"></select></label>
+            <label>Benchmark platform<select id="scorerPlatformSelect"></select></label>
+            <label>Objective<select id="objectiveSelect">
+              <option value="Awareness">Awareness</option>
+              <option value="First order">First order</option>
+              <option value="Repeat order">Repeat order</option>
+              <option value="Category expansion">Category expansion</option>
+              <option value="Society penetration">Society penetration</option>
+              <option value="WhatsApp activation">WhatsApp activation</option>
+            </select></label>
+            <label>Campaign channel<select id="channelSelect">
+              <option value="WhatsApp broadcast">WhatsApp broadcast</option>
+              <option value="WhatsApp group seeding">WhatsApp group seeding</option>
+              <option value="Instagram Reels">Instagram Reels</option>
+              <option value="YouTube Shorts">YouTube Shorts</option>
+              <option value="Push notification">Push notification</option>
+              <option value="In-app banner">In-app banner</option>
+            </select></label>
           </div>
-          <p class="section-note">Scores are model assumptions until validated with uploaded pilot data.</p>
+        </article>
+
+        <!-- Opportunity Score -->
+        <div class="grid two-col">
+          <article class="card oe-score-card">
+            <div class="oe-score-header">
+              <div class="score-orb"><span id="scoreValue">--</span><small>/100</small></div>
+              <div class="oe-score-summary">
+                <h3 id="wedgeTitle">Select a wedge</h3>
+                <p id="wedgeNarrative" class="note"></p>
+                <div class="oe-confidence-badge" id="oeConfidenceBadge"></div>
+              </div>
+            </div>
+            <div id="scoreBreakdown" class="breakdown"></div>
+            <button class="secondary-btn oe-explain-toggle" id="oeExplainToggle">Why this score?</button>
+            <div id="oeExplainPanel" class="oe-explain-panel hidden">
+              <div id="oeExplainContent"></div>
+            </div>
+          </article>
+
+          <!-- Automated Recommendation -->
+          <article class="card oe-recommendation-card">
+            <p class="eyebrow">Automated Recommendation</p>
+            <h3>Recommended actions</h3>
+            <div id="oeRecommendation" class="oe-recommendation">
+              <p class="note">Select a city, category, and platform to generate a recommendation.</p>
+            </div>
+          </article>
         </div>
 
-        <div class="control-strip">
-          <label>
-            City
-            <select id="citySelect"></select>
-          </label>
-          <label>
-            Language
-            <select id="languageSelect"></select>
-          </label>
-          <label>
-            Category
-            <select id="categorySelect"></select>
-          </label>
-          <label>
-            Platform
-            <select id="scorerPlatformSelect"></select>
-          </label>
-          <label>
-            Objective
-            <select id="objectiveSelect">
-              <option value="awareness">Awareness</option>
-              <option value="first_order">First order</option>
-              <option value="repeat_order">Repeat order</option>
-              <option value="category_expansion">Category expansion</option>
-            </select>
-          </label>
-        </div>
+        <!-- Campaign Action Brief -->
+        <article class="card oe-brief-card">
+          <div class="section-title"><p class="eyebrow">Campaign Action Brief</p><h3>Decision-grade brief</h3></div>
+          <div id="oeBrief" class="oe-brief">
+            <p class="note">Configure your wedge above, then generate a brief.</p>
+          </div>
+          <div class="button-row oe-brief-actions">
+            <button class="primary-btn" id="oeGenerateBrief">Generate brief</button>
+            <button class="secondary-btn" id="oeCopyBrief">Copy brief</button>
+            <button class="secondary-btn" id="oeExportJson">Export JSON</button>
+            <button class="secondary-btn" id="oeMarkValidation">Mark needs validation</button>
+          </div>
+          <div id="oeValidationBanner" class="oe-validation-banner hidden"></div>
+        </article>
 
         <div class="grid two-col">
-          <article class="card score-card">
-            <p class="eyebrow">Opportunity score</p>
-            <div class="score-main"><span id="scoreValue">--</span><small>/100</small></div>
-            <p id="scoreVerdict" class="verdict"></p>
-            <div id="scoreBreakdown" class="breakdown"></div>
+          <!-- Evidence Ledger -->
+          <article class="card oe-evidence-card">
+            <p class="eyebrow">Evidence Ledger</p>
+            <h3>Supporting sources &amp; confidence</h3>
+            <div id="oeEvidenceLedger" class="oe-evidence-ledger"></div>
           </article>
 
-          <article class="card">
-            <p class="eyebrow">Decision readout</p>
-            <h3 id="wedgeTitle">Select a city-language-category wedge</h3>
-            <p id="wedgeNarrative" class="body-copy"></p>
-            <div class="decision-columns">
-              <div>
-                <h4>Top reasons</h4>
-                <div id="attractiveReasons" class="guardrail-list"></div>
-              </div>
-              <div>
-                <h4>Top risks</h4>
-                <div id="wedgeRisks" class="guardrail-list"></div>
-              </div>
-            </div>
-            <div id="guardrails" class="guardrail-list"></div>
+          <!-- Live Signal Readiness -->
+          <article class="card oe-signals-card">
+            <p class="eyebrow">Live Signal Connectors</p>
+            <h3>Data readiness &amp; automation layer</h3>
+            <div id="oeSignals" class="oe-signals"></div>
           </article>
         </div>
 
-        <article class="card wide-card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Ranked opportunities</p>
-              <h3>Top city-language wedges from the current seed model</h3>
+        <!-- Learning Loop -->
+        <article class="card oe-learning-card" id="oeLearningLoop">
+          <div class="section-title"><p class="eyebrow">Learning Loop</p><h3>How results improve future decisions</h3></div>
+          <div class="oe-learning-flow">
+            <div class="oe-learning-step">
+              <div class="oe-learning-num">1</div>
+              <div class="oe-learning-text"><strong>Run pilot</strong><br>Execute a measured campaign with tracked CTR, CVR, CAC.</div>
             </div>
-            <span class="pill">Editable in data/city_language_seed.json</span>
+            <div class="oe-learning-connector"></div>
+            <div class="oe-learning-step">
+              <div class="oe-learning-num">2</div>
+              <div class="oe-learning-text"><strong>Upload results</strong><br>Add pilot CSV to the Tracker tab. Real data replaces assumptions.</div>
+            </div>
+            <div class="oe-learning-connector"></div>
+            <div class="oe-learning-step">
+              <div class="oe-learning-num">3</div>
+              <div class="oe-learning-text"><strong>Re-score opportunity</strong><br>Updated confidence and scores flow back into the Opportunity Engine.</div>
+            </div>
+            <div class="oe-learning-connector"></div>
+            <div class="oe-learning-step">
+              <div class="oe-learning-num">4</div>
+              <div class="oe-learning-text"><strong>Refine campaign</strong><br>Sharper brief, better channel mix, validated benchmark — repeat.</div>
+            </div>
           </div>
-          <div id="rankingTable" class="table-wrap"></div>
         </article>
       </section>
 
-      <!-- BRIEFS SECTION -->
-      <section id="briefs" class="panel">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Report generator</p>
-            <h2>Professional GTM content report</h2>
-          </div>
-          <p class="section-note">Produces an intern-readable report without claiming campaign performance.</p>
+      <section id="whatsapp" class="panel">
+        <div class="section-title"><p class="eyebrow">WhatsApp conversion rail</p><h2>Conversation flow after wedge selection</h2></div>
+        <p class="note rail-note">WhatsApp is the conversion rail, not the strategy itself. Use it after the city-language-category wedge is defined.</p>
+        <div class="grid two-col">
+          <article class="card">
+            <div class="form-grid slim">
+              <label>Language<select id="waLanguageSelect"></select></label>
+              <label>Offer<select id="waOfferSelect">
+                <option>First-order coupon</option>
+                <option>Free delivery</option>
+                <option>Category bundle</option>
+                <option>Festival/local offer</option>
+              </select></label>
+            </div>
+            <div id="funnelStages" class="journey-map"></div>
+            <button id="copyWhatsapp" class="primary-btn">Copy WhatsApp message</button>
+          </article>
+          <article class="phone-card">
+            <div class="phone-shell">
+              <div class="phone-top">WhatsApp pilot preview</div>
+              <div id="whatsappPreview" class="chat-window"></div>
+            </div>
+          </article>
         </div>
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Measurement checklist</p><h3>What needs to be tracked</h3></div>
+          <div id="measurementChecklist" class="metric-chip-row"></div>
+        </article>
+      </section>
 
-        <!-- Report inputs: these local controls generate the markdown report in-browser. -->
-        <article class="card wide-card">
-          <div class="report-form">
+      <section id="planner" class="panel">
+        <div class="section-title"><p class="eyebrow">Experiment designer</p><h2>Structure a measured pilot</h2></div>
+        <article class="card">
+          <div class="form-grid">
+            <label>Platform<select id="plannerPlatformSelect"></select></label>
+            <label>City<select id="plannerCitySelect"></select></label>
+            <label>Language<select id="plannerLanguageSelect"></select></label>
+            <label>Category<select id="plannerCategorySelect"></select></label>
+            <label>Objective<select id="plannerObjectiveSelect">
+              <option>Awareness</option><option selected>First order</option><option>Repeat order</option><option>Category expansion</option><option>Society penetration</option><option>WhatsApp activation</option>
+            </select></label>
+            <label>Budget range<select id="plannerBudgetSelect"><option>INR 0-5K</option><option selected>INR 5K-15K</option><option>INR 15K-50K</option><option>INR 50K+</option></select></label>
+            <label>Duration<select id="plannerDurationSelect"><option>3 days</option><option selected>7 days</option><option>14 days</option><option>30 days</option></select></label>
+            <label>Offer type<select id="plannerOfferSelect"><option>First-order coupon</option><option>Free delivery</option><option>Category bundle</option><option>Festival/local offer</option><option>No discount / content-led test</option></select></label>
+            <label class="span-two">Channel mix<select id="plannerChannelSelect" multiple size="5"><option selected>WhatsApp broadcast</option><option>WhatsApp group seeding</option><option selected>Instagram Reels</option><option>YouTube Shorts</option><option>Push notification</option><option>In-app banner</option><option>Society ambassador</option></select></label>
+          </div>
+        </article>
+        <button id="generateExperimentPlan" class="primary-btn">Generate experiment plan</button>
+        <div id="experimentPlanOutput" class="planner-output"></div>
+      </section>
+
+      <section id="unit" class="panel">
+        <div class="section-title"><p class="eyebrow">Unit economics modeler</p><h2>User-adjustable assumption model</h2></div>
+        <article class="card">
+          <div class="form-grid">
+            <label>AOV<input id="unitAovInput" type="number" value="527" /></label>
+            <label>Gross margin %<input id="unitMarginInput" type="number" value="18" /></label>
+            <label>Repeat orders/month<input id="unitRepeatInput" type="number" step="0.1" value="2.4" /></label>
+            <label>CAC<input id="unitCacInput" type="number" value="300" /></label>
+            <label>Customer lifetime months<input id="unitLifetimeInput" type="number" value="3" /></label>
+          </div>
+        </article>
+        <div id="unitEconomicsOutput" class="kpi-strip"></div>
+      </section>
+
+      <section id="report" class="panel">
+        <div class="section-title"><p class="eyebrow">Report generator</p><h2>Stakeholder-ready GTM brief</h2></div>
+        <article class="card">
+          <div class="form-grid">
             <label>Platform<select id="reportPlatformSelect"></select></label>
             <label>City<select id="reportCitySelect"></select></label>
             <label>Language<select id="reportLanguageSelect"></select></label>
             <label>Category<select id="reportCategorySelect"></select></label>
-            <label>Target audience<input id="targetAudienceInput" type="text" value="Urban quick-commerce users in serviceable pin codes" /></label>
-            <label>Campaign objective<select id="reportObjectiveSelect">
-              <option value="awareness">Awareness</option>
-              <option value="first_order">First order</option>
-              <option value="repeat_order">Repeat order</option>
-              <option value="category_expansion">Category expansion</option>
-            </select></label>
+            <label>Campaign objective<select id="reportObjectiveSelect"><option>Awareness</option><option selected>First order</option><option>Repeat order</option><option>Category expansion</option><option>Society penetration</option><option>WhatsApp activation</option></select></label>
             <label>Offer<input id="offerInput" type="text" value="Pin-code limited launch offer with category deep link" /></label>
-            <label>Campaign duration<input id="durationInput" type="text" value="14 days" /></label>
-            <label>Channel mix<select id="channelMixSelect" multiple size="6">
-              <option selected>WhatsApp</option>
-              <option selected>Instagram Reels</option>
-              <option>YouTube Shorts</option>
-              <option selected>Push Notifications</option>
-              <option>In-app Banner</option>
-              <option>Society Ambassador</option>
-            </select></label>
-            <label>Tone<select id="toneSelect">
-              <option>premium</option>
-              <option selected>local</option>
-              <option>urgent</option>
-              <option>trust-building</option>
-              <option>festive</option>
-            </select></label>
-            <label class="span-two">Notes<textarea id="reportNotesInput" rows="4" placeholder="Add manager notes, category constraints, or neighborhood context."></textarea></label>
+            <label>Tone<select id="toneSelect"><option>Premium</option><option selected>Local</option><option>Urgent</option><option>Trust-building</option><option>Festive</option><option>Youthful</option><option>Household reliability</option><option>Operational / performance-focused</option></select></label>
+            <label class="span-two">Channel mix<select id="channelMixSelect" multiple size="5"><option selected>WhatsApp broadcast</option><option>WhatsApp group seeding</option><option selected>Instagram Reels</option><option>YouTube Shorts</option><option selected>Push notification</option><option>In-app banner</option><option>Society ambassador</option></select></label>
+            <label class="span-two">Notes<textarea id="reportNotesInput" rows="3" placeholder="Add manager notes or operating constraints."></textarea></label>
+          </div>
+          <div class="button-row">
+            <button id="generateReport" class="primary-btn">Generate executive report</button>
+            <button id="copyBrief" class="secondary-btn">Copy</button>
+            <button id="downloadHtmlReport" class="secondary-btn">Download as HTML</button>
+            <button id="downloadReport" class="secondary-btn">Download as Markdown</button>
+            <button id="printReport" class="secondary-btn">Print / Save as PDF</button>
+            <button id="clearReport" class="secondary-btn">Clear</button>
           </div>
         </article>
-
-        <article class="card wide-card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Generated markdown</p>
-              <h3 id="briefHeadline">Quick-commerce GTM content report</h3>
-            </div>
-            <div class="button-row">
-              <button id="generateReport" class="primary-btn">Generate Manager Report</button>
-              <button id="copyBrief" class="secondary-btn">Copy Report</button>
-              <button id="downloadReport" class="secondary-btn">Download as Markdown</button>
-              <button id="printReport" class="secondary-btn">Print / Save as PDF</button>
-            </div>
-          </div>
-          <pre id="briefOutput" class="brief-box"></pre>
-        </article>
+        <article id="briefOutput" class="report-document"></article>
       </section>
 
-      <!-- FUNNEL SECTION -->
-      <section id="funnel" class="panel">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Conversion layer</p>
-            <h2>WhatsApp funnel blueprint</h2>
-          </div>
-          <p class="section-note">Designed for pilot execution; native-language copy should be reviewed by a speaker.</p>
-        </div>
-
-        <div class="funnel">
-          <div class="funnel-step">
-            <span>01</span>
-            <h3>Local trigger</h3>
-            <p id="funnelTrigger">Evening snack / urgent household need / last-minute guest occasion.</p>
-          </div>
-          <div class="funnel-step">
-            <span>02</span>
-            <h3>WhatsApp touch</h3>
-            <p>Broadcast, apartment group, creator story, or society ambassador share.</p>
-          </div>
-          <div class="funnel-step">
-            <span>03</span>
-            <h3>Offer</h3>
-            <p id="funnelOffer">Pin-code limited offer with delivery promise and expiry window.</p>
-          </div>
-          <div class="funnel-step">
-            <span>04</span>
-            <h3>Conversion</h3>
-            <p>App open → add to cart → first order → repeat purchase within 7 days.</p>
-          </div>
-        </div>
-
-        <article class="card wide-card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Copy skeleton</p>
-              <h3>WhatsApp message template</h3>
-            </div>
-            <button id="copyWhatsapp" class="primary-btn">Copy WhatsApp copy</button>
-          </div>
-          <pre id="whatsappOutput" class="brief-box"></pre>
-        </article>
-      </section>
-
-      <!-- EXPERIMENT SECTION -->
       <section id="experiments" class="panel">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Pilot layer</p>
-            <h2>Experiment tracker</h2>
-          </div>
-          <p class="section-note">Upload your campaign CSV later; the dashboard will compute performance live in-browser.</p>
-        </div>
-
-        <article class="card wide-card">
-          <div class="upload-box">
-            <div>
-              <h3>Upload your pilot campaign CSV</h3>
-              <p>Use the included <code>data/campaign_template.csv</code>. Keep the same column names.</p>
-            </div>
-            <input id="campaignUpload" type="file" accept=".csv" />
-          </div>
+        <div class="section-title"><p class="eyebrow">Pilot tracker</p><h2>CSV-based campaign metrics</h2></div>
+        <article class="card upload-card">
+          <div><h3>Upload real pilot CSV</h3><p class="note">Use <code>data/campaign_template.csv</code>. CTR, CAC, CVR, repeat rate, and revenue stay unavailable until upload.</p></div>
+          <input id="campaignUpload" type="file" accept=".csv" />
         </article>
-
-        <div id="campaignEmpty" class="empty-state">
-          <h3>No campaign data uploaded yet</h3>
-          <p>This is intentional. We will not fake CTR, CAC, conversion, or repeat rate. Once you run a small pilot, upload the CSV here.</p>
-        </div>
-
-        <div id="campaignDashboard" class="hidden">
-          <div id="campaignKpis" class="kpi-grid"></div>
-          <div class="grid two-col">
-            <article class="card">
-              <h3>Spend vs conversions</h3>
-              <div id="campaignChart" class="chart"></div>
-            </article>
-            <article class="card">
-              <h3>Best performing experiments</h3>
-              <div id="campaignTable" class="table-wrap"></div>
-            </article>
-          </div>
-        </div>
+        <div id="campaignEmpty" class="empty-state">Upload a pilot CSV to see campaign metrics.</div>
+        <div id="campaignDashboard" class="hidden"><div id="campaignKpis" class="kpi-strip"></div><div id="campaignChart" class="chart"></div><div id="campaignTable" class="table-wrap"></div></div>
       </section>
 
-      <!-- SOURCES SECTION -->
       <section id="sources" class="panel">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Audit trail</p>
-            <h2>Sources and confidence levels</h2>
-          </div>
-          <p class="section-note">Everything should be either sourced or clearly marked as a model assumption.</p>
-        </div>
-        <article class="card wide-card">
-          <div id="sourceTable" class="table-wrap"></div>
-        </article>
+        <div class="section-title"><p class="eyebrow">Source audit trail</p><h2>Verified sources and confidence tiers</h2></div>
+        <div id="sourceTable" class="source-grid"></div>
       </section>
     </main>
   </div>
 
-  <!-- app.js is the brain: it fills the dashboard with data and makes buttons work. -->
   <script src="app.js"></script>
 </body>
 </html>
