@@ -270,7 +270,7 @@
     <nav class="tabbar" aria-label="Dashboard sections">
       <button class="tab active" data-tab="market">Market</button>
       <button class="tab" data-tab="scorer">Opportunity Engine</button>
-      <button class="tab" data-tab="whatsapp">WhatsApp</button>
+      <button class="tab" data-tab="campaign">Campaign</button>
       <button class="tab" data-tab="planner">Planner</button>
       <button class="tab" data-tab="unit">Unit Economics</button>
       <button class="tab" data-tab="report">Report</button>
@@ -476,34 +476,98 @@
         </article>
       </section>
 
-      <section id="whatsapp" class="panel">
-        <div class="section-title"><p class="eyebrow">WhatsApp conversion rail</p><h2>Conversation flow after wedge selection</h2></div>
-        <p class="note rail-note">WhatsApp is the conversion rail, not the strategy itself. Use it after the city-language-category wedge is defined.</p>
+      <section id="campaign" class="panel">
+        <!-- A) Campaign Control Panel -->
+        <article class="card ca-control-panel">
+          <div class="section-title"><p class="eyebrow">Campaign Autopilot</p><h2>Turn opportunity into action</h2></div>
+          <div id="caConnectionStatus" class="ca-connection-grid"></div>
+          <div class="form-grid slim">
+            <label>Campaign objective<select id="caObjective"><option value="">Select objective</option><option>Awareness</option><option>Trial</option><option>Conversion</option><option>Retention</option><option>Repeat purchase</option><option>Win-back</option></select></label>
+            <label>Channel<select id="caChannel"><option value="">Select channel</option><option>WhatsApp</option><option>SMS</option><option>Push notification</option><option>In-app banner</option><option>Quick-commerce listing copy</option><option>Local social creative</option></select></label>
+            <label>Offer angle<select id="caOffer"><option value="">Select offer type</option><option>First-order coupon</option><option>Free delivery</option><option>Category bundle</option><option>Festival / local offer</option><option>No discount / content-led test</option></select></label>
+            <label>Tone<select id="caTone"><option value="Premium">Premium</option><option value="Local">Local</option><option value="Urgent">Urgent</option><option value="Trust-building">Trust-building</option><option value="Festive">Festive</option><option value="Youthful">Youthful</option><option value="Household reliability">Household reliability</option><option value="Operational">Operational / performance-focused</option></select></label>
+          </div>
+        </article>
+
+        <!-- B) Draft Generator + C) Localization -->
         <div class="grid two-col">
-          <article class="card">
-            <div class="form-grid slim">
-              <label>Language<select id="waLanguageSelect"></select></label>
-              <label>Offer<select id="waOfferSelect">
-                <option>First-order coupon</option>
-                <option>Free delivery</option>
-                <option>Category bundle</option>
-                <option>Festival/local offer</option>
-              </select></label>
+          <article class="card ca-draft-card">
+            <div class="section-title"><p class="eyebrow">Campaign Draft</p><h3>Automated message drafts</h3></div>
+            <span class="ca-draft-label">Drafts — review before use</span>
+            <div id="caDrafts" class="ca-draft-output"><p class="note">Configure your campaign above, then generate drafts.</p></div>
+            <div class="button-row ca-draft-actions">
+              <button class="primary-btn" id="caGenerateDraft">Generate campaign draft</button>
+              <button class="secondary-btn" id="caCopyDraft">Copy draft</button>
+              <button class="secondary-btn" id="caAddToBrief">Add to campaign brief</button>
+              <button class="secondary-btn" id="caExportJson">Export campaign JSON</button>
             </div>
-            <div id="funnelStages" class="journey-map"></div>
-            <button id="copyWhatsapp" class="primary-btn">Copy WhatsApp message</button>
           </article>
-          <article class="phone-card">
-            <div class="phone-shell">
-              <div class="phone-top">WhatsApp pilot preview</div>
-              <div id="whatsappPreview" class="chat-window"></div>
-            </div>
+          <article class="card ca-local-card">
+            <div class="section-title"><p class="eyebrow">Localization</p><h3>Language and culture context</h3></div>
+            <div id="caLocalInfo" class="ca-local-output"><p class="note">Select a city and language to see localization context.</p></div>
           </article>
         </div>
-        <article class="card">
-          <div class="section-title"><p class="eyebrow">Measurement checklist</p><h3>What needs to be tracked</h3></div>
-          <div id="measurementChecklist" class="metric-chip-row"></div>
+
+        <!-- D) Measurement Tracker -->
+        <article class="card ca-tracker-card">
+          <div class="section-title"><p class="eyebrow">Measurement Tracker</p><h3>Pilot performance metrics</h3></div>
+          <div id="caTrackerEmpty" class="ca-empty-state">
+            <p>Pilot campaign CSV not uploaded. Upload data to calculate delivery rate, open rate, CTR, reply rate, CVR, repeat rate, unsubscribe rate, CAC proxy, and ROAS.</p>
+            <div class="ca-upload-row">
+              <label class="ca-upload-label">Upload pilot CSV<input id="caCsvUpload" type="file" accept=".csv" /></label>
+              <button class="secondary-btn" id="caCalculateMetrics" disabled>Calculate metrics</button>
+            </div>
+            <div id="caMissingColumns" class="ca-missing-info hidden"></div>
+          </div>
+          <div id="caTrackerDashboard" class="hidden">
+            <div id="caMetricsKpis" class="kpi-strip"></div>
+            <details class="ca-formula-details">
+              <summary>How metrics are calculated</summary>
+              <div id="caFormulas" class="ca-formulas"></div>
+            </details>
+          </div>
         </article>
+
+        <!-- E) Quality Checklist + F) What needs tracking -->
+        <div class="grid two-col">
+          <article class="card ca-checklist-card">
+            <div class="section-title"><p class="eyebrow">Quality Checklist</p><h3>Campaign readiness</h3></div>
+            <div id="caChecklist" class="ca-checklist"></div>
+          </article>
+          <article class="card ca-tracking-card">
+            <div class="section-title"><p class="eyebrow">What needs to be tracked</p><h3>Measurement plan</h3></div>
+            <div id="caTrackingMetrics" class="ca-tracking-list"></div>
+          </article>
+        </div>
+
+        <!-- H) Learning Loop -->
+        <article class="card ca-learning-card">
+          <div class="section-title"><p class="eyebrow">Learning Loop</p><h3>How results improve future decisions</h3></div>
+          <div class="ca-learning-flow">
+            <div class="ca-learning-step"><div class="ca-learning-num">1</div><div class="ca-learning-text"><strong>Run pilot</strong><br>Execute measured campaign with tracked metrics.</div></div>
+            <div class="ca-learning-connector"></div>
+            <div class="ca-learning-step"><div class="ca-learning-num">2</div><div class="ca-learning-text"><strong>Upload CSV</strong><br>Real data replaces assumptions in the tracker.</div></div>
+            <div class="ca-learning-connector"></div>
+            <div class="ca-learning-step"><div class="ca-learning-num">3</div><div class="ca-learning-text"><strong>Calculate metrics</strong><br>Delivery rate, CTR, CVR, CAC proxy, repeat rate.</div></div>
+            <div class="ca-learning-connector"></div>
+            <div class="ca-learning-step"><div class="ca-learning-num">4</div><div class="ca-learning-text"><strong>Compare hypothesis</strong><br>Does pilot data support or challenge the OE score?</div></div>
+            <div class="ca-learning-connector"></div>
+            <div class="ca-learning-step"><div class="ca-learning-num">5</div><div class="ca-learning-text"><strong>Mark learnings</strong><br>Save notes for next campaign cycle.</div></div>
+            <div class="ca-learning-connector"></div>
+            <div class="ca-learning-step"><div class="ca-learning-num">6</div><div class="ca-learning-text"><strong>Refine campaign</strong><br>Sharper brief, validated benchmark, updated score.</div></div>
+          </div>
+          <div class="ca-note-section">
+            <label class="ca-note-label">Learning Note<textarea id="caLearningNote" class="ca-note-input" placeholder="What did you learn from this campaign? What would you change?"></textarea></label>
+            <div class="button-row">
+              <button class="secondary-btn" id="caSaveNote">Save learning note</button>
+              <button class="secondary-btn" id="caClearNote">Clear learning note</button>
+            </div>
+          </div>
+        </article>
+
+        <div class="button-row" style="justify-content: flex-end;">
+          <button class="secondary-btn" id="caResetCampaign">Reset campaign</button>
+        </div>
       </section>
 
       <section id="planner" class="panel">

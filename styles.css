@@ -2522,6 +2522,355 @@ code {
   margin-bottom: 0;
 }
 
+/* ===== CAMPAIGN AUTOPILOT ===== */
+
+.ca-control-panel { margin-bottom: 0; }
+
+.ca-connection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.ca-connection-item {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--card-border);
+}
+
+.ca-connection-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-2);
+  margin-bottom: 4px;
+}
+
+.ca-connection-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ca-connection-missing {
+  font-size: 12px;
+  color: var(--danger);
+  font-style: italic;
+}
+
+.ca-draft-card { display: flex; flex-direction: column; gap: 16px; }
+
+.ca-draft-label {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted-2);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ca-draft-output { min-height: 80px; }
+
+.ca-draft-field {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.ca-draft-field:last-child { border-bottom: none; }
+
+.ca-draft-field-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-2);
+  margin-bottom: 4px;
+}
+
+.ca-draft-field-value {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.ca-draft-actions { margin-top: 4px; }
+
+.ca-local-card { display: flex; flex-direction: column; gap: 14px; }
+
+.ca-local-output { display: flex; flex-direction: column; gap: 12px; }
+
+.ca-local-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--card-border);
+}
+
+.ca-local-key {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-2);
+}
+
+.ca-local-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+  max-width: 60%;
+}
+
+.ca-local-flag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 6px;
+  font-weight: 700;
+}
+
+.ca-local-flag.confident { background: rgba(52,211,153,0.12); color: var(--success); border: 1px solid rgba(52,211,153,0.25); }
+.ca-local-flag.partial { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+.ca-local-flag.unvalidated { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.25); }
+
+.ca-tracker-card { margin-bottom: 0; }
+
+.ca-empty-state {
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--muted-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ca-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ca-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px dashed var(--card-border);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ca-upload-label:hover {
+  border-color: var(--theme-primary-border);
+  background: var(--theme-primary-dim);
+}
+
+.ca-upload-label input[type="file"] {
+  font-size: 13px;
+}
+
+.ca-missing-info {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(248,113,113,0.06);
+  border: 1px solid rgba(248,113,113,0.2);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.ca-formula-details {
+  margin-top: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 0 16px;
+  background: var(--glass-bg);
+}
+
+.ca-formula-details summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ca-formula-details[open] summary { margin-bottom: 10px; }
+
+.ca-formulas { padding-bottom: 14px; }
+
+.ca-formula-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 13px;
+}
+
+.ca-formula-row:last-child { border-bottom: none; }
+
+.ca-formula-name { font-weight: 700; color: var(--text); min-width: 140px; }
+.ca-formula-calc { color: var(--muted-2); font-family: ui-monospace, monospace; font-size: 12px; }
+
+.ca-checklist { display: flex; flex-direction: column; gap: 8px; }
+
+.ca-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--card-border);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ca-checklist-item:hover { border-color: var(--theme-primary-border); }
+
+.ca-check-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.ca-check-icon.ready { background: rgba(52,211,153,0.15); color: var(--success); border: 1.5px solid rgba(52,211,153,0.35); }
+.ca-check-icon.needs-validation { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1.5px solid rgba(251,191,36,0.35); }
+.ca-check-icon.missing { background: rgba(248,113,113,0.12); color: var(--danger); border: 1.5px solid rgba(248,113,113,0.25); }
+
+.ca-check-text { font-size: 13px; color: var(--text-secondary); }
+.ca-check-text strong { color: var(--text); }
+
+.ca-tracking-list { display: flex; flex-direction: column; gap: 8px; }
+
+.ca-tracking-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--card-border);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ca-tracking-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  flex-shrink: 0;
+}
+
+.ca-learning-card { margin-top: 18px; }
+
+.ca-learning-flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  padding: 8px 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.ca-learning-flow::-webkit-scrollbar { display: none; }
+
+.ca-learning-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 130px;
+  text-align: center;
+}
+
+.ca-learning-num {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--theme-primary-dim);
+  border: 2px solid var(--theme-primary-border);
+  color: var(--theme-primary);
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.ca-learning-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.ca-learning-text strong { color: var(--text); }
+
+.ca-learning-connector {
+  width: 32px;
+  height: 2px;
+  background: var(--card-border);
+  margin-top: 16px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.ca-learning-step:last-of-type + .ca-learning-connector { display: none; }
+
+.ca-note-section { margin-top: 22px; }
+
+.ca-note-label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-2);
+  margin-bottom: 8px;
+}
+
+.ca-note-input {
+  width: 100%;
+  min-height: 90px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: var(--glass-bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+
+.ca-note-input::placeholder { color: var(--muted-2); }
+.ca-note-input:focus { outline: none; border-color: var(--theme-primary-border); }
+
 /* ===== BENCHMARK COCKPIT ===== */
 
 .bm-detail-panel {
@@ -3263,13 +3612,27 @@ code {
 .bm-detail-actions { flex-direction: column; }
 .bm-detail-actions button { width: 100%; }
 
-.oe-learning-flow {
+.ca-learning-flow {
     flex-direction: column;
     align-items: center;
     gap: 0;
   }
 
-  .oe-learning-connector {
+  .ca-learning-connector {
+    width: 2px;
+    height: 20px;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .ca-connection-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ca-checklist-item { padding: 10px 12px; }
+  .ca-tracking-item { padding: 8px 10px; }
+
+  .oe-learning-flow {
     width: 2px;
     height: 20px;
     margin-top: 0;

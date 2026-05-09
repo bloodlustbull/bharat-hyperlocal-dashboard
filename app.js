@@ -12,6 +12,9 @@ let pilotCampaignUploaded = false;
 let reportExportReady = false;
 let lastReportMarkdown = "";
 let lastReportHtml = "";
+let caCsvData = null;
+let caDraftData = null;
+let caMetrics = null;
 
 const PLATFORM_THEMES = {
   blinkit: {
@@ -98,7 +101,7 @@ const BRAND_ICONS = {
     glow: "rgba(247, 201, 72, 0.45)"
   },
   instamart: {
-    image: "assets/logos/swiggy logo.webp",
+    image: "assets/logos/instamart.webp",
     gradient: "linear-gradient(135deg, #ff5722 0%, #e64a19 50%, #ff7043 100%)",
     glow: "rgba(255, 87, 34, 0.45)"
   },
@@ -108,7 +111,7 @@ const BRAND_ICONS = {
     glow: "rgba(139, 60, 247, 0.45)"
   },
   bigbasket_now: {
-    image: "assets/logos/big basket.webp",
+    image: "assets/logos/bigbasket.webp",
     gradient: "linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #4ade80 100%)",
     glow: "rgba(34, 197, 94, 0.45)"
   },
@@ -472,10 +475,10 @@ function navigateOeStep(step) {
     2: ".oe-score-card",
     3: "#benchmarkCockpit",
     4: ".oe-brief-card",
-    5: "#whatsapp",
+    5: "#campaign",
     6: "#oeLearningLoop"
   };
-  const tabMap = { 1: "scorer", 2: "scorer", 3: "market", 4: "scorer", 5: "whatsapp", 6: "scorer" };
+  const tabMap = { 1: "scorer", 2: "scorer", 3: "market", 4: "scorer", 5: "campaign", 6: "scorer" };
   const tab = tabMap[step];
   if (tab) goToTab(tab);
   const selector = selectorMap[step];
@@ -639,6 +642,7 @@ function goToTab(tabName) {
   document.querySelectorAll(".panel").forEach(panel => panel.classList.toggle("active-panel", panel.id === tabName));
   if (tabName === "market") renderMarketPulse();
   if (tabName === "scorer") renderScore();
+  if (tabName === "campaign") renderCampaignAutopilot();
 }
 
 function enterDashboard(platformId) {
@@ -794,7 +798,6 @@ function populateSeedControls() {
   updateLanguageOptions("citySelect", "languageSelect");
   updateLanguageOptions("plannerCitySelect", "plannerLanguageSelect");
   updateLanguageOptions("reportCitySelect", "reportLanguageSelect");
-  $("waLanguageSelect").innerHTML = (seedData.allowedLanguages || []).map(lang => `<option>${escapeHtml(lang)}</option>`).join("");
 }
 
 function cityFor(selectId) {
@@ -1097,7 +1100,23 @@ async function copyBrief() {
 
 function exportJson() {
   if (!window._oeBriefData) { generateBrief(); }
-  const json = JSON.stringify(window._oeBriefData, null, 2);
+  const exportData = { ...window._oeBriefData };
+  if (caDraftData) {
+    exportData.campaign = {
+      city: caDraftData.city,
+      useCase: caDraftData.useCase,
+      language: caDraftData.language,
+      benchmark: caDraftData.benchmark,
+      objective: caDraftData.objective,
+      channel: caDraftData.channel,
+      messageDrafts: caDraftData.messageDrafts,
+      trackingMetrics: caDraftData.trackingMetrics || ["Delivered", "Opened", "Clicked", "Replied", "Converted", "Repeat purchase", "Unsubscribed", "Spend", "Revenue"],
+      metricResults: caMetrics || null,
+      validationWarnings: caDraftData.validationWarnings,
+      learningNote: localStorage.getItem("caLearningNote") || ""
+    };
+  }
+  const json = JSON.stringify(exportData, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1377,41 +1396,382 @@ function renderSources() {
   }).join("");
 }
 
-function renderWhatsapp() {
+function caGetContext() {
   const city = cityFor("citySelect");
-  const language = $("waLanguageSelect").value || "English";
-  const category = $("categorySelect").value || seedData.categories?.[0] || "Grocery";
-  const offer = $("waOfferSelect").value;
-  const review = language === "English" ? "English control copy — ready for testing." : `${language} version requires native-speaker review before launch.`;
-  const stages = [
-    ["Trigger moment", `${category} need in ${city.city}: urgent, repeat, or impulse-led.`, "Occasion fit", "Log occasion and timing."],
-    ["Audience segment", `${language}-speaking users in serviceable pin codes.`, "Audience quality", "Verify city, language, and serviceability."],
-    ["First touch", `Need ${category.toLowerCase()} quickly in ${city.city}?`, "CTR", "Send approved control and local variant."],
-    ["Offer / nudge", `${offer} for serviceable pin codes only.`, "App opens", "Confirm offer terms and expiry."],
-    ["App deep-link click", "Tracked category-page link.", "Deep-link CTR", "Attach UTM parameters to deep link."],
-    ["First order", "User orders only if stock, price, and serviceability fit.", "CVR / CAC", "Log orders in campaign CSV after pilot."],
-    ["Repeat-order reminder", "Consent-aware reminder after replenishment window.", "Repeat rate", "Respect frequency limits and consent."],
-    ["Measurement", "CSV upload calculates CTR, CAC, CVR, repeat rate, and revenue.", "Pilot metrics", "Review tracker before claiming outcomes."]
+  const language = $("languageSelect")?.value || "English";
+  const category = $("categorySelect")?.value || "Grocery";
+  const platform = getPlatforms().find(item => item.id === ($("scorerPlatformSelect")?.value || "blinkit")) || selectedPlatform();
+  const objective = $("objectiveSelect")?.value || "";
+  const channel = ($("channelSelect")?.value) || "";
+  const caObjective = $("caObjective")?.value || "";
+  const caChannel = $("caChannel")?.value || "";
+  const caOffer = $("caOffer")?.value || "";
+  const caTone = $("caTone")?.value || "Local";
+  return { city, language, category, platform, objective, channel, caObjective, caChannel, caOffer, caTone };
+}
+
+function renderCampaignAutopilot() {
+  const ctx = caGetContext();
+  const bmBrand = bmSelectedBrand || $("scorerPlatformSelect")?.value;
+  const bmDims = BM_DIMENSIONS[bmBrand];
+  const result = calculateScore(ctx.city, ctx.language, ctx.category);
+  const confidence = result.confidence || "D";
+
+  const connections = [
+    { label: "City", value: ctx.city.city || "Not selected", ok: !!ctx.city.city },
+    { label: "Language", value: ctx.language, ok: true },
+    { label: "Category", value: ctx.category, ok: true },
+    { label: "Benchmark", value: ctx.platform.name, ok: true, bmBrand },
+    { label: "OE Score", value: result.score ? `${result.score}/100` : "Not scored", ok: !!result.score },
+    { label: "Confidence", value: confidence, ok: confidence !== "D", raw: confidence }
   ];
-  $("funnelStages").innerHTML = stages.map(([title, body, metric, action], index) => `
-    <div class="journey-step">
-      <span class="stage-number">${index + 1}</span>
-      <div>
-        <strong>${escapeHtml(title)}</strong>
-        <p>${escapeHtml(body)}</p>
-        <span class="metric-chip">${escapeHtml(metric)}</span>
-        <p class="note">${escapeHtml(action)}</p>
-      </div>
+
+  $("caConnectionStatus").innerHTML = connections.map(c => `
+    <div class="ca-connection-item">
+      <div class="ca-connection-label">${escapeHtml(c.label)}</div>
+      ${c.ok
+        ? `<div class="ca-connection-value">${escapeHtml(c.value)}</div>`
+        : `<div class="ca-connection-missing">${escapeHtml(c.value)}</div>`}
     </div>
   `).join("");
-  $("whatsappPreview").innerHTML = `
-    <div class="chat-bubble system">${escapeHtml(review)}</div>
-    <div class="chat-bubble">${escapeHtml(stages[2][1])}</div>
-    <div class="chat-bubble">${escapeHtml(stages[3][1])}</div>
-    <div class="chat-bubble system">Open app — attach tracked deep link with UTM parameters.</div>
-    <div class="chat-bubble system">Reminder only after consent and manager-approved frequency.</div>
-  `;
-  $("measurementChecklist").innerHTML = ["CTR", "Deep-link clicks", "CVR", "CAC", "First orders", "Repeat order rate", "Revenue", "Orders per pin code"].map(metric => `<span class="metric-chip">${escapeHtml(metric)}${pilotCampaignUploaded ? "" : " — awaiting pilot data"}</span>`).join("");
+
+  renderCALocalization(ctx);
+  renderCAChecklist(ctx, bmDims, confidence);
+  renderCATrackingList();
+  renderCAMeasurementTracker();
+}
+
+function renderCALocalization(ctx) {
+  if (!ctx.city.city) {
+    $("caLocalInfo").innerHTML = `<p class="note">Select a city and language in the Opportunity Engine to see localization context.</p>`;
+    return;
+  }
+  const cityData = (seedData.cities || []).find(c => c.city === ctx.city.city) || {};
+  const lang = ctx.language;
+  const isVernacular = ["Telugu", "Tamil", "Marathi", "Kannada", "Malayalam", "Odia", "Punjabi", "Haryanvi"].includes(lang);
+  const langConf = cityData.confidence || "D";
+  const localRows = [
+    { key: "Recommended language", val: lang, flag: isVernacular ? "Vernacular" : "English-supplemented", flagClass: langConf === "A" || langConf === "B" ? "confident" : "partial" },
+    { key: "Direction", val: "LTR", flag: "", flagClass: "" },
+    { key: "Culture context", val: cityData.notes || ctx.city.state || "No specific context available", flag: "", flagClass: "" },
+    { key: "Localization confidence", val: langConf, flag: langConf === "D" ? "Unvalidated" : langConf === "C" ? "Partial" : "Source-backed", flagClass: langConf === "D" ? "unvalidated" : langConf === "C" ? "partial" : "confident" }
+  ];
+  if (langConf === "D") localRows.push({ key: "Note", val: "Language context requires validation.", flag: "", flagClass: "unvalidated" });
+
+  $("caLocalInfo").innerHTML = localRows.map(r => `
+    <div class="ca-local-row">
+      <span class="ca-local-key">${escapeHtml(r.key)}</span>
+      <span class="ca-local-val">${escapeHtml(r.val)}${r.flag ? `<span class="ca-local-flag ${r.flagClass}">${escapeHtml(r.flag)}</span>` : ""}</span>
+    </div>
+  `).join("");
+}
+
+function generateCampaignDraft() {
+  const ctx = caGetContext();
+  if (!ctx.city.city) { $("caDrafts").innerHTML = `<p class="note">Select market first — choose a city in the Opportunity Engine.</p>`; return; }
+  if (!ctx.caObjective) { $("caDrafts").innerHTML = `<p class="note">Select a campaign objective above to generate drafts.</p>`; return; }
+  if (!ctx.caChannel) { $("caDrafts").innerHTML = `<p class="note">Select a channel above to generate drafts.</p>`; return; }
+
+  const result = calculateScore(ctx.city, ctx.language, ctx.category);
+  const confidence = result.confidence || "D";
+  const bmBrand = bmSelectedBrand || $("scorerPlatformSelect")?.value;
+  const bmDims = BM_DIMENSIONS[bmBrand];
+  const platformName = ctx.platform.name;
+  const cityName = ctx.city.city;
+  const cat = ctx.category.toLowerCase();
+  const obj = ctx.caObjective;
+  const channel = ctx.caChannel;
+  const offer = ctx.caOffer || "No discount";
+  const tone = ctx.caTone;
+  const isVernacular = ["Telugu", "Tamil", "Marathi", "Kannada", "Malayalam", "Odia", "Punjabi", "Haryanvi"].includes(ctx.language);
+
+  let primary, short, cta, followup, reminder, unsubscribe;
+
+  if (obj === "Awareness") {
+    primary = `${cat.charAt(0).toUpperCase() + cat.slice(1)} delivery is now live in ${cityName}. Explore available options near you.`;
+    short = `${cat.charAt(0).toUpperCase() + cat.slice(1)} in ${cityName} — tap to explore.`;
+    cta = "Explore now";
+    followup = `Still looking for ${cat} options in ${cityName}? Here are this week's picks.`;
+    reminder = `Your ${cat} delivery is available in ${cityName}. Open the app to browse.`;
+  } else if (obj === "Trial" || obj === "Conversion") {
+    primary = `Need ${cat} fast in ${cityName}? Try a quick local convenience run today. ${offer !== "No discount" ? offer + " for first orders." : ""}`.trim();
+    short = `${cat.charAt(0).toUpperCase() + cat.slice(1)} in ${cityName} — first order offer inside.`;
+    cta = "Order now";
+    followup = `Your ${cat} order is a tap away. ${offer !== "No discount" ? offer + " still available." : "Fast delivery in your area."}`;
+    reminder = `${cat.charAt(0).toUpperCase() + cat.slice(1)} delivery reminder — your offer expires soon.`;
+  } else if (obj === "Retention" || obj === "Repeat purchase") {
+    primary = `Welcome back. Your regular ${cat} order is ready to reorder in one tap.`;
+    short = `Reorder your ${cat} essentials in ${cityName}.`;
+    cta = "Reorder now";
+    followup = `Haven't ordered ${cat} this week? Your usual items are in stock.`;
+    reminder = `Your ${cat} replenishment window is open. Tap to reorder.`;
+  } else if (obj === "Win-back") {
+    primary = `It's been a while. Your ${cat} delivery in ${cityName} is still here — come back with a fresh offer.`;
+    short = `We miss you — ${cat} delivery in ${cityName}, with a comeback offer.`;
+    cta = "Come back";
+    followup = `Your local ${cat} selection has expanded. Browse what's new in ${cityName}.`;
+    reminder = `Last chance — your win-back offer for ${cat} delivery expires today.`;
+  } else {
+    primary = `${cat.charAt(0).toUpperCase() + cat.slice(1)} delivery in ${cityName} — explore what's available near you.`;
+    short = `${cat} delivery in ${cityName} — tap to explore.`;
+    cta = "Try now";
+    followup = `More ${cat} options available in ${cityName} this week.`;
+    reminder = `Your ${cat} delivery reminder for ${cityName}.`;
+  }
+
+  unsubscribe = "Reply STOP to opt out.";
+  if (channel === "WhatsApp" || channel === "SMS") {
+    unsubscribe = "Reply STOP to opt out of future messages.";
+  } else if (channel === "Push notification" || channel === "In-app banner") {
+    unsubscribe = "Manage notification preferences in app settings.";
+  } else {
+    unsubscribe = "Opt out through platform preferences.";
+  }
+
+  if (isVernacular) {
+    primary += ` [${ctx.language} variant requires native-speaker review before launch]`;
+  }
+
+  const validationWarnings = [];
+  if (confidence === "D") validationWarnings.push("Score confidence is D — decision-grade data is missing.");
+  if (!bmDims) validationWarnings.push("Benchmark not selected — recommendations may lack precision.");
+  if (cityFor("citySelect").confidence === "D") validationWarnings.push("City data is model assumption — requires validation.");
+
+  caDraftData = {
+    city: cityName,
+    useCase: ctx.category,
+    language: ctx.language,
+    benchmark: platformName,
+    objective: obj,
+    channel,
+    offer,
+    tone,
+    messageDrafts: { primary, short, cta, followup, reminder, unsubscribe },
+    score: result.score,
+    confidence,
+    validationWarnings,
+    generatedAt: new Date().toISOString(),
+    localization: { recommendedLanguage: ctx.language, direction: "LTR", confidence: ctx.city.confidence || "D" }
+  };
+
+  const fields = [
+    { label: "Primary message", value: primary },
+    { label: "Short version", value: short },
+    { label: "CTA", value: cta },
+    { label: "Follow-up message", value: followup },
+    { label: "Reminder message", value: reminder },
+    { label: "Unsubscribe line", value: unsubscribe }
+  ];
+
+  $("caDrafts").innerHTML = fields.map(f => `
+    <div class="ca-draft-field">
+      <div class="ca-draft-field-label">${escapeHtml(f.label)}</div>
+      <div class="ca-draft-field-value">${escapeHtml(f.value)}</div>
+    </div>
+  `).join("") + (validationWarnings.length ? `
+    <div class="ca-draft-field" style="border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.06); border-radius: 10px; padding: 10px 14px;">
+      <div class="ca-draft-field-label" style="color: var(--danger);">Validation warnings</div>
+      <div class="ca-draft-field-value">${validationWarnings.map(w => `<div>${escapeHtml(w)}</div>`).join("")}</div>
+    </div>
+  ` : "");
+
+  window._oeBriefData = window._oeBriefData || null;
+}
+
+async function copyCampaignDraft() {
+  if (!caDraftData) { generateCampaignDraft(); }
+  if (!caDraftData) return;
+  const drafts = caDraftData.messageDrafts;
+  const text = [
+    `Campaign Draft — ${caDraftData.city} / ${caDraftData.useCase} / ${caDraftData.channel}`,
+    `Objective: ${caDraftData.objective}`,
+    `Tone: ${caDraftData.tone}`,
+    `Offer: ${caDraftData.offer}`,
+    ``,
+    `Primary: ${drafts.primary}`,
+    `Short: ${drafts.short}`,
+    `CTA: ${drafts.cta}`,
+    `Follow-up: ${drafts.followup}`,
+    `Reminder: ${drafts.reminder}`,
+    `Unsubscribe: ${drafts.unsubscribe}`,
+    ``,
+    `Drafts — review before use.`
+  ].join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    $("caCopyDraft").textContent = "Copied!";
+    setTimeout(() => { $("caCopyDraft").textContent = "Copy draft"; }, 2000);
+  } catch(e) { console.warn("Clipboard write failed", e); }
+}
+
+function caAddToBrief() {
+  if (!caDraftData) { generateCampaignDraft(); }
+  if (!caDraftData) return;
+  if (!window._oeBriefData) { generateBrief(); }
+  if (!window._oeBriefData) return;
+
+  const lens = `[Campaign: ${caDraftData.objective} via ${caDraftData.channel}] Primary: "${caDraftData.messageDrafts.primary}" CTA: "${caDraftData.messageDrafts.cta}"`;
+  if (window._oeBriefData.caCampaignLens && window._oeBriefData.caCampaignLens.includes(caDraftData.objective + " via " + caDraftData.channel)) {
+    $("caAddToBrief").textContent = "Already added";
+    setTimeout(() => { $("caAddToBrief").textContent = "Add to campaign brief"; }, 2000);
+    return;
+  }
+  window._oeBriefData.caCampaignLens = (window._oeBriefData.caCampaignLens || "") + lens + "\n";
+  window._oeBriefData.channel = caDraftData.channel;
+  window._oeBriefData.campaignObjective = caDraftData.objective;
+  window._oeBriefData.messageDrafts = caDraftData.messageDrafts;
+  window._oeBriefData.trackingMetrics = ["Delivered", "Opened", "Clicked", "Replied", "Converted", "Repeat purchase", "Unsubscribed", "Spend", "Revenue"];
+  window._oeBriefData.metricResults = caMetrics || null;
+  window._oeBriefData.validationWarnings = caDraftData.validationWarnings;
+  window._oeBriefData.learningNote = localStorage.getItem("caLearningNote") || "";
+
+  const briefEl = $("oeBrief");
+  const existingCampaign = briefEl.querySelector("[data-ca-campaign]");
+  if (existingCampaign) existingCampaign.remove();
+
+  const campaignDiv = document.createElement("div");
+  campaignDiv.setAttribute("data-ca-campaign", "true");
+  campaignDiv.classList.add("oe-brief-field");
+  campaignDiv.innerHTML = `<div class="oe-brief-field-label">Campaign Autopilot</div><div class="oe-brief-field-value">${escapeHtml(lens)}</div>`;
+  briefEl.appendChild(campaignDiv);
+
+  $("caAddToBrief").textContent = "Added to brief";
+  setTimeout(() => { $("caAddToBrief").textContent = "Add to campaign brief"; }, 2000);
+}
+
+function exportCampaignJson() {
+  if (!caDraftData) { generateCampaignDraft(); }
+  if (!caDraftData) return;
+  const exportData = {
+    ...caDraftData,
+    benchmark: caDraftData.benchmark,
+    trackingMetrics: caMetrics ? caMetrics : null,
+    learningNote: localStorage.getItem("caLearningNote") || ""
+  };
+  if (window._oeBriefData) {
+    exportData.briefCity = window._oeBriefData.city;
+    exportData.briefCategory = window._oeBriefData.category;
+    exportData.briefLanguage = window._oeBriefData.language;
+    exportData.briefPlatform = window._oeBriefData.platform;
+    exportData.briefBenchmark = window._oeBriefData.benchmark;
+  }
+  const json = JSON.stringify(exportData, null, 2);
+  downloadText(`campaign-${caDraftData.city}-${caDraftData.useCase}-${caDraftData.channel.replace(/\s+/g, "-")}.json`, json, "application/json");
+}
+
+function calculateCAMetrics(rows) {
+  const totals = rows.reduce((acc, row) => {
+    acc.sent += Number(row.sent || 0);
+    acc.delivered += Number(row.delivered || 0);
+    acc.opened += Number(row.opened || 0);
+    acc.clicked += Number(row.clicked || 0);
+    acc.replied += Number(row.replied || 0);
+    acc.converted += Number(row.converted || 0);
+    acc.repeat_purchases += Number(row.repeat_purchases || 0);
+    acc.unsubscribed += Number(row.unsubscribed || 0);
+    acc.spend += Number(row.spend || 0);
+    acc.revenue += Number(row.revenue || 0);
+    return acc;
+  }, { sent: 0, delivered: 0, opened: 0, clicked: 0, replied: 0, converted: 0, repeat_purchases: 0, unsubscribed: 0, spend: 0, revenue: 0 });
+
+  const pct = (n, d) => d > 0 ? (n / d * 100).toFixed(1) + "%" : "Not calculable";
+  const ratio = (n, d) => d > 0 ? (n / d).toFixed(2) + "x" : "Not calculable";
+  const currency = (n) => "INR " + formatNumber(Math.round(n));
+
+  return {
+    totals,
+    metrics: [
+      { name: "Delivery Rate", calc: "delivered / sent", value: totals.sent ? (totals.delivered / totals.sent * 100).toFixed(1) + "%" : "Not calculable" },
+      { name: "Open Rate", calc: "opened / delivered", value: totals.delivered ? (totals.opened / totals.delivered * 100).toFixed(1) + "%" : "Not calculable" },
+      { name: "CTR", calc: totals.delivered ? "clicked / delivered" : "clicked / opened", value: totals.delivered ? (totals.clicked / totals.delivered * 100).toFixed(1) + "%" : totals.opened ? pct(totals.clicked, totals.opened) : "Not calculable" },
+      { name: "Reply Rate", calc: "replied / delivered", value: totals.delivered ? (totals.replied / totals.delivered * 100).toFixed(1) + "%" : "Not calculable" },
+      { name: "CVR", calc: "converted / clicked", value: totals.clicked ? (totals.converted / totals.clicked * 100).toFixed(1) + "%" : "Not calculable" },
+      { name: "Repeat Rate", calc: "repeat_purchases / converted", value: totals.converted ? (totals.repeat_purchases / totals.converted * 100).toFixed(1) + "%" : "Not calculable" },
+      { name: "Unsubscribe Rate", calc: "unsubscribed / delivered", value: totals.delivered ? (totals.unsubscribed / totals.delivered * 100).toFixed(1) + "%" : "Not calculable" },
+      { name: "CAC Proxy", calc: "spend / converted", value: totals.converted ? currency(totals.spend / totals.converted) : "Not calculable" },
+      { name: "ROAS", calc: "revenue / spend", value: totals.spend ? (totals.revenue / totals.spend).toFixed(2) + "x" : "Not calculable" }
+    ]
+  };
+}
+
+function renderCAMeasurementTracker() {
+  if (!caCsvData) {
+    $("caTrackerEmpty").classList.remove("hidden");
+    $("caTrackerDashboard").classList.add("hidden");
+    $("caCalculateMetrics").disabled = true;
+    return;
+  }
+  $("caTrackerEmpty").classList.add("hidden");
+  $("caTrackerDashboard").classList.remove("hidden");
+  $("caCalculateMetrics").disabled = false;
+
+  const result = calculateCAMetrics(caCsvData);
+  caMetrics = result;
+
+  $("caMetricsKpis").innerHTML = result.metrics.map(m => `
+    <article class="kpi-card">
+      <div class="kpi-label">${escapeHtml(m.name)}</div>
+      <div class="kpi-value">${escapeHtml(m.value)}</div>
+      <div class="kpi-caption">${escapeHtml(m.calc)}</div>
+    </article>
+  `).join("");
+
+  const requiredCols = ["sent", "delivered", "opened", "clicked", "replied", "converted", "repeat_purchases", "unsubscribed", "spend", "revenue"];
+  const headers = Object.keys(caCsvData[0] || {});
+  const missing = requiredCols.filter(c => !headers.includes(c));
+  const missingEl = $("caMissingColumns");
+  if (missing.length > 0) {
+    missingEl.classList.remove("hidden");
+    missingEl.textContent = `Missing columns: ${missing.join(", ")}. Some metrics may show "Not calculable".`;
+  } else {
+    missingEl.classList.add("hidden");
+  }
+
+  $("caFormulas").innerHTML = result.metrics.map(m => `
+    <div class="ca-formula-row"><span class="ca-formula-name">${escapeHtml(m.name)}</span><span class="ca-formula-calc">${escapeHtml(m.calc)}</span></div>
+  `).join("");
+}
+
+function renderCAChecklist(ctx, bmDims, confidence) {
+  const items = [
+    { label: "Market selected", ok: !!ctx.city.city, status: ctx.city.city ? "ready" : "missing" },
+    { label: "Benchmark selected", ok: !!bmDims, status: bmDims ? "ready" : "missing" },
+    { label: "Language context available", ok: true, status: (ctx.city.confidence || "D") === "D" ? "needs-validation" : "ready" },
+    { label: "Campaign objective selected", ok: !!ctx.caObjective, status: ctx.caObjective ? "ready" : "missing" },
+    { label: "Message draft generated", ok: !!caDraftData, status: caDraftData ? "ready" : "missing" },
+    { label: "Tracking metrics identified", ok: true, status: "ready" },
+    { label: "CSV uploaded", ok: !!caCsvData, status: caCsvData ? "ready" : "missing" },
+    { label: "Evidence confidence acceptable", ok: confidence !== "D", status: confidence === "D" ? "needs-validation" : "ready" }
+  ];
+  $("caChecklist").innerHTML = items.map(it => {
+    const icon = it.status === "ready" ? "✓" : it.status === "needs-validation" ? "!" : "—";
+    const text = it.status === "ready" ? it.label : it.status === "needs-validation" ? `${it.label} — needs validation` : `${it.label} — missing`;
+    return `<div class="ca-checklist-item"><span class="ca-check-icon ${it.status}">${icon}</span><span class="ca-check-text">${escapeHtml(text)}</span></div>`;
+  }).join("");
+}
+
+function renderCATrackingList() {
+  const metrics = ["Delivered", "Opened", "Clicked", "Replied", "Converted", "Repeat purchase", "Unsubscribed", "Spend", "Revenue"];
+  $("caTrackingMetrics").innerHTML = metrics.map(m => `
+    <div class="ca-tracking-item"><span class="ca-tracking-dot"></span>${escapeHtml(m)}</div>
+  `).join("");
+}
+
+function resetCampaign() {
+  caDraftData = null;
+  caCsvData = null;
+  caMetrics = null;
+  $("caObjective").value = "";
+  $("caChannel").value = "";
+  $("caOffer").value = "";
+  $("caTone").value = "Local";
+  $("caCsvUpload").value = "";
+  $("caLearningNote").value = "";
+  $("caDrafts").innerHTML = `<p class="note">Configure your campaign above, then generate drafts.</p>`;
+  $("caTrackerEmpty").classList.remove("hidden");
+  $("caTrackerDashboard").classList.add("hidden");
+  $("caMissingColumns").classList.add("hidden");
+  renderCampaignAutopilot();
 }
 
 function selectedMulti(id) {
@@ -1656,15 +2016,30 @@ function attachEvents() {
   });
   $("benchmarkLensSelect").addEventListener("change", renderPlatformIntelligence);
   ["marketMetricSelect", "marketViewSelect"].forEach(id => $(id).addEventListener("change", renderMarketPulse));
-  [["citySelect", "languageSelect"], ["plannerCitySelect", "plannerLanguageSelect"], ["reportCitySelect", "reportLanguageSelect"]].forEach(([cityId, langId]) => $(cityId).addEventListener("change", () => { updateLanguageOptions(cityId, langId); renderScore(); renderExperimentPlan(); renderReport(); renderWhatsapp(); renderBenchmarkCockpit(); }));
-  ["languageSelect", "categorySelect", "scorerPlatformSelect", "objectiveSelect"].forEach(id => $(id).addEventListener("change", () => { renderScore(); renderWhatsapp(); renderBenchmarkCockpit(); }));
+  [["citySelect", "languageSelect"], ["plannerCitySelect", "plannerLanguageSelect"], ["reportCitySelect", "reportLanguageSelect"]].forEach(([cityId, langId]) => $(cityId).addEventListener("change", () => { updateLanguageOptions(cityId, langId); renderScore(); renderExperimentPlan(); renderReport(); renderCampaignAutopilot(); renderBenchmarkCockpit(); }));
+  ["languageSelect", "categorySelect", "scorerPlatformSelect", "objectiveSelect"].forEach(id => $(id).addEventListener("change", () => { renderScore(); renderCampaignAutopilot(); renderBenchmarkCockpit(); }));
   $("channelSelect")?.addEventListener("change", () => { renderScore(); });
   $("oeGenerateBrief").addEventListener("click", generateBrief);
   $("oeCopyBrief").addEventListener("click", copyBrief);
   $("oeExportJson").addEventListener("click", exportJson);
   $("oeMarkValidation").addEventListener("click", markValidation);
   $("oeExplainToggle").addEventListener("click", () => { toggleExplain(); if (!$("oeExplainPanel").classList.contains("hidden")) renderExplainPanel(); });
-  ["waLanguageSelect", "waOfferSelect"].forEach(id => $(id).addEventListener("change", renderWhatsapp));
+  ["caObjective", "caChannel", "caOffer", "caTone"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", renderCampaignAutopilot); });
+  $("caGenerateDraft").addEventListener("click", generateCampaignDraft);
+  $("caCopyDraft").addEventListener("click", copyCampaignDraft);
+  $("caAddToBrief").addEventListener("click", caAddToBrief);
+  $("caExportJson").addEventListener("click", exportCampaignJson);
+  $("caCalculateMetrics").addEventListener("click", () => { if (caCsvData) renderCAMeasurementTracker(); });
+  $("caCsvUpload").addEventListener("change", event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => { caCsvData = parseCsv(evt.target.result); renderCAMeasurementTracker(); renderCampaignAutopilot(); };
+    reader.readAsText(file);
+  });
+  $("caSaveNote").addEventListener("click", () => { localStorage.setItem("caLearningNote", $("caLearningNote").value); $("caSaveNote").textContent = "Saved!"; setTimeout(() => { $("caSaveNote").textContent = "Save learning note"; }, 2000); });
+  $("caClearNote").addEventListener("click", () => { $("caLearningNote").value = ""; localStorage.removeItem("caLearningNote"); });
+  $("caResetCampaign").addEventListener("click", resetCampaign);
   ["plannerPlatformSelect", "plannerLanguageSelect", "plannerCategorySelect", "plannerObjectiveSelect", "plannerBudgetSelect", "plannerDurationSelect", "plannerOfferSelect", "plannerChannelSelect"].forEach(id => $(id).addEventListener("change", renderExperimentPlan));
   $("generateExperimentPlan").addEventListener("click", renderExperimentPlan);
   ["unitAovInput", "unitMarginInput", "unitRepeatInput", "unitCacInput", "unitLifetimeInput"].forEach(id => $(id).addEventListener("input", renderUnitEconomics));
@@ -1676,7 +2051,6 @@ function attachEvents() {
   $("downloadHtmlReport").addEventListener("click", () => downloadText("bharat-hyperlocal-gtm-report.html", `<!doctype html><html><body>${lastReportHtml}</body></html>`, "text/html"));
   $("downloadReport").addEventListener("click", () => downloadText("bharat-hyperlocal-gtm-report.md", lastReportMarkdown, "text/markdown"));
   $("printReport").addEventListener("click", () => window.print());
-  $("copyWhatsapp").addEventListener("click", async () => { try { await navigator.clipboard.writeText($("whatsappPreview").innerText); $("copyWhatsapp").textContent = "Copied!"; setTimeout(() => { $("copyWhatsapp").textContent = "Copy message"; }, 2000); } catch(e) { console.warn("Clipboard write failed", e); } });
   $("campaignUpload").addEventListener("change", event => {
     const file = event.target.files[0];
     if (!file) return;
@@ -1699,6 +2073,8 @@ async function init() {
   seedData = await loadJson("data/city_language_seed.json", FALLBACK_SEED_DATA);
   populatePlatformControls();
   populateSeedControls();
+  const savedNote = localStorage.getItem("caLearningNote");
+  if (savedNote && $("caLearningNote")) $("caLearningNote").value = savedNote;
   setActivePlatform("blinkit");
   renderKpis();
   renderPlatformIntelligence();
@@ -1707,7 +2083,7 @@ async function init() {
   renderProofCards();
   renderSources();
   renderScore();
-  renderWhatsapp();
+  renderCampaignAutopilot();
   renderExperimentPlan();
   renderUnitEconomics();
   renderReport();
