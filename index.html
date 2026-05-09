@@ -11,12 +11,38 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-platform="blinkit">
+  <!-- Three.js 3D overlay -->
+  <div id="three-container" class="active"></div>
+
+  <div id="three-overlay">
+    <div id="intro-content">
+      <div id="intro-eyebrow">
+        <span class="pulse-dot"></span>
+        Bharat Hyperlocal Intelligence Platform
+      </div>
+      <h1 id="intro-title">Discover India's <span class="gradient-text">Local Market Intelligence</span></h1>
+      <p id="intro-subtitle">City-language opportunity wedges, quick-commerce benchmarks, and decision-grade campaign actions — built on auditable public sources.</p>
+      <button id="intro-cta">
+        <span>Explore Platforms</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="brand-hint" class="hidden">
+    <span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 15l-2 5L9 9l11 4-5 2z"/></svg>
+      Select a platform to enter the dashboard
+    </span>
+  </div>
+
+  <div id="brand-label"></div>
   <div class="ambient-field" aria-hidden="true"></div>
   <div class="mesh-gradient" aria-hidden="true"></div>
   <div class="floating-particles" id="floatingParticles" aria-hidden="true"></div>
 
-  <!-- Landing view: cinematic hero + storytelling sections -->
-  <section id="landingView" class="entry-view view-active">
+  <!-- Landing view: cinematic hero + storytelling sections (3D replaces this) -->
+  <section id="landingView" class="entry-view" style="display:none;">
     <div class="hero-fullscreen">
       <div class="landing-orb orb-a" aria-hidden="true"></div>
       <div class="landing-orb orb-b" aria-hidden="true"></div>
@@ -276,6 +302,7 @@
       <button class="tab" data-tab="report">Report</button>
       <button class="tab" data-tab="experiments">Tracker</button>
       <button class="tab" data-tab="sources">Sources</button>
+      <button class="tab" data-tab="signals">Signals</button>
     </nav>
 
     <main>
@@ -515,12 +542,19 @@
             <p>Pilot campaign CSV not uploaded. Upload data to calculate delivery rate, open rate, CTR, reply rate, CVR, repeat rate, unsubscribe rate, CAC proxy, and ROAS.</p>
             <div class="ca-upload-row">
               <label class="ca-upload-label">Upload pilot CSV<input id="caCsvUpload" type="file" accept=".csv" /></label>
-              <button class="secondary-btn" id="caCalculateMetrics" disabled>Calculate metrics</button>
             </div>
-            <div id="caMissingColumns" class="ca-missing-info hidden"></div>
           </div>
           <div id="caTrackerDashboard" class="hidden">
+            <div id="caTrackerStatus" class="ca-status-message"></div>
             <div id="caMetricsKpis" class="kpi-strip"></div>
+            <div class="ca-tracker-actions">
+              <button class="secondary-btn" id="caViewColumns">View detected columns</button>
+              <button class="secondary-btn" id="caResetCsv">Reset CSV data</button>
+            </div>
+            <details id="caColumnMapping" class="ca-formula-details hidden">
+              <summary>CSV Column Mapping</summary>
+              <div id="caColumnMappingContent" class="ca-formulas"></div>
+            </details>
             <details class="ca-formula-details">
               <summary>How metrics are calculated</summary>
               <div id="caFormulas" class="ca-formulas"></div>
@@ -645,9 +679,86 @@
         <div class="section-title"><p class="eyebrow">Source audit trail</p><h2>Verified sources and confidence tiers</h2></div>
         <div id="sourceTable" class="source-grid"></div>
       </section>
+
+      <section id="signals" class="panel">
+        <div class="section-title"><p class="eyebrow">Market signal layer</p><h2>Live Market Signal Snapshot</h2></div>
+        <p class="note signal-disclaimer">Market signal snapshot — last updated from Tavily research (May 2025–May 2026). This is not a real-time API feed.</p>
+
+        <div class="signal-filters">
+          <div class="signal-filter-group">
+            <label class="signal-filter-label">Brand</label>
+            <select id="signalBrandFilter">
+              <option value="all">All brands</option>
+              <option value="Blinkit">Blinkit</option>
+              <option value="Swiggy Instamart">Swiggy Instamart</option>
+              <option value="Zepto">Zepto</option>
+              <option value="BigBasket">BigBasket</option>
+              <option value="Dunzo">Dunzo</option>
+              <option value="Industry">Market-wide</option>
+            </select>
+          </div>
+          <div class="signal-filter-group">
+            <label class="signal-filter-label">Signal type</label>
+            <select id="signalTypeFilter">
+              <option value="all">All types</option>
+              <option value="GOV/GMV/revenue update">GOV / GMV / Revenue</option>
+              <option value="dark store/expansion update">Expansion</option>
+              <option value="profitability/loss/margin">Profitability</option>
+              <option value="retail media/advertising signal">Retail Media</option>
+              <option value="regulatory/legal/policy signal">Regulatory</option>
+              <option value="competitive move">Competition</option>
+              <option value="consumer behavior signal">Consumer Behavior</option>
+              <option value="operational risk signal">Operational Risk</option>
+              <option value="funding/investment">Funding</option>
+              <option value="shutdown/distress/cautionary signal">Shutdown / Distress</option>
+            </select>
+          </div>
+          <div class="signal-filter-group">
+            <label class="signal-filter-label">Confidence</label>
+            <select id="signalConfFilter">
+              <option value="all">All levels</option>
+              <option value="A">A — Verified primary source</option>
+              <option value="B">B — Credible third-party</option>
+              <option value="C">C — Directional / partial</option>
+              <option value="D">D — Needs validation</option>
+            </select>
+          </div>
+          <div class="signal-filter-group signal-filter-flags">
+            <label class="signal-filter-checkbox"><input type="checkbox" id="signalNeedsValidation" /> Needs validation only</label>
+          </div>
+        </div>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Top signals</p><h3>Highest-impact market signals</h3></div>
+          <div id="signalTopList" class="signal-list"></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Monthly timeline</p><h3>Signal timeline: May 2025 — May 2026</h3></div>
+          <div id="signalTimeline" class="signal-timeline"></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Brand signal map</p><h3>Signals by platform</h3></div>
+          <div id="signalBrandMap" class="signal-brand-map"></div>
+        </article>
+
+        <div class="button-row">
+          <button class="secondary-btn" id="signalViewAudit">View source audit</button>
+          <button class="secondary-btn" id="signalExportJson">Export signals JSON</button>
+        </div>
+      </section>
     </main>
   </div>
 
-  <script src="app.js"></script>
+  <div id="signalDetailModal" class="signal-modal hidden">
+    <div class="signal-modal-content">
+      <button class="signal-modal-close" id="signalModalClose">&times;</button>
+      <div id="signalModalBody"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

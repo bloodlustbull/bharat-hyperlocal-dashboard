@@ -15,6 +15,8 @@ let lastReportHtml = "";
 let caCsvData = null;
 let caDraftData = null;
 let caMetrics = null;
+let caColumnMapping = null;
+let marketSignals = null;
 
 const PLATFORM_THEMES = {
   blinkit: {
@@ -116,7 +118,7 @@ const BRAND_ICONS = {
     glow: "rgba(34, 197, 94, 0.45)"
   },
   dunzo: {
-    image: "assets/logos/Dunzo.png",
+    image: "assets/logos/dunzo.png",
     gradient: "linear-gradient(135deg, #c58a1f 0%, #a67518 50%, #daa544 100%)",
     glow: "rgba(197, 138, 31, 0.45)"
   }
@@ -615,7 +617,10 @@ function selectedTheme() {
 
 function setView(viewId) {
   ["landingView", "brandMapView", "dashboardView"].forEach(id => {
-    $(id)?.classList.toggle("view-active", id === viewId);
+    const view = $(id);
+    if (!view) return;
+    view.style.display = "";
+    view.classList.toggle("view-active", id === viewId);
   });
 }
 
@@ -624,6 +629,9 @@ function showLanding() {
 }
 
 function showBrandMap() {
+  $("three-overlay")?.classList.add("hidden");
+  $("three-container")?.classList.add("hidden");
+  $("brand-hint")?.classList.add("hidden");
   setView("brandMapView");
   const startScreen = $("benchmarkStart");
   const orbit = $("brandOrbit");
@@ -978,7 +986,7 @@ function oeSignals() {
   rows.push({ name: "Public market data", status: hasSources && hasMetrics ? "loaded" : "partial" });
   rows.push({ name: "City-language seed data", status: hasCities ? "loaded" : "partial" });
   rows.push({ name: "Platform intelligence", status: hasPlatformIntel ? "loaded" : "partial" });
-  rows.push({ name: "Campaign CSV", status: "not-connected" });
+  rows.push({ name: "Campaign CSV", status: caCsvData ? "loaded" : "not-connected" });
   rows.push({ name: "News / live market feed", status: "not-connected" });
   rows.push({ name: "Google Trends / search demand", status: "not-connected" });
   return rows;
@@ -1659,73 +1667,265 @@ function exportCampaignJson() {
   downloadText(`campaign-${caDraftData.city}-${caDraftData.useCase}-${caDraftData.channel.replace(/\s+/g, "-")}.json`, json, "application/json");
 }
 
-function calculateCAMetrics(rows) {
-  const totals = rows.reduce((acc, row) => {
-    acc.sent += Number(row.sent || 0);
-    acc.delivered += Number(row.delivered || 0);
-    acc.opened += Number(row.opened || 0);
-    acc.clicked += Number(row.clicked || 0);
-    acc.replied += Number(row.replied || 0);
-    acc.converted += Number(row.converted || 0);
-    acc.repeat_purchases += Number(row.repeat_purchases || 0);
-    acc.unsubscribed += Number(row.unsubscribed || 0);
-    acc.spend += Number(row.spend || 0);
-    acc.revenue += Number(row.revenue || 0);
-    return acc;
-  }, { sent: 0, delivered: 0, opened: 0, clicked: 0, replied: 0, converted: 0, repeat_purchases: 0, unsubscribed: 0, spend: 0, revenue: 0 });
+const CA_COLUMN_ALIASES = {
+  sent: ["sent", "sends", "messages_sent", "total_sent"],
+  delivered: ["delivered", "deliveries", "messages_delivered"],
+  opened: ["opened", "opens", "open"],
+  clicked: ["clicked", "clicks", "link_clicks", "ctr_clicks"],
+  converted: ["converted", "conversions", "orders", "purchases"],
+  repeat_purchases: ["repeat_purchases", "repeat_orders", "repeat", "repeat_orders_7d"],
+  unsubscribed: ["unsubscribed", "opt_out", "stop", "unsubscribes"],
+  spend: ["spend", "cost", "ad_spend", "amount_spent", "spend_inr"],
+  revenue: ["revenue", "sales", "gmv", "order_value", "revenue_inr"],
+  replied: ["replied", "replies", "reply", "responses"]
+};
 
-  const pct = (n, d) => d > 0 ? (n / d * 100).toFixed(1) + "%" : "Not calculable";
-  const ratio = (n, d) => d > 0 ? (n / d).toFixed(2) + "x" : "Not calculable";
-  const currency = (n) => "INR " + formatNumber(Math.round(n));
+function detectColumnMapping(headers) {
+  const mapping = {};
+  const detected = {};
+  const missing = [];
+  const normalized = headers.map(h => h.toLowerCase().trim().replace(/[\s-]+/g, "_"));
+  for (const [metricKey, aliases] of Object.entries(CA_COLUMN_ALIASES)) {
+    let found = null;
+    for (const alias of aliases) {
+      const idx = normalized.indexOf(alias.toLowerCase());
+      if (idx !== -1) {
+        found = headers[idx];
+        break;
+      }
+    }
+    if (found) {
+      mapping[metricKey] = found;
+      detected[metricKey] = found;
+    } else {
+      missing.push(metricKey);
+    }
+  }
+  return { mapping, detected, missing };
+}
 
-  return {
-    totals,
-    metrics: [
-      { name: "Delivery Rate", calc: "delivered / sent", value: totals.sent ? (totals.delivered / totals.sent * 100).toFixed(1) + "%" : "Not calculable" },
-      { name: "Open Rate", calc: "opened / delivered", value: totals.delivered ? (totals.opened / totals.delivered * 100).toFixed(1) + "%" : "Not calculable" },
-      { name: "CTR", calc: totals.delivered ? "clicked / delivered" : "clicked / opened", value: totals.delivered ? (totals.clicked / totals.delivered * 100).toFixed(1) + "%" : totals.opened ? pct(totals.clicked, totals.opened) : "Not calculable" },
-      { name: "Reply Rate", calc: "replied / delivered", value: totals.delivered ? (totals.replied / totals.delivered * 100).toFixed(1) + "%" : "Not calculable" },
-      { name: "CVR", calc: "converted / clicked", value: totals.clicked ? (totals.converted / totals.clicked * 100).toFixed(1) + "%" : "Not calculable" },
-      { name: "Repeat Rate", calc: "repeat_purchases / converted", value: totals.converted ? (totals.repeat_purchases / totals.converted * 100).toFixed(1) + "%" : "Not calculable" },
-      { name: "Unsubscribe Rate", calc: "unsubscribed / delivered", value: totals.delivered ? (totals.unsubscribed / totals.delivered * 100).toFixed(1) + "%" : "Not calculable" },
-      { name: "CAC Proxy", calc: "spend / converted", value: totals.converted ? currency(totals.spend / totals.converted) : "Not calculable" },
-      { name: "ROAS", calc: "revenue / spend", value: totals.spend ? (totals.revenue / totals.spend).toFixed(2) + "x" : "Not calculable" }
-    ]
-  };
+function sumCsvColumn(rows, mapping, key) {
+  const colName = mapping[key];
+  if (!colName) return null;
+  return rows.reduce((sum, row) => {
+    const val = Number(row[colName]);
+    return sum + (isNaN(val) ? 0 : val);
+  }, 0);
+}
+
+function calculateCAMetrics(rows, mapping) {
+  const totals = {};
+  for (const key of Object.keys(CA_COLUMN_ALIASES)) {
+    totals[key] = sumCsvColumn(rows, mapping, key);
+  }
+
+  const has = (key) => mapping[key] != null;
+  const val = (key) => totals[key];
+  const label = (key) => CA_COLUMN_ALIASES[key][0];
+
+  function missingMsg(keys) {
+    return keys.filter(k => !has(k)).map(k => label(k));
+  }
+
+  const metrics = [];
+
+  // Delivery Rate = delivered / sent
+  {
+    const missing = missingMsg(["delivered", "sent"]);
+    const num = val("delivered");
+    const den = val("sent");
+    if (missing.length) {
+      metrics.push({ name: "Delivery Rate", calc: "delivered / sent", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "Delivery Rate", calc: "delivered / sent", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "Delivery Rate", calc: "delivered / sent", value: (num / den * 100).toFixed(1) + "%", available: true });
+    }
+  }
+
+  // Open Rate = opened / delivered
+  {
+    const missing = missingMsg(["opened", "delivered"]);
+    const num = val("opened");
+    const den = val("delivered");
+    if (missing.length) {
+      metrics.push({ name: "Open Rate", calc: "opened / delivered", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "Open Rate", calc: "opened / delivered", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "Open Rate", calc: "opened / delivered", value: (num / den * 100).toFixed(1) + "%", available: true });
+    }
+  }
+
+  // CTR = clicked / delivered, or clicked / opened if delivered unavailable
+  {
+    let calc, num, den, missing;
+    if (has("delivered")) {
+      calc = "clicked / delivered";
+      missing = missingMsg(["clicked", "delivered"]);
+      num = val("clicked");
+      den = val("delivered");
+    } else if (has("opened")) {
+      calc = "clicked / opened (delivered unavailable)";
+      missing = missingMsg(["clicked"]);
+      num = val("clicked");
+      den = val("opened");
+    } else {
+      calc = "clicked / delivered";
+      missing = ["delivered", "opened"];
+      num = null;
+      den = null;
+    }
+    if (missing.length) {
+      metrics.push({ name: "CTR", calc, value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "CTR", calc, value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "CTR", calc, value: (num / den * 100).toFixed(1) + "%", available: true });
+    }
+  }
+
+  // Reply Rate = replied / delivered
+  {
+    const missing = missingMsg(["replied", "delivered"]);
+    const num = val("replied");
+    const den = val("delivered");
+    if (missing.length) {
+      metrics.push({ name: "Reply Rate", calc: "replied / delivered", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "Reply Rate", calc: "replied / delivered", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "Reply Rate", calc: "replied / delivered", value: (num / den * 100).toFixed(1) + "%", available: true });
+    }
+  }
+
+  // CVR = converted / clicked
+  {
+    const missing = missingMsg(["converted", "clicked"]);
+    const num = val("converted");
+    const den = val("clicked");
+    if (missing.length) {
+      metrics.push({ name: "CVR", calc: "converted / clicked", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "CVR", calc: "converted / clicked", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "CVR", calc: "converted / clicked", value: (num / den * 100).toFixed(1) + "%", available: true });
+    }
+  }
+
+  // Repeat Rate = repeat_purchases / converted
+  {
+    const missing = missingMsg(["repeat_purchases", "converted"]);
+    const num = val("repeat_purchases");
+    const den = val("converted");
+    if (missing.length) {
+      metrics.push({ name: "Repeat Rate", calc: "repeat_purchases / converted", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "Repeat Rate", calc: "repeat_purchases / converted", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "Repeat Rate", calc: "repeat_purchases / converted", value: (num / den * 100).toFixed(1) + "%", available: true });
+    }
+  }
+
+  // Unsubscribe Rate = unsubscribed / delivered
+  {
+    const missing = missingMsg(["unsubscribed", "delivered"]);
+    const num = val("unsubscribed");
+    const den = val("delivered");
+    if (missing.length) {
+      metrics.push({ name: "Unsubscribe Rate", calc: "unsubscribed / delivered", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "Unsubscribe Rate", calc: "unsubscribed / delivered", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "Unsubscribe Rate", calc: "unsubscribed / delivered", value: (num / den * 100).toFixed(1) + "%", available: true });
+    }
+  }
+
+  // CAC Proxy = spend / converted
+  {
+    const missing = missingMsg(["spend", "converted"]);
+    const num = val("spend");
+    const den = val("converted");
+    if (missing.length) {
+      metrics.push({ name: "CAC Proxy", calc: "spend / converted", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "CAC Proxy", calc: "spend / converted", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "CAC Proxy", calc: "spend / converted", value: "INR " + formatNumber(Math.round(num / den)), available: true });
+    }
+  }
+
+  // ROAS = revenue / spend
+  {
+    const missing = missingMsg(["revenue", "spend"]);
+    const num = val("revenue");
+    const den = val("spend");
+    if (missing.length) {
+      metrics.push({ name: "ROAS", calc: "revenue / spend", value: "Not calculable \u2014 missing column: " + missing.join(", "), available: false });
+    } else if (den === 0) {
+      metrics.push({ name: "ROAS", calc: "revenue / spend", value: "Not calculable \u2014 denominator is zero", available: false });
+    } else {
+      metrics.push({ name: "ROAS", calc: "revenue / spend", value: (num / den).toFixed(2) + "x", available: true });
+    }
+  }
+
+  const calculableCount = metrics.filter(m => m.available).length;
+  const notCalculableCount = metrics.length - calculableCount;
+
+  return { totals, metrics, calculableCount, notCalculableCount };
 }
 
 function renderCAMeasurementTracker() {
   if (!caCsvData) {
     $("caTrackerEmpty").classList.remove("hidden");
     $("caTrackerDashboard").classList.add("hidden");
-    $("caCalculateMetrics").disabled = true;
     return;
   }
   $("caTrackerEmpty").classList.add("hidden");
   $("caTrackerDashboard").classList.remove("hidden");
-  $("caCalculateMetrics").disabled = false;
 
-  const result = calculateCAMetrics(caCsvData);
+  if (!caColumnMapping) {
+    caColumnMapping = detectColumnMapping(Object.keys(caCsvData[0] || {}));
+  }
+
+  const result = calculateCAMetrics(caCsvData, caColumnMapping.mapping);
   caMetrics = result;
+  pilotCampaignUploaded = true;
+
+  const rowCount = caCsvData.length;
+  const headerList = Object.keys(caCsvData[0] || {});
+  const detectedColNames = Object.values(caColumnMapping.detected);
+  const allMetricKeys = Object.keys(CA_COLUMN_ALIASES);
+  const mappedCount = allMetricKeys.filter(k => caColumnMapping.mapping[k]).length;
+
+  $("caTrackerStatus").innerHTML = `
+    <div class="ca-status-row">
+      <span class="ca-status-success">&#10003; CSV imported successfully</span>
+      <span class="ca-status-stat">${rowCount} row${rowCount !== 1 ? "s" : ""} detected</span>
+      <span class="ca-status-stat">${result.calculableCount} metric${result.calculableCount !== 1 ? "s" : ""} calculable</span>
+      ${result.notCalculableCount > 0 ? `<span class="ca-status-warning">${result.notCalculableCount} metric${result.notCalculableCount !== 1 ? "s" : ""} need column mapping</span>` : ""}
+    </div>
+  `;
 
   $("caMetricsKpis").innerHTML = result.metrics.map(m => `
-    <article class="kpi-card">
+    <article class="kpi-card${m.available ? "" : " kpi-card--not-calculable"}">
       <div class="kpi-label">${escapeHtml(m.name)}</div>
-      <div class="kpi-value">${escapeHtml(m.value)}</div>
+      <div class="kpi-value${m.available ? "" : " kpi-value--warning"}">${escapeHtml(m.value)}</div>
       <div class="kpi-caption">${escapeHtml(m.calc)}</div>
     </article>
   `).join("");
 
-  const requiredCols = ["sent", "delivered", "opened", "clicked", "replied", "converted", "repeat_purchases", "unsubscribed", "spend", "revenue"];
-  const headers = Object.keys(caCsvData[0] || {});
-  const missing = requiredCols.filter(c => !headers.includes(c));
-  const missingEl = $("caMissingColumns");
-  if (missing.length > 0) {
-    missingEl.classList.remove("hidden");
-    missingEl.textContent = `Missing columns: ${missing.join(", ")}. Some metrics may show "Not calculable".`;
-  } else {
-    missingEl.classList.add("hidden");
-  }
+  $("caColumnMappingContent").innerHTML = `
+    <div class="ca-mapping-header">Columns detected in CSV: ${headerList.map(h => escapeHtml(h)).join(", ")}</div>
+    ${allMetricKeys.map(key => {
+      const mappedCol = caColumnMapping.mapping[key];
+      const canonicalName = CA_COLUMN_ALIASES[key][0];
+      return `<div class="ca-formula-row">
+        <span class="ca-formula-name">${escapeHtml(canonicalName)}</span>
+        <span class="ca-formula-calc">${mappedCol ? escapeHtml(mappedCol) : "Not mapped"}</span>
+      </div>`;
+    }).join("")}
+  `;
 
   $("caFormulas").innerHTML = result.metrics.map(m => `
     <div class="ca-formula-row"><span class="ca-formula-name">${escapeHtml(m.name)}</span><span class="ca-formula-calc">${escapeHtml(m.calc)}</span></div>
@@ -1760,6 +1960,7 @@ function renderCATrackingList() {
 function resetCampaign() {
   caDraftData = null;
   caCsvData = null;
+  caColumnMapping = null;
   caMetrics = null;
   $("caObjective").value = "";
   $("caChannel").value = "";
@@ -1770,7 +1971,20 @@ function resetCampaign() {
   $("caDrafts").innerHTML = `<p class="note">Configure your campaign above, then generate drafts.</p>`;
   $("caTrackerEmpty").classList.remove("hidden");
   $("caTrackerDashboard").classList.add("hidden");
-  $("caMissingColumns").classList.add("hidden");
+  const colMapping = $("caColumnMapping");
+  if (colMapping) colMapping.classList.add("hidden");
+  renderCampaignAutopilot();
+}
+
+function resetCsvData() {
+  caCsvData = null;
+  caColumnMapping = null;
+  caMetrics = null;
+  $("caCsvUpload").value = "";
+  $("caTrackerEmpty").classList.remove("hidden");
+  $("caTrackerDashboard").classList.add("hidden");
+  const colMapping = $("caColumnMapping");
+  if (colMapping) colMapping.classList.add("hidden");
   renderCampaignAutopilot();
 }
 
@@ -2029,12 +2243,13 @@ function attachEvents() {
   $("caCopyDraft").addEventListener("click", copyCampaignDraft);
   $("caAddToBrief").addEventListener("click", caAddToBrief);
   $("caExportJson").addEventListener("click", exportCampaignJson);
-  $("caCalculateMetrics").addEventListener("click", () => { if (caCsvData) renderCAMeasurementTracker(); });
+  $("caViewColumns").addEventListener("click", () => { const panel = $("caColumnMapping"); if (panel) panel.classList.toggle("hidden"); });
+  $("caResetCsv").addEventListener("click", resetCsvData);
   $("caCsvUpload").addEventListener("change", event => {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = evt => { caCsvData = parseCsv(evt.target.result); renderCAMeasurementTracker(); renderCampaignAutopilot(); };
+    reader.onload = evt => { caCsvData = parseCsv(evt.target.result); const headers = Object.keys(caCsvData[0] || {}); caColumnMapping = detectColumnMapping(headers); renderCAMeasurementTracker(); renderCampaignAutopilot(); };
     reader.readAsText(file);
   });
   $("caSaveNote").addEventListener("click", () => { localStorage.setItem("caLearningNote", $("caLearningNote").value); $("caSaveNote").textContent = "Saved!"; setTimeout(() => { $("caSaveNote").textContent = "Save learning note"; }, 2000); });
@@ -2065,6 +2280,25 @@ function attachEvents() {
   });
   setupScrollAnimations();
   setupFloatingParticles();
+  $("signalBrandFilter")?.addEventListener("change", () => { renderTopSignals(); renderSignalTimeline(); renderSignalBrandMap(); });
+  $("signalTypeFilter")?.addEventListener("change", () => { renderTopSignals(); renderSignalTimeline(); renderSignalBrandMap(); });
+  $("signalConfFilter")?.addEventListener("change", () => { renderTopSignals(); renderSignalTimeline(); renderSignalBrandMap(); });
+  $("signalNeedsValidation")?.addEventListener("change", () => { renderTopSignals(); renderSignalTimeline(); renderSignalBrandMap(); });
+  $("signalViewAudit")?.addEventListener("click", renderSourceAudit);
+  $("signalExportJson")?.addEventListener("click", () => {
+    if (!marketSignals) return;
+    const blob = new Blob([JSON.stringify(marketSignals, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "market_signals_2025_2026.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  $("signalModalClose")?.addEventListener("click", () => $("signalDetailModal").classList.add("hidden"));
+  $("signalDetailModal")?.addEventListener("click", (e) => { if (e.target === $("signalDetailModal")) $("signalDetailModal").classList.add("hidden"); });
   setupScrollLinks();
 }
 
@@ -2090,7 +2324,270 @@ async function init() {
   renderOeSignals();
   renderBenchmarkCockpit();
   attachEvents();
-  showLanding();
+  if ($("three-overlay") && !$("three-overlay").classList.contains("hidden")) {
+    setView(null);
+  } else {
+    showLanding();
+  }
+  await loadMarketSignals();
 }
 
-init();
+window.enterDashboard = enterDashboard;
+  window.showBrandMap = showBrandMap;
+  window.showLanding = showLanding;
+  init();
+
+const SIGNAL_TYPE_LABELS = {
+  "GOV/GMV/revenue update": "GOV / Revenue",
+  "order volume/user growth": "Order Volume",
+  "dark store/expansion update": "Expansion",
+  "profitability/loss/margin": "Profitability",
+  "retail media/advertising signal": "Retail Media",
+  "funding/investment": "Funding",
+  "shutdown/distress/cautionary signal": "Shutdown / Distress",
+  "competitive move": "Competition",
+  "consumer behavior signal": "Consumer Behavior",
+  "regulatory/legal/policy signal": "Regulatory",
+  "operational risk signal": "Operational Risk",
+  "product/category expansion": "Category Expansion",
+  "ipo_milestone": "IPO",
+  "partnership/acquisition": "Partnership",
+  "local language/vernacular marketing signal": "Vernacular"
+};
+
+const BRAND_MATCH = {
+  "Blinkit": ["Blinkit", "Eternal"],
+  "Swiggy Instamart": ["Swiggy Instamart", "Swiggy"],
+  "Zepto": ["Zepto"],
+  "BigBasket": ["BigBasket", "BigBasket Now", "BigBasket B2C", "BB Now"],
+  "Dunzo": ["Dunzo"],
+  "Industry": ["Industry", "Meta", "WhatsApp"]
+};
+
+function getSignalBrandGroup(signal) {
+  const b = signal.brand || "";
+  for (const [group, aliases] of Object.entries(BRAND_MATCH)) {
+    if (aliases.some(a => b.includes(a))) return group;
+  }
+  return "Industry";
+}
+
+function filterSignals() {
+  if (!marketSignals || !marketSignals.signals) return [];
+  const brandFilter = $("signalBrandFilter").value;
+  const typeFilter = $("signalTypeFilter").value;
+  const confFilter = $("signalConfFilter").value;
+  const needsVal = $("signalNeedsValidation").checked;
+  return marketSignals.signals.filter(s => {
+    if (brandFilter !== "all" && getSignalBrandGroup(s) !== brandFilter) return false;
+    if (typeFilter !== "all" && s.event_type !== typeFilter) return false;
+    if (confFilter !== "all" && s.confidence !== confFilter) return false;
+    if (needsVal && !s.needs_validation) return false;
+    return true;
+  });
+}
+
+function renderTopSignals() {
+  const filtered = filterSignals();
+  const top10 = filtered.sort((a, b) => b.business_impact_score - a.business_impact_score).slice(0, 10);
+  $("signalTopList").innerHTML = top10.map(s => {
+    const impactClass = s.business_impact_score >= 90 ? "high" : s.business_impact_score >= 75 ? "medium" : "low";
+    const confClass = "conf-" + s.confidence.toLowerCase();
+    const brandTag = getSignalBrandGroup(s);
+    const typeLabel = SIGNAL_TYPE_LABELS[s.event_type] || s.event_type;
+    return `<div class="signal-item" data-signal-id="${escapeHtml(s.id)}">
+      <div class="signal-impact-badge ${impactClass}">${s.business_impact_score}</div>
+      <div class="signal-item-body">
+        <div class="signal-item-title">${escapeHtml(s.signal_summary)}</div>
+        <div class="signal-item-meta">
+          <span class="signal-tag ${confClass}">${s.confidence}</span>
+          <span class="signal-tag brand-tag">${escapeHtml(brandTag)}</span>
+          <span class="signal-tag type-tag">${escapeHtml(typeLabel)}</span>
+          ${s.hard_metric_available ? `<span class="signal-metric">${escapeHtml(s.metric_name)}: ${escapeHtml(s.metric_value)}</span>` : ""}
+          ${s.needs_validation ? `<span class="signal-needs-validation">&#9888; Needs validation</span>` : ""}
+          <span style="color:var(--muted-2)">${escapeHtml(s.date_published)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  $("signalTopList").querySelectorAll(".signal-item").forEach(el => {
+    el.addEventListener("click", () => openSignalDetail(el.dataset.signalId));
+  });
+}
+
+function renderSignalTimeline() {
+  const filtered = filterSignals();
+  const months = {};
+  const monthOrder = ["2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05"];
+  monthOrder.forEach(m => { months[m] = []; });
+  filtered.forEach(s => {
+    const m = (s.date_published || "").substring(0, 7);
+    if (months[m]) months[m].push(s);
+    else { const nearest = monthOrder.filter(x => x <= m).pop(); if (nearest) months[nearest].push(s); }
+  });
+  const monthNames = {"2025-05":"May 2025","2025-06":"Jun 2025","2025-07":"Jul 2025","2025-08":"Aug 2025","2025-09":"Sep 2025","2025-10":"Oct 2025","2025-11":"Nov 2025","2025-12":"Dec 2025","2026-01":"Jan 2026","2026-02":"Feb 2026","2026-03":"Mar 2026","2026-04":"Apr 2026","2026-05":"May 2026"};
+  $("signalTimeline").innerHTML = monthOrder.map(m => {
+    const items = months[m] || [];
+    if (items.length === 0) return `<div class="signal-timeline-month"><div class="signal-timeline-month-label">${monthNames[m]}</div><div class="signal-timeline-items"><div class="signal-timeline-entry" style="opacity:0.5">No strong public signal found.</div></div></div>`;
+    return `<div class="signal-timeline-month"><div class="signal-timeline-month-label">${monthNames[m]}</div><div class="signal-timeline-items">${items.map(s => {
+      const confC = "conf-" + s.confidence.toLowerCase();
+      return `<div class="signal-timeline-entry" data-signal-id="${escapeHtml(s.id)}"><span class="signal-tag ${confC}" style="margin-right:4px">${s.confidence}</span> ${escapeHtml(s.signal_summary.substring(0, 120))}${s.signal_summary.length > 120 ? "..." : ""}</div>`;
+    }).join("")}</div></div>`;
+  }).join("");
+  $("signalTimeline").querySelectorAll("[data-signal-id]").forEach(el => {
+    el.addEventListener("click", () => openSignalDetail(el.dataset.signalId));
+  });
+}
+
+function renderSignalBrandMap() {
+  if (!marketSignals || !marketSignals.platformIntelligence) return;
+  const filtered = filterSignals();
+  const brandGroups = {};
+  filtered.forEach(s => {
+    const g = getSignalBrandGroup(s);
+    if (!brandGroups[g]) brandGroups[g] = [];
+    brandGroups[g].push(s);
+  });
+  $("signalBrandMap").innerHTML = marketSignals.platformIntelligence.map(p => {
+    const matchBrand = p.id === "blinkit" ? "Blinkit" : p.id === "instamart" ? "Swiggy Instamart" : p.id === "zepto" ? "Zepto" : p.id === "bigbasket_now" ? "BigBasket" : p.id === "dunzo" ? "Dunzo" : "Industry";
+    const signals = brandGroups[matchBrand] || [];
+    return `<div class="signal-brand-card" data-brand="${escapeHtml(p.id)}">
+      <div class="signal-brand-card-title">${escapeHtml(p.name)}</div>
+      <div class="signal-brand-card-role">${escapeHtml(p.currentRole)}</div>
+      <div class="signal-brand-card-count">${signals.length} signal${signals.length !== 1 ? "s" : ""} &middot; Confidence: ${p.sourceQuality}</div>
+      <div class="signal-brand-card-metrics">${p.publicMetrics ? p.publicMetrics.slice(0, 3).map(m => escapeHtml(m)).join("<br>") : ""}</div>
+    </div>`;
+  }).join("");
+}
+
+function openSignalDetail(signalId) {
+  if (!marketSignals || !marketSignals.signals) return;
+  const s = marketSignals.signals.find(sig => sig.id === signalId);
+  if (!s) return;
+  const brandTag = getSignalBrandGroup(s);
+  const typeLabel = SIGNAL_TYPE_LABELS[s.event_type] || s.event_type;
+  const moduleLabels = {"Opportunity Engine":"OE","Benchmark Cockpit":"Cockpit","Campaign Autopilot":"Autopilot","Measurement Tracker":"Tracker","Evidence Ledger":"Evidence","Executive Decision Brief":"Brief"};
+  const oeSignal = s.dashboard_module_mapping && s.dashboard_module_mapping.includes("Opportunity Engine");
+  const cockpitSignal = s.dashboard_module_mapping && s.dashboard_module_mapping.includes("Benchmark Cockpit");
+  const autopilotSignal = s.dashboard_module_mapping && s.dashboard_module_mapping.includes("Campaign Autopilot");
+  let oeAction = "";
+  if (oeSignal && (s.confidence === "A" || s.confidence === "B")) {
+    oeAction = `<div class="signal-detail-section"><div class="signal-detail-label">Opportunity Engine Impact</div><div class="signal-detail-value" style="color:var(--success)">Confidence can be upgraded to ${s.confidence} based on this signal.</div></div>`;
+  } else if (oeSignal) {
+    oeAction = `<div class="signal-detail-section"><div class="signal-detail-label">Opportunity Engine Impact</div><div class="signal-detail-value" style="color:#fbbf24">Signal noted, but confidence ${s.confidence} is not sufficient to upgrade dashboard confidence.</div></div>`;
+  }
+  let cockpitAction = "";
+  if (cockpitSignal) {
+    cockpitAction = `<div class="signal-detail-section"><div class="signal-detail-label">Benchmark Cockpit</div><div class="signal-detail-value">${escapeHtml(s.recommended_dashboard_action || "Add to brand benchmark detail panel.")}</div></div>`;
+  }
+  let autopilotAction = "";
+  if (autopilotSignal) {
+    autopilotAction = `<div class="signal-detail-section"><div class="signal-detail-label">Campaign Autopilot</div><div class="signal-detail-value" style="color:#fbbf24">&#9888; Signal-informed recommendation — review before use.</div><div class="signal-detail-value">${escapeHtml(s.signal_summary)}</div></div>`;
+  }
+  $("signalModalBody").innerHTML = `
+    <div class="signal-detail-section"><div class="signal-detail-label">Signal</div><div class="signal-detail-value" style="font-size:16px;font-weight:600">${escapeHtml(s.signal_summary)}</div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <span class="signal-tag conf-${s.confidence.toLowerCase()}">Confidence: ${s.confidence}</span>
+      <span class="signal-tag brand-tag">${escapeHtml(brandTag)}</span>
+      <span class="signal-tag type-tag">${escapeHtml(typeLabel)}</span>
+      <span class="signal-impact-badge ${s.business_impact_score >= 90 ? "high" : s.business_impact_score >= 75 ? "medium" : "low"}">${s.business_impact_score}</span>
+      ${s.needs_validation ? `<span class="signal-needs-validation">&#9888; Needs validation</span>` : ""}
+    </div>
+    ${s.hard_metric_available ? `<div class="signal-detail-section"><div class="signal-detail-label">Metric</div><div class="signal-detail-metric">${escapeHtml(s.metric_name)}: ${escapeHtml(s.metric_value)}${s.metric_unit ? " " + escapeHtml(s.metric_unit) : ""}</div><div style="font-size:12px;color:var(--muted-2);margin-top:2px">Type: ${escapeHtml(s.metric_type || "N/A")}</div></div>` : ""}
+    <div class="signal-detail-section"><div class="signal-detail-label">Date Published</div><div class="signal-detail-value">${escapeHtml(s.date_published || "N/A")}</div></div>
+    <div class="signal-detail-section"><div class="signal-detail-label">Source</div><div class="signal-detail-value">${escapeHtml(s.source_name || "N/A")}${s.source_url ? ` — <a href="${escapeHtml(s.source_url)}" target="_blank" rel="noopener">View source</a>` : ""}</div></div>
+    <div class="signal-detail-section"><div class="signal-detail-label">Dashboard Modules</div><div class="signal-detail-modules">${(s.dashboard_module_mapping || []).map(m => `<span class="signal-module-tag">${moduleLabels[m] || m}</span>`).join("")}</div></div>
+    ${oeAction}${cockpitAction}${autopilotAction}
+    ${s.limitation_or_caveat ? `<div class="signal-detail-section"><div class="signal-detail-label">Caveat</div><div class="signal-caveat">${escapeHtml(s.limitation_or_caveat)}</div></div>` : ""}
+    <div class="signal-detail-section"><div class="signal-detail-label">Recommended Action</div><div class="signal-detail-value">${escapeHtml(s.recommended_dashboard_action || "No specific action recommended.")}</div></div>
+  `;
+  $("signalDetailModal").classList.remove("hidden");
+}
+
+function renderSourceAudit() {
+  if (!marketSignals || !marketSignals.sources) return;
+  const validationSignals = marketSignals.signals.filter(s => s.needs_validation);
+  const body = `<div class="signal-detail-section" style="margin-bottom:20px"><div class="signal-detail-label" style="font-size:14px;font-weight:700;color:var(--text)">Sources (${marketSignals.sources.length})</div></div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="border-bottom:2px solid var(--card-border)"><th style="text-align:left;padding:8px;color:var(--muted-2)">Source</th><th style="text-align:left;padding:8px;color:var(--muted-2)">Type</th><th style="text-align:left;padding:8px;color:var(--muted-2)">Confidence</th></tr></thead>
+    <tbody>${marketSignals.sources.map(src => `<tr style="border-bottom:1px solid var(--card-border)"><td style="padding:8px;color:var(--text)">${escapeHtml(src.name)}</td><td style="padding:8px;color:var(--text-secondary)">${escapeHtml(src.type)}</td><td style="padding:8px"><span class="signal-tag conf-${src.confidence.toLowerCase()}">${src.confidence}</span></td></tr>`).join("")}</tbody></table>
+    <div class="signal-detail-section" style="margin-top:24px"><div class="signal-detail-label" style="font-size:14px;font-weight:700;color:var(--text)">Signals Needing Validation (${validationSignals.length})</div></div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="border-bottom:2px solid var(--card-border)"><th style="text-align:left;padding:8px;color:var(--muted-2)">ID</th><th style="text-align:left;padding:8px;color:var(--muted-2)">Brand</th><th style="text-align:left;padding:8px;color:var(--muted-2)">Signal</th><th style="text-align:left;padding:8px;color:var(--muted-2)">Caveat</th></tr></thead>
+    <tbody>${validationSignals.map(s => `<tr style="border-bottom:1px solid var(--card-border)"><td style="padding:8px;color:var(--text-secondary)">${escapeHtml(s.id)}</td><td style="padding:8px;color:var(--text)">${escapeHtml(s.brand)}</td><td style="padding:8px;color:var(--text)">${escapeHtml(s.signal_summary.substring(0, 80))}...</td><td style="padding:8px;color:#fbbf24;font-size:12px">${escapeHtml((s.limitation_or_caveat || "").substring(0, 80))}...</td></tr>`).join("")}</tbody></table>`;
+  $("signalModalBody").innerHTML = body;
+  $("signalDetailModal").classList.remove("hidden");
+}
+
+function updateOEEvidenceFromSignals() {
+  if (!marketSignals || !marketSignals.signals) return;
+  const signalRows = marketSignals.signals.filter(s => s.confidence === "A" || s.confidence === "B").slice(0, 10).map(s => ({
+    source: `${s.brand} — ${s.signal_summary.substring(0, 60)}`,
+    what: s.hard_metric_available ? `${s.metric_name}: ${s.metric_value}` : "Directional signal",
+    confidence: s.confidence,
+    limitation: s.needs_validation ? "Needs validation" : ""
+  }));
+  if (signalRows.length > 0) {
+    const existingLedger = $("oeEvidenceLedger");
+    if (existingLedger) {
+      const signalHtml = signalRows.map(r => `<div class="oe-evidence-row"><span class="oe-evidence-source">${escapeHtml(r.source)}</span><span class="oe-evidence-what">${escapeHtml(r.what)}</span><span class="oe-evidence-conf conf-${r.confidence.toLowerCase()}">${r.confidence}</span></div>`).join("");
+      existingLedger.innerHTML += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--card-border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted-2);margin-bottom:6px">From Market Signal Layer</div>${signalHtml}</div>`;
+    }
+  }
+}
+
+function updateCockpitFromSignals() {
+  if (!marketSignals || !marketSignals.platformIntelligence) return;
+  const container = $("bmCockpitGrid");
+  if (!container) return;
+  container.querySelectorAll(".bm-cockpit-card").forEach(card => {
+    const platformId = card.dataset.platform;
+    const matchBrand = platformId === "blinkit" ? "Blinkit" : platformId === "instamart" ? "Swiggy Instamart" : platformId === "zepto" ? "Zepto" : platformId === "bigbasket_now" ? "BigBasket" : platformId === "dunzo" ? "Dunzo" : "Industry";
+    const platformSignals = marketSignals.signals.filter(s => getSignalBrandGroup(s) === matchBrand);
+    if (platformSignals.length > 0) {
+      const existing = card.querySelector(".signal-count-badge");
+      if (existing) existing.textContent = `${platformSignals.length}`;
+      else {
+        const countEl = document.createElement("div");
+        countEl.className = "signal-count-badge";
+        countEl.style.cssText = "position:absolute;top:8px;right:8px;background:var(--theme-primary);color:var(--theme-text-on-primary);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;";
+        countEl.textContent = `${platformSignals.length}`;
+        card.style.position = "relative";
+        card.appendChild(countEl);
+      }
+    }
+  });
+}
+
+function updateAutopilotFromSignals() {
+  if (!marketSignals || !marketSignals.signals) return;
+  const autopilotSignals = marketSignals.signals.filter(s => s.dashboard_module_mapping && s.dashboard_module_mapping.includes("Campaign Autopilot") && (s.confidence === "A" || s.confidence === "B")).slice(0, 5);
+  if (autopilotSignals.length === 0) return;
+  const draftArea = $("caDrafts");
+  if (!draftArea) return;
+  const existingHint = draftArea.querySelector(".signal-autopilot-hint");
+  if (existingHint) return;
+  const noteEl = draftArea.querySelector(".note");
+  if (!noteEl) return;
+  const hintEl = document.createElement("div");
+  hintEl.className = "signal-autopilot-hint";
+  hintEl.style.cssText = "background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--muted-2);line-height:1.5";
+  hintEl.innerHTML = `<strong style="color:#fbbf24">Signal-informed recommendation — review before use:</strong><br>${autopilotSignals.map(s => `&#8226; ${escapeHtml(s.signal_summary.substring(0, 100))}`).join("<br>")}`;
+  noteEl.parentNode.insertBefore(hintEl, noteEl.nextSibling);
+}
+
+async function loadMarketSignals() {
+  try {
+    const response = await fetch("data/market_signals_2025_2026.json");
+    if (!response.ok) throw new Error("Failed to load signals");
+    marketSignals = await response.json();
+    renderTopSignals();
+    renderSignalTimeline();
+    renderSignalBrandMap();
+    updateOEEvidenceFromSignals();
+    updateCockpitFromSignals();
+    updateAutopilotFromSignals();
+  } catch (err) {
+    console.warn("Could not load market signals:", err);
+  }
+}

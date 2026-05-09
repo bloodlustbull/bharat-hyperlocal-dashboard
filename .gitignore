@@ -1,2 +1,4 @@
 my-landing-page/
 node_modules/
+dist/
+public/data/
