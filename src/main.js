@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { createScene } from './scene/createScene.js';
 import { addLights, setThemeLights } from './scene/lights.js';
 import { createParticles, animateParticles, setParticleColor } from './scene/particles.js';
-import { createBrandObjects, animateBrandEntry, animateBrandIdle, hoverBrand, animateBrandExit } from './scene/brandObjects.js';
+import { createBrandObjects, animateBrandIdle, hoverBrand, animateBrandExit } from './scene/brandObjects.js';
 import { setupInteractions, applyParallax } from './scene/interactions.js';
 import { setupResponsive, isMobile, adjustCameraForDevice } from './scene/responsive.js';
 import './styles/main.css';
@@ -80,9 +80,7 @@ function showIntroOverlay() {
 }
 
 function startIntroSequence() {
-  setTimeout(() => {
-    animateBrandEntry(brandMeshes, () => {});
-  }, 800);
+  // The start page keeps the center clean; brand selection now happens in the HTML brand map.
 }
 
 function onBrandClick(brandId) {

@@ -17,6 +17,16 @@ let caDraftData = null;
 let caMetrics = null;
 let caColumnMapping = null;
 let marketSignals = null;
+let geoLiveData = null;
+let geoMapInstance = null;
+let geoMapLoadedForCity = null;
+let geoRefreshTimer = null;
+let voiceRecognition = null;
+let voiceListening = false;
+let shellyStandby = false;
+let shellySpeaking = false;
+let shellyVoices = [];
+let shellyStopAfterAnswer = false;
 
 const PLATFORM_THEMES = {
   blinkit: {
@@ -651,6 +661,8 @@ function goToTab(tabName) {
   if (tabName === "market") renderMarketPulse();
   if (tabName === "scorer") renderScore();
   if (tabName === "campaign") renderCampaignAutopilot();
+  if (tabName === "video") renderVideoCampaignStudio();
+  if (tabName === "geo") renderGeoSalesCommandCenter();
 }
 
 function enterDashboard(platformId) {
@@ -686,7 +698,7 @@ function applyTheme(platformId) {
 
 function setActivePlatform(platformId) {
   if ($("platformSelect")) $("platformSelect").value = platformId;
-  ["scorerPlatformSelect", "plannerPlatformSelect", "reportPlatformSelect"].forEach(id => {
+  ["scorerPlatformSelect", "plannerPlatformSelect", "reportPlatformSelect", "videoPlatformSelect"].forEach(id => {
     if ($(id)) $(id).value = platformId;
   });
   updateTheme(platformId);
@@ -701,6 +713,8 @@ function updatePlatformPanels() {
   renderExperimentPlan();
   renderReport();
   renderBenchmarkCockpit();
+  renderVideoCampaignStudio();
+  renderGeoSalesCommandCenter();
 }
 
 function sourceById(id) {
@@ -730,7 +744,7 @@ function sourceLabelReadable(sourceId) {
 function populatePlatformControls() {
   const platforms = getPlatforms();
   const options = platforms.map(platform => `<option value="${platform.id}">${escapeHtml(platform.name)}</option>`).join("");
-  ["platformSelect", "scorerPlatformSelect", "plannerPlatformSelect", "reportPlatformSelect"].forEach(id => {
+  ["platformSelect", "scorerPlatformSelect", "plannerPlatformSelect", "reportPlatformSelect", "videoPlatformSelect"].forEach(id => {
     if ($(id)) $(id).innerHTML = options;
   });
   $("platformButtons").innerHTML = platforms.map(platform => `
@@ -801,11 +815,12 @@ function populateSeedControls() {
   const categories = seedData.categories || [];
   const cityOptions = cities.map(city => `<option value="${escapeHtml(city.city)}">${escapeHtml(city.city)}</option>`).join("");
   const categoryOptions = categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("");
-  ["citySelect", "plannerCitySelect", "reportCitySelect"].forEach(id => { if ($(id)) $(id).innerHTML = cityOptions; });
-  ["categorySelect", "plannerCategorySelect", "reportCategorySelect"].forEach(id => { if ($(id)) $(id).innerHTML = categoryOptions; });
+  ["citySelect", "plannerCitySelect", "reportCitySelect", "videoCitySelect", "geoCitySelect"].forEach(id => { if ($(id)) $(id).innerHTML = cityOptions; });
+  ["categorySelect", "plannerCategorySelect", "reportCategorySelect", "videoCategorySelect"].forEach(id => { if ($(id)) $(id).innerHTML = categoryOptions; });
   updateLanguageOptions("citySelect", "languageSelect");
   updateLanguageOptions("plannerCitySelect", "plannerLanguageSelect");
   updateLanguageOptions("reportCitySelect", "reportLanguageSelect");
+  updateLanguageOptions("videoCitySelect", "videoLanguageSelect");
 }
 
 function cityFor(selectId) {
@@ -1404,6 +1419,109 @@ function renderSources() {
   }).join("");
 }
 
+const WA_NATIVE_LIBRARY = {
+  Hindi: { greeting: "अरे सुनो", hook: "फ्रिज खाली और मूड पूरा फिल्मी?", punch: "आपके इलाके में झटपट डिलीवरी तैयार है", cta: "अभी टैप करो, वरना मम्मी वाला साइड-आई मिलेगा।", meme: "Local meme cue: mummy checking empty dabba" },
+  Telugu: { greeting: "అరే బాబు", hook: "ఫ్రిజ్ ఖాళీ, క్రేవింగ్ మాత్రం ఫుల్ ఆన్?", punch: "మీ ఏరియాలో ఫాస్ట్ డెలివరీ రెడీ", cta: "ఇప్పుడే ట్యాప్ చేయండి, క్రేవింగ్ ఆగదు।", meme: "Local meme cue: last-minute chai break panic" },
+  Tamil: { greeting: "வணக்கம் பாஸ்", hook: "fridge காலி, craving மட்டும் full-aa?", punch: "உங்க area-ல quick delivery ready", cta: "இப்போ tap பண்ணுங்க, பசிக்கு interval இல்ல.", meme: "Local meme cue: tea kadai-level craving" },
+  Marathi: { greeting: "ऐका ना", hook: "फ्रिज रिकामा, पण craving full on?", punch: "तुमच्या भागात fast delivery ready आहे", cta: "आता tap करा, भूक wait करत नाही.", meme: "Local meme cue: dabba khali reaction" },
+  Kannada: { greeting: "ಕೇಳ್ರಿ ಬಾಸ್", hook: "ಫ್ರಿಜ್ ಖಾಲಿ, craving ಮಾತ್ರ full?", punch: "ನಿಮ್ಮ ಏರಿಯಾದಲ್ಲಿ fast delivery ready ಇದೆ", cta: "ಈಗ tap ಮಾಡಿ, ಹಸಿವು wait ಮಾಡಲ್ಲ.", meme: "Local meme cue: traffic-signal patience vs instant snacks" },
+  Malayalam: { greeting: "നോക്കൂ മച്ചാ", hook: "fridge കാലി, craving full power ആണോ?", punch: "നിങ്ങളുടെ area-യിൽ quick delivery ready", cta: "ഇപ്പോ tap ചെയ്യൂ, വിശപ്പ് wait ചെയ്യില്ല.", meme: "Local meme cue: tea-time emergency" },
+  Odia: { greeting: "ଶୁଣ ଭାଇ", hook: "ଫ୍ରିଜ୍ ଖାଲି, craving full on?", punch: "ତୁମ area re fast delivery ready achhi", cta: "ଏବେ tap କର, ଭୋକ wait କରେନି.", meme: "Local meme cue: khaiba dabba check" },
+  Punjabi: { greeting: "ਓ ਜੀ ਸੁਣੋ", hook: "fridge ਖਾਲੀ, craving full power?", punch: "ਤੁਹਾਡੇ area ਵਿੱਚ fast delivery ready aa", cta: "ਹੁਣ tap ਕਰੋ, craving ਨੂੰ wait ਨਾ ਕਰਾਓ.", meme: "Local meme cue: full-power hunger entry" },
+  Haryanvi: { greeting: "सुण ले भाई", hook: "फ्रिज खाली, craving full power?", punch: "तेरे area में fast delivery ready se", cta: "अभी tap कर, भूख कोई meeting ना se.", meme: "Local meme cue: office meeting vs snack emergency" },
+  English: { greeting: "Quick heads-up", hook: "empty fridge, full cravings?", punch: "Fast local delivery is ready in your area", cta: "Tap now before the snack debate starts.", meme: "Local meme cue: group chat deciding snacks forever" }
+};
+
+function getNativeCopy(language, cityName, category, offer) {
+  const pack = WA_NATIVE_LIBRARY[language] || WA_NATIVE_LIBRARY.Hindi;
+  const cat = category.toLowerCase();
+  const offerLine = offer && offer !== "No discount / content-led test" && offer !== "No discount" ? ` ${offer} bhi hai.` : "";
+  return {
+    body: `${pack.greeting}! ${pack.hook} ${cat} ${cityName} mein ready hai.${offerLine} ${pack.punch}.`,
+    cta: pack.cta,
+    meme: pack.meme
+  };
+}
+
+function nativeLanguagesForCity(city, selectedLanguage) {
+  const cityLanguages = (city.languages || []).filter(lang => lang !== "English");
+  return [...new Set([selectedLanguage, ...cityLanguages, "Hindi"].filter(Boolean))].slice(0, 3);
+}
+
+function renderWhatsAppPreviews(ctx) {
+  const grid = $("waPreviewGrid");
+  if (!grid) return;
+  if (!ctx.city.city) {
+    grid.innerHTML = `<p class="note">Select a city in the Opportunity Engine to preview native WhatsApp messages.</p>`;
+    return;
+  }
+
+  const languages = nativeLanguagesForCity(ctx.city, ctx.language);
+  const offer = ctx.caOffer || "No discount";
+  const time = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  grid.innerHTML = languages.map(language => {
+    const copy = getNativeCopy(language, ctx.city.city, ctx.category, offer);
+    return `
+      <div class="wa-phone">
+        <div class="wa-topbar">
+          <div class="wa-avatar">${escapeHtml(language.slice(0, 1))}</div>
+          <div><strong>${escapeHtml(ctx.platform.name)}</strong><span>${escapeHtml(ctx.city.city)} · ${escapeHtml(language)}</span></div>
+        </div>
+        <div class="wa-chat">
+          <div class="wa-bubble"><p>${escapeHtml(copy.body)}</p><p><strong>${escapeHtml(copy.cta)}</strong></p><span>${escapeHtml(time)}</span></div>
+          <div class="wa-reply">😂 Send me the deal</div>
+        </div>
+        <div class="wa-meta"><span>Native language must be used</span><span>${escapeHtml(copy.meme)}</span></div>
+        <p class="wa-review-note">Native-speaker review required before launch.</p>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderSocialCampaignPreview(ctx) {
+  const target = $("socialCampaignPreview");
+  if (!target) return;
+  if (!ctx.city.city) {
+    target.innerHTML = `<p class="note">Select a city to preview Instagram and YouTube campaign formats.</p>`;
+    return;
+  }
+  const copy = getNativeCopy(ctx.language, ctx.city.city, ctx.category, ctx.caOffer || "Content-led test");
+  const cat = ctx.category.toLowerCase();
+  const cards = [
+    {
+      channel: "Instagram Reels",
+      handle: "@quicklocal",
+      hook: copy.body,
+      format: "9:16 reel with meme opener, product flash, local CTA",
+      kpi: "3-sec hold, saves, shares, profile taps, link CTR"
+    },
+    {
+      channel: "Instagram Stories",
+      handle: "Area story ad",
+      hook: `${ctx.city.city} poll: ${cat} abhi chahiye ya baad mein?`,
+      format: "Poll sticker + swipe/tap link + reply DM tag",
+      kpi: "Tap-forward rate, poll response, link CTR, replies"
+    },
+    {
+      channel: "YouTube Shorts",
+      handle: "15 sec local short",
+      hook: `Empty shelf to instant ${cat}: ${copy.cta}`,
+      format: "Hook in 2 seconds, native caption, pinned tracked link",
+      kpi: "Viewed vs swiped, CTR, engaged views, conversions"
+    }
+  ];
+  target.innerHTML = cards.map(card => `
+    <div class="social-card">
+      <div class="social-card-top"><span>${escapeHtml(card.channel)}</span><strong>${escapeHtml(card.handle)}</strong></div>
+      <div class="social-screen">
+        <p>${escapeHtml(card.hook)}</p>
+        <button type="button">${escapeHtml(copy.cta)}</button>
+      </div>
+      <div class="social-card-meta"><span>${escapeHtml(card.format)}</span><span>${escapeHtml(card.kpi)}</span></div>
+    </div>
+  `).join("");
+}
+
 function caGetContext() {
   const city = cityFor("citySelect");
   const language = $("languageSelect")?.value || "English";
@@ -1444,6 +1562,8 @@ function renderCampaignAutopilot() {
   `).join("");
 
   renderCALocalization(ctx);
+  renderWhatsAppPreviews(ctx);
+  renderSocialCampaignPreview(ctx);
   renderCAChecklist(ctx, bmDims, confidence);
   renderCATrackingList();
   renderCAMeasurementTracker();
@@ -1988,6 +2108,797 @@ function resetCsvData() {
   renderCampaignAutopilot();
 }
 
+function videoGetContext() {
+  const city = cityFor("videoCitySelect");
+  const language = $("videoLanguageSelect")?.value || "Hindi";
+  const category = $("videoCategorySelect")?.value || "Grocery";
+  const platform = getPlatforms().find(item => item.id === ($("videoPlatformSelect")?.value || "blinkit")) || selectedPlatform();
+  const format = $("videoFormatSelect")?.value || "Instagram Reel";
+  const manager = $("videoManagerSelect")?.value || "Area manager";
+  return { city, language, category, platform, format, manager };
+}
+
+function videoSampleRows(ctx) {
+  const base = categoryProfile(ctx.category).whatsappConversionFit || 7;
+  const density = Number(ctx.city.quickCommerceDensity || 6);
+  return [
+    { segment: "New viewers", reached: 4200 + density * 180, watched: 2600 + base * 140, clicked: 240 + base * 18, orders: 38 + base, note: "Hook test audience" },
+    { segment: "Repeat viewers", reached: 1800 + density * 120, watched: 1380 + base * 90, clicked: 190 + base * 16, orders: 52 + base, note: "Retarget with stronger CTA" },
+    { segment: "WhatsApp responders", reached: 620 + density * 40, watched: 520 + base * 45, clicked: 118 + base * 10, orders: 44 + base, note: "Warm lead list" },
+    { segment: "High intent pin codes", reached: 950 + density * 70, watched: 760 + base * 55, clicked: 140 + base * 12, orders: 48 + base, note: "Manager should send more videos" }
+  ];
+}
+
+function renderVideoCampaignStudio() {
+  if (!$("videoBlueprint")) return;
+  const ctx = videoGetContext();
+  const copy = getNativeCopy(ctx.language, ctx.city.city || "selected city", ctx.category, "Content-led offer");
+  const cat = ctx.category.toLowerCase();
+  const rows = videoSampleRows(ctx);
+  const maxCtr = Math.max(...rows.map(row => row.clicked / row.reached));
+
+  renderVideoPlatformOutputs(ctx, copy);
+
+  $("videoBlueprint").innerHTML = [
+    ["Native hook", copy.body],
+    ["Local meme angle", copy.meme],
+    ["3-second opener", `Show the empty ${cat} shelf, then cut to a funny "${ctx.language} panic" reaction.`],
+    ["Middle beat", `Area-specific proof: ${ctx.city.city || "selected city"} delivery, category availability, and one clear product shot.`],
+    ["CTA", `${copy.cta} Use tracked link, UTM, and WhatsApp reply tag.`],
+    ["Manager action", `${ctx.manager} checks CTR by segment and sends more videos to high-intent pin codes.`]
+  ].map(([label, value]) => `<div class="video-blueprint-row"><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div>`).join("");
+
+  $("videoStoryboard").innerHTML = `
+    <div class="reel-frame">
+      <div class="reel-top">${escapeHtml(ctx.format)} · ${escapeHtml(ctx.platform.name)}</div>
+      <div class="reel-scene active"><strong>0-3s</strong><p>${escapeHtml(copy.body)}</p></div>
+      <div class="reel-scene"><strong>4-8s</strong><p>${escapeHtml(ctx.city.city || "Local")} ${escapeHtml(cat)} delivery: problem, product, proof.</p></div>
+      <div class="reel-scene"><strong>9-15s</strong><p>${escapeHtml(copy.cta)} Track click, reply, order, repeat.</p></div>
+      <div class="reel-caption">Designed for future Whisperflow scripts and autonomous reel-agent generation.</div>
+    </div>
+    <div class="video-creative-lab">
+      <div class="video-lab-card hot"><span>Hook A</span><strong>Empty shelf panic</strong><p>Best for impulse snacks, dairy, household refills.</p></div>
+      <div class="video-lab-card"><span>Hook B</span><strong>Area manager dare</strong><p>Local face says: beat this delivery time.</p></div>
+      <div class="video-lab-card"><span>Hook C</span><strong>Meme reaction cut</strong><p>Native punchline first, product proof second.</p></div>
+    </div>
+  `;
+
+  $("videoCtrGraph").innerHTML = `
+    <div class="video-bars">
+      ${rows.map(row => {
+        const ctr = row.clicked / row.reached;
+        const width = Math.max(10, (ctr / maxCtr) * 100);
+        return `<div class="video-bar-row">
+          <span>${escapeHtml(row.segment)}</span>
+          <div class="video-bar-track"><div class="video-bar-fill" style="width:${width}%"></div></div>
+          <strong>${(ctr * 100).toFixed(1)}%</strong>
+        </div>`;
+      }).join("")}
+    </div>
+    <p class="video-graph-note">CTR = clicks / reached. Replace sample rows with real user event data before claiming performance.</p>
+  `;
+
+  const checklist = [
+    "Every reel has campaign_id, creative_id, city, pin_code, language, category, manager_id.",
+    "Track reached, 3-second views, 50% views, full views, clicks, WhatsApp replies, orders, repeat orders.",
+    "CTR is checked by language and pin code, not only campaign average.",
+    "Area manager reviews high-click/low-order segments for stock, price, or serviceability issues.",
+    "Native-language script is reviewed by a local speaker before publishing.",
+    "Autonomous reel agent receives only approved brand claims, product shots, and CTA rules."
+  ];
+  $("videoChecklist").innerHTML = checklist.map(item => `<div class="video-check-item"><span>✓</span><p>${escapeHtml(item)}</p></div>`).join("");
+
+  $("videoUserDatabase").innerHTML = `
+    <table>
+      <thead><tr><th>User segment</th><th>Reached</th><th>Watched</th><th>Clicked</th><th>Orders</th><th>Manager decision</th></tr></thead>
+      <tbody>${rows.map(row => {
+        const ctr = row.clicked / row.reached;
+        const decision = ctr > 0.08 ? "Send more native videos" : ctr > 0.05 ? "Retarget with stronger hook" : "Rewrite hook and test meme angle";
+        return `<tr><td>${escapeHtml(row.segment)}</td><td>${formatNumber(row.reached)}</td><td>${formatNumber(row.watched)}</td><td>${formatNumber(row.clicked)}</td><td>${formatNumber(row.orders)}</td><td>${escapeHtml(decision)}</td></tr>`;
+      }).join("")}</tbody>
+    </table>
+  `;
+
+  $("videoAgentPlan").innerHTML = [
+    ["Whisperflow input", "Voice note from area manager: local insight, offer, objection, and language direction."],
+    ["Agent output", "Native reel script, shot list, caption, thumbnail text, UTM campaign metadata."],
+    ["Human gate", "Manager approves local humor, compliance, stock promise, and brand-safe claims."],
+    ["Feedback loop", "CTR and order data decide which pin codes get more reel variations."]
+  ].map(([label, value]) => `<div class="video-agent-step"><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div>`).join("");
+}
+
+function renderVideoPlatformOutputs(ctx, copy) {
+  const target = $("videoPlatformOutputs");
+  if (!target) return;
+  const cityName = ctx.city.city || "Local area";
+  const cat = ctx.category.toLowerCase();
+  const outputs = [
+    {
+      platform: "Instagram Reel",
+      className: "instagram",
+      duration: "0:15",
+      handle: "@hyperlocal_bharat",
+      caption: `${copy.cta} #${cityName.replace(/\s+/g, "")}Deals`,
+      hook: copy.body,
+      kpi: "Watch hold + profile taps + link CTR"
+    },
+    {
+      platform: "YouTube Short",
+      className: "youtube",
+      duration: "0:18",
+      handle: "Bharat Hyperlocal Shorts",
+      caption: `Fast ${cat} delivery in ${cityName}`,
+      hook: `Empty shelf to instant ${cat}: ${copy.cta}`,
+      kpi: "Viewed vs swiped + pinned-link CTR"
+    },
+    {
+      platform: "WhatsApp Status",
+      className: "whatsapp",
+      duration: "0:12",
+      handle: `${cityName} broadcast list`,
+      caption: "Reply 😂 for the deal",
+      hook: copy.body,
+      kpi: "Status views + replies + tracked clicks"
+    }
+  ];
+
+  target.innerHTML = outputs.map((item, index) => `
+    <div class="video-output-phone ${item.className}">
+      <div class="video-output-header">
+        <span>${escapeHtml(item.platform)}</span>
+        <strong>${escapeHtml(item.duration)}</strong>
+      </div>
+      <div class="video-output-screen">
+        <div class="video-output-bg"></div>
+        <img class="video-output-product product-one" src="assets/hero/items/grocery-item-08.png" alt="" />
+        <img class="video-output-product product-two" src="assets/hero/items/grocery-item-10.png" alt="" />
+        <img class="video-output-product product-three" src="assets/hero/items/grocery-item-06.png" alt="" />
+        <div class="video-output-copy">
+          <span>${escapeHtml(item.handle)}</span>
+          <h4>${escapeHtml(item.hook)}</h4>
+          <p>${escapeHtml(item.caption)}</p>
+        </div>
+        <div class="video-output-playbar"><i style="animation-delay:${index * -1.2}s"></i></div>
+      </div>
+      <div class="video-output-footer">
+        <span>${escapeHtml(item.kpi)}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+const GEO_CITY_CENTERS = {
+  Bengaluru: [77.5946, 12.9716],
+  Hyderabad: [78.4867, 17.385],
+  Chennai: [80.2707, 13.0827],
+  Pune: [73.8567, 18.5204],
+  Gurgaon: [77.0266, 28.4595],
+  Vizag: [83.2185, 17.6868],
+  Coimbatore: [76.9558, 11.0168],
+  Nagpur: [79.0882, 21.1458],
+  Kochi: [76.2673, 9.9312],
+  Bhubaneswar: [85.8245, 20.2961],
+  Ludhiana: [75.8573, 30.901],
+  Mysuru: [76.6394, 12.2958]
+};
+
+function geoContext() {
+  const city = cityFor("geoCitySelect");
+  return {
+    city,
+    range: $("geoRangeSelect")?.value || "daily",
+    metric: $("geoMetricSelect")?.value || "sales",
+    channel: $("geoChannelSelect")?.value || "All channels"
+  };
+}
+
+function geoAreaRows(ctx) {
+  const center = GEO_CITY_CENTERS[ctx.city.city] || [77.5946, 12.9716];
+  const density = Number(ctx.city.quickCommerceDensity || 6);
+  const names = ["Central cluster", "North zone", "South zone", "East pocket", "West pocket", "High-intent society belt"];
+  const rangeMultiplier = { daily: 1, weekly: 6.4, three_month: 82, six_month: 164 }[ctx.range] || 1;
+  return names.map((name, index) => {
+    const angle = (index / names.length) * Math.PI * 2;
+    const radius = 0.018 + index * 0.006;
+    const sales = Math.round((42000 + density * 5200 + index * 7400) * rangeMultiplier);
+    const orders = Math.round((160 + density * 18 + index * 24) * rangeMultiplier);
+    const ctr = Number((4.2 + density * 0.35 + index * 0.52).toFixed(1));
+    const repeat = Number((18 + density * 1.4 + index * 1.8).toFixed(1));
+    return {
+      id: `${ctx.city.city}-${index}`,
+      area: name,
+      lng: center[0] + Math.cos(angle) * radius,
+      lat: center[1] + Math.sin(angle) * radius,
+      sales,
+      orders,
+      ctr,
+      repeat,
+      topAudience: ["Students", "Young professionals", "Families", "Office clusters", "Premium societies", "Repeat buyers"][index],
+      action: ctr >= 7 ? "Scale Instagram + YouTube videos" : sales > 100000 ? "Add WhatsApp retargeting" : "Test funnier native hook"
+    };
+  });
+}
+
+function geoFeatureCollection(rows, metric = "sales") {
+  const max = Math.max(...rows.map(row => metricValue(row, metric)));
+  return {
+    type: "FeatureCollection",
+    features: rows.map(row => ({
+      type: "Feature",
+      properties: { ...row, metric_score: Math.max(0.1, metricValue(row, metric) / Math.max(1, max)) },
+      geometry: { type: "Point", coordinates: [row.lng, row.lat] }
+    }))
+  };
+}
+
+function metricValue(row, metric) {
+  if (metric === "orders") return row.orders;
+  if (metric === "ctr") return row.ctr;
+  if (metric === "repeat") return row.repeat;
+  return row.sales;
+}
+
+function metricLabel(metric, value) {
+  if (metric === "sales") return `INR ${formatNumber(value)}`;
+  if (metric === "orders") return `${formatNumber(value)} orders`;
+  return `${value}%`;
+}
+
+async function loadMapLibreAssets() {
+  if (window.maplibregl) return true;
+  if (!document.querySelector("[data-maplibre-css]")) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.css";
+    link.dataset.maplibreCss = "true";
+    document.head.appendChild(link);
+  }
+  return new Promise(resolve => {
+    const existing = document.querySelector("[data-maplibre-script]");
+    if (existing) {
+      existing.addEventListener("load", () => resolve(true), { once: true });
+      existing.addEventListener("error", () => resolve(false), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js";
+    script.dataset.maplibreScript = "true";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
+
+async function loadGeoLiveData() {
+  try {
+    const response = await fetch(`data/live_area_metrics.json?ts=${Date.now()}`);
+    if (response.ok) geoLiveData = await response.json();
+  } catch {
+    geoLiveData = null;
+  }
+}
+
+function renderGeoFallbackMap(rows, ctx) {
+  const max = Math.max(...rows.map(row => metricValue(row, ctx.metric)));
+  $("geoMap").innerHTML = `<div class="geo-fallback-map">
+    ${rows.map((row, index) => {
+      const value = metricValue(row, ctx.metric);
+      const size = 54 + (value / max) * 64;
+      const left = 16 + (index % 3) * 31;
+      const top = 16 + Math.floor(index / 3) * 34;
+      return `<button class="geo-bubble" type="button" style="width:${size}px;height:${size}px;left:${left}%;top:${top}%;" data-area="${escapeHtml(row.area)}">
+        <strong>${escapeHtml(row.area.split(" ")[0])}</strong><span>${escapeHtml(metricLabel(ctx.metric, value))}</span>
+      </button>`;
+    }).join("")}
+  </div>`;
+}
+
+async function renderGeoMap(rows, ctx) {
+  const status = $("geoMapStatus");
+  const mapEl = $("geoMap");
+  if (!status || !mapEl) return;
+  const hasMapLibre = await loadMapLibreAssets();
+  const center = GEO_CITY_CENTERS[ctx.city.city] || [77.5946, 12.9716];
+  const data = geoFeatureCollection(rows, ctx.metric);
+
+  if (!hasMapLibre) {
+    status.innerHTML = `<span class="geo-status-warning">MapLibre CDN unavailable. Showing local interactive 3D-style fallback map.</span>`;
+    renderGeoFallbackMap(rows, ctx);
+    return;
+  }
+
+  status.innerHTML = `<span class="geo-status-live">MapLibre real-world layer active</span><span>GeoJSON source updates on refresh/poll.</span>`;
+  if (!geoMapInstance || geoMapLoadedForCity !== ctx.city.city) {
+    mapEl.innerHTML = "";
+    geoMapLoadedForCity = ctx.city.city;
+    geoMapInstance = new window.maplibregl.Map({
+      container: "geoMap",
+      center,
+      zoom: 11,
+      pitch: 58,
+      bearing: -18,
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: "raster",
+            tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png", "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+            tileSize: 256,
+            attribution: "OpenStreetMap contributors"
+          }
+        },
+        layers: [{ id: "osm", type: "raster", source: "osm" }]
+      }
+    });
+    geoMapInstance.addControl(new window.maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+    geoMapInstance.on("load", () => updateGeoMapSource(data, ctx));
+  } else {
+    updateGeoMapSource(data, ctx);
+  }
+}
+
+function updateGeoMapSource(data, ctx) {
+  if (!geoMapInstance || !geoMapInstance.loaded()) return;
+  const metric = ctx.metric;
+  if (!geoMapInstance.getSource("areas")) {
+    geoMapInstance.addSource("areas", { type: "geojson", data });
+    geoMapInstance.addLayer({
+      id: "area-heat",
+      type: "circle",
+      source: "areas",
+      paint: {
+        "circle-radius": ["interpolate", ["linear"], ["get", "metric_score"], 0, 12, 1, 52],
+        "circle-color": ["interpolate", ["linear"], ["get", "metric_score"], 0, "#60a5fa", 0.55, "#fbbf24", 1, "#34d399"],
+        "circle-opacity": 0.72,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1
+      }
+    });
+    geoMapInstance.on("click", "area-heat", event => {
+      const p = event.features?.[0]?.properties;
+      if (!p) return;
+      new window.maplibregl.Popup()
+        .setLngLat(event.lngLat)
+        .setHTML(`<strong>${escapeHtml(p.area)}</strong><br>${escapeHtml(metricLabel(metric, Number(p[metric])))}<br>${escapeHtml(p.action)}`)
+        .addTo(geoMapInstance);
+    });
+  } else {
+    geoMapInstance.getSource("areas").setData(data);
+    geoMapInstance.setPaintProperty("area-heat", "circle-radius", ["interpolate", ["linear"], ["get", "metric_score"], 0, 12, 1, 52]);
+    geoMapInstance.setPaintProperty("area-heat", "circle-color", ["interpolate", ["linear"], ["get", "metric_score"], 0, "#60a5fa", 0.55, "#fbbf24", 1, "#34d399"]);
+  }
+}
+
+async function renderGeoSalesCommandCenter() {
+  if (!$("geoAreaPanel")) return;
+  const ctx = geoContext();
+  await loadGeoLiveData();
+  const liveRows = geoLiveData?.areas?.filter(row => row.city === ctx.city.city) || [];
+  const rows = liveRows.length ? liveRows : geoAreaRows(ctx);
+  const sorted = [...rows].sort((a, b) => metricValue(b, ctx.metric) - metricValue(a, ctx.metric));
+  const top = sorted[0];
+
+  $("geoAreaPanel").innerHTML = `
+    <div class="geo-command-strip">
+      <div><span>Sales AM</span><strong>${escapeHtml(top.area)}</strong><p>Push stock + offers where demand is already warm.</p></div>
+      <div><span>Marketing AM</span><strong>${escapeHtml(top.topAudience)}</strong><p>Send more native video variants to the best-clicking group.</p></div>
+    </div>
+    <div class="geo-decision-hero"><span>Top area</span><strong>${escapeHtml(top.area)}</strong><p>${escapeHtml(metricLabel(ctx.metric, metricValue(top, ctx.metric)))} · ${escapeHtml(top.action)}</p></div>
+    ${sorted.map(row => `<div class="geo-area-row"><span>${escapeHtml(row.area)}</span><strong>${escapeHtml(metricLabel(ctx.metric, metricValue(row, ctx.metric)))}</strong><p>${escapeHtml(row.topAudience)} · ${escapeHtml(row.action)}</p></div>`).join("")}
+  `;
+
+  renderGeoTrendGraph(sorted, ctx);
+  renderGeoAudienceGraph(sorted);
+  await renderGeoMap(sorted, ctx);
+}
+
+function renderGeoTrendGraph(rows, ctx) {
+  const periods = ["Daily", "Weekly", "3 month", "6 month"];
+  const base = rows.reduce((sum, row) => sum + row.sales, 0) / Math.max(1, rows.length);
+  const values = [base / 30, base / 4, base * 3, base * 6].map(Math.round);
+  const max = Math.max(...values);
+  $("geoTrendGraph").innerHTML = periods.map((period, index) => `
+    <div class="geo-trend-row"><span>${period}</span><div class="geo-trend-track"><div style="width:${(values[index] / max) * 100}%"></div></div><strong>INR ${formatNumber(values[index])}</strong></div>
+  `).join("");
+}
+
+function renderGeoAudienceGraph(rows) {
+  const audiences = rows.map(row => ({ label: row.topAudience, ctr: row.ctr })).sort((a, b) => b.ctr - a.ctr);
+  const max = Math.max(...audiences.map(item => item.ctr));
+  $("geoAudienceGraph").innerHTML = audiences.map(item => `
+    <div class="geo-trend-row"><span>${escapeHtml(item.label)}</span><div class="geo-trend-track"><div style="width:${(item.ctr / max) * 100}%"></div></div><strong>${item.ctr}%</strong></div>
+  `).join("");
+}
+
+const SHELLY_LANG = {
+  English: { code: "en-IN", greeting: "Hi, I am Shelly. I am here.", prefix: "Shelly here.", fallback: "Ask me about score, sales area, video CTR, news signals, or say take me to a tab." },
+  Hindi: { code: "hi-IN", greeting: "नमस्ते, मैं शेली हूँ। बोलिए।", prefix: "शेली बोल रही हूँ।", fallback: "आप score, sales area, video CTR, news signals पूछ सकते हैं, या किसी tab पर जाने को कह सकते हैं।" },
+  Telugu: { code: "te-IN", greeting: "నమస్తే, నేను షెల్లీ. చెప్పండి.", prefix: "షెల్లీ ఇక్కడ ఉంది.", fallback: "Score, sales area, video CTR, news signals గురించి అడగండి, లేదా tab కి తీసుకెళ్ళమని చెప్పండి." },
+  Tamil: { code: "ta-IN", greeting: "வணக்கம், நான் ஷெல்லி. சொல்லுங்கள்.", prefix: "ஷெல்லி பேசுகிறேன்.", fallback: "Score, sales area, video CTR, news signals கேளுங்கள், அல்லது tab க்கு போக சொல்லுங்கள்." },
+  Marathi: { code: "mr-IN", greeting: "नमस्कार, मी शेली आहे. बोला.", prefix: "शेली बोलते आहे.", fallback: "Score, sales area, video CTR, news signals विचारा, किंवा tab वर घेऊन जा असे सांगा." },
+  Kannada: { code: "kn-IN", greeting: "ನಮಸ್ಕಾರ, ನಾನು ಶೆಲ್ಲಿ. ಹೇಳಿ.", prefix: "ಶೆಲ್ಲಿ ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ.", fallback: "Score, sales area, video CTR, news signals ಕೇಳಿ, ಅಥವಾ tab ಗೆ ತೆಗೆದುಕೊಂಡು ಹೋಗು ಎಂದು ಹೇಳಿ." },
+  Malayalam: { code: "ml-IN", greeting: "നമസ്കാരം, ഞാൻ ഷെല്ലി. പറയൂ.", prefix: "ഷെല്ലിയാണ് സംസാരിക്കുന്നത്.", fallback: "Score, sales area, video CTR, news signals ചോദിക്കാം, അല്ലെങ്കിൽ tab തുറക്കാൻ പറയാം." },
+  Odia: { code: "or-IN", greeting: "ନମସ୍କାର, ମୁଁ ଶେଲି। କୁହନ୍ତୁ।", prefix: "ଶେଲି କହୁଛି।", fallback: "Score, sales area, video CTR, news signals ପଚାରନ୍ତୁ, କିମ୍ବା tab କୁ ନେବାକୁ କୁହନ୍ତୁ।" },
+  Punjabi: { code: "pa-IN", greeting: "ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਮੈਂ ਸ਼ੈਲੀ ਹਾਂ। ਦੱਸੋ।", prefix: "ਸ਼ੈਲੀ ਬੋਲ ਰਹੀ ਹੈ।", fallback: "Score, sales area, video CTR, news signals ਪੁੱਛੋ, ਜਾਂ tab ਤੇ ਲੈ ਜਾਣ ਲਈ ਕਹੋ।" },
+  Haryanvi: { code: "hi-IN", greeting: "राम राम, मैं शेली सूँ। बोलो।", prefix: "शेली बोल री सूँ।", fallback: "Score, sales area, video CTR, news signals पूछो, या tab पे ले चल कहो।" }
+};
+
+const SHELLY_WAKE_RE = /\b(shelly|shelli|shelley|शेली|शैली|షెల్లీ|ஷெல்லி|ಶೆಲ್ಲಿ|ഷെല്ലി|ଶେଲି|ਸ਼ੈਲੀ)\b/i;
+
+function currentAssistantLanguage(command = "") {
+  const selected = $("languageSelect")?.value || "English";
+  const text = command.toLowerCase();
+  if (/[\u0900-\u097F]/.test(command)) return selected === "Marathi" || selected === "Haryanvi" ? selected : "Hindi";
+  if (/[\u0C00-\u0C7F]/.test(command)) return "Telugu";
+  if (/[\u0B80-\u0BFF]/.test(command)) return "Tamil";
+  if (/[\u0C80-\u0CFF]/.test(command)) return "Kannada";
+  if (/[\u0D00-\u0D7F]/.test(command)) return "Malayalam";
+  if (/[\u0B00-\u0B7F]/.test(command)) return "Odia";
+  if (/[\u0A00-\u0A7F]/.test(command)) return "Punjabi";
+  if (text.includes("namaste") || text.includes("hindi")) return "Hindi";
+  return selected in SHELLY_LANG ? selected : "English";
+}
+
+function detectShellyMood(command) {
+  const text = command.toLowerCase();
+  if (/(angry|irritated|annoyed|frustrated|bad|worried|confused|stress|tension|problem|issue|hate)/.test(text)) return "concerned";
+  if (/(great|good|nice|love|happy|awesome|excellent|perfect)/.test(text)) return "positive";
+  if (/(urgent|fast|quick|now|jaldi|abhi)/.test(text)) return "urgent";
+  return "neutral";
+}
+
+function moodOpener(mood, language) {
+  if (language !== "English") return SHELLY_LANG[language]?.prefix || SHELLY_LANG.English.prefix;
+  if (mood === "concerned") return "I hear you. Let me keep this direct.";
+  if (mood === "urgent") return "Got it, quick answer.";
+  if (mood === "positive") return "Nice. Here is the useful bit.";
+  return "Shelly here.";
+}
+
+function stripWakeName(command) {
+  return command.replace(SHELLY_WAKE_RE, "").trim();
+}
+
+function tabFromVoice(command) {
+  const text = command.toLowerCase();
+  const tabs = [
+    ["market", "market"],
+    ["opportunity engine", "scorer"],
+    ["opportunity", "scorer"],
+    ["campaign", "campaign"],
+    ["video", "video"],
+    ["video campaigns", "video"],
+    ["geo", "geo"],
+    ["sales", "geo"],
+    ["planner", "planner"],
+    ["unit economics", "unit"],
+    ["economics", "unit"],
+    ["report", "report"],
+    ["tracker", "experiments"],
+    ["sources", "sources"],
+    ["signals", "signals"],
+    ["news", "signals"]
+  ];
+  const match = tabs.find(([phrase]) => text.includes(phrase));
+  return match?.[1] || null;
+}
+
+function answerSpecificQuestion(command, language) {
+  const text = command.toLowerCase();
+  const city = cityFor("citySelect");
+  const selectedLanguage = $("languageSelect")?.value || "English";
+  const category = $("categorySelect")?.value || "Grocery";
+  const platform = getPlatforms().find(item => item.id === ($("scorerPlatformSelect")?.value || "blinkit")) || selectedPlatform();
+  const score = calculateScore(city, selectedLanguage, category);
+  const geoRows = geoAreaRows({ city, range: "daily", metric: "sales", channel: "All channels" }).sort((a, b) => b.sales - a.sales);
+  const topArea = geoRows[0];
+  const videoRows = videoSampleRows({ city, language: selectedLanguage, category, platform, format: "Instagram Reel", manager: "Area manager" })
+    .map(row => ({ ...row, ctr: row.clicked / row.reached }))
+    .sort((a, b) => b.ctr - a.ctr);
+  const topVideo = videoRows[0];
+  const ctx = {
+    platform: platform.name,
+    city: city.city,
+    language: selectedLanguage,
+    category,
+    score: score.score,
+    confidence: score.confidence,
+    area: topArea.area,
+    sales: formatNumber(topArea.sales),
+    action: topArea.action,
+    audience: topVideo.segment,
+    ctr: (topVideo.ctr * 100).toFixed(1)
+  };
+  const say = (kind) => localizedShellyAnswer(kind, language, ctx);
+
+  if (text.includes("score") || text.includes("opportunity") || text.includes("स्कोर") || text.includes("स्कोअर")) {
+    return say("score");
+  }
+  if (text.includes("sales") || text.includes("area") || text.includes("where") || text.includes("सेल") || text.includes("एरिया")) {
+    return say("sales");
+  }
+  if (text.includes("video") || text.includes("ctr") || text.includes("reel") || text.includes("youtube") || text.includes("instagram")) {
+    return say("video");
+  }
+  if (text.includes("news") || text.includes("signal") || text.includes("market update") || text.includes("खबर")) {
+    const signal = marketSignals?.signals?.[0];
+    if (signal) return language === "English" ? `Latest saved signal: ${signal.signal_summary}.` : `${SHELLY_LANG[language]?.prefix || ""} Latest saved signal: ${signal.signal_summary}.`;
+    return say("news");
+  }
+  if (text.includes("what should") || text.includes("next") || text.includes("recommend") || text.includes("क्या कर") || text.includes("पुढे")) {
+    return score.score >= 70 ? say("nextScale") : say("nextValidate");
+  }
+  if (language !== "English") return SHELLY_LANG[language]?.fallback || SHELLY_LANG.English.fallback;
+  return SHELLY_LANG.English.fallback;
+}
+
+function localizedShellyAnswer(kind, language, c) {
+  const en = {
+    score: `${c.platform} in ${c.city}, ${c.language}, ${c.category}: opportunity score is ${c.score} out of 100, confidence ${c.confidence}.`,
+    sales: `Watch ${c.area}. Estimated daily sales are ${c.sales} rupees. Action: ${c.action}.`,
+    video: `Best video audience is ${c.audience}, with estimated CTR ${c.ctr} percent. Test more native short videos there.`,
+    news: "Real-time news is not connected yet. I can only read saved dashboard signals for now.",
+    nextScale: `Next step: run a small measured pilot in ${c.area}, using ${c.language} copy and video retargeting for ${c.audience}.`,
+    nextValidate: `Next step: do not scale yet. Validate the ${c.language} ${c.category} wedge with a small pilot and upload real results.`
+  };
+  const hi = {
+    score: `${c.city} में ${c.platform}, ${c.language}, ${c.category} का opportunity score ${c.score} out of 100 है. Confidence ${c.confidence}.`,
+    sales: `${c.area} पर ध्यान दें. Estimated daily sales ${c.sales} rupees हैं. Action: ${c.action}.`,
+    video: `Video के लिए सबसे अच्छा audience ${c.audience} है. Estimated CTR ${c.ctr} percent. वहाँ native short videos test करें.`,
+    news: "Real-time news अभी connected नहीं है. मैं अभी saved dashboard signals ही पढ़ सकती हूँ.",
+    nextScale: `Next step: ${c.area} में छोटा measured pilot चलाइए, ${c.language} copy और ${c.audience} retargeting के साथ.`,
+    nextValidate: `Next step: अभी scale मत कीजिए. पहले ${c.language} ${c.category} wedge को छोटे pilot से validate करें.`
+  };
+  const te = {
+    score: `${c.city} లో ${c.platform}, ${c.language}, ${c.category} opportunity score ${c.score} out of 100. Confidence ${c.confidence}.`,
+    sales: `${c.area} ని watch చేయండి. Estimated daily sales ${c.sales} rupees. Action: ${c.action}.`,
+    video: `Video కోసం best audience ${c.audience}. Estimated CTR ${c.ctr} percent. అక్కడ native short videos test చేయండి.`,
+    news: "Real-time news ఇంకా connected లేదు. ఇప్పటికి saved dashboard signals మాత్రమే చదవగలను.",
+    nextScale: `Next step: ${c.area} లో small measured pilot run చేయండి, ${c.language} copy మరియు ${c.audience} retargeting తో.`,
+    nextValidate: `Next step: ఇప్పుడే scale చేయకండి. ముందుగా ${c.language} ${c.category} wedge ని small pilot తో validate చేయండి.`
+  };
+  const mr = {
+    score: `${c.city} मध्ये ${c.platform}, ${c.language}, ${c.category} चा opportunity score ${c.score} out of 100 आहे. Confidence ${c.confidence}.`,
+    sales: `${c.area} वर लक्ष ठेवा. Estimated daily sales ${c.sales} rupees आहेत. Action: ${c.action}.`,
+    video: `Video साठी best audience ${c.audience} आहे. Estimated CTR ${c.ctr} percent. तिथे native short videos test करा.`,
+    news: "Real-time news अजून connected नाही. आत्ता मी saved dashboard signals वाचू शकते.",
+    nextScale: `Next step: ${c.area} मध्ये छोटा measured pilot चालवा, ${c.language} copy आणि ${c.audience} retargeting सोबत.`,
+    nextValidate: `Next step: अजून scale करू नका. आधी ${c.language} ${c.category} wedge छोट्या pilot ने validate करा.`
+  };
+  if (language === "Hindi" || language === "Haryanvi") return hi[kind] || en[kind];
+  if (language === "Telugu") return te[kind] || en[kind];
+  if (language === "Marathi") return mr[kind] || en[kind];
+  return en[kind];
+}
+
+function getVoiceBriefText(command = "brief") {
+  const city = cityFor("citySelect");
+  const language = $("languageSelect")?.value || "English";
+  const category = $("categorySelect")?.value || "Grocery";
+  const platform = getPlatforms().find(item => item.id === ($("scorerPlatformSelect")?.value || "blinkit")) || selectedPlatform();
+  const score = calculateScore(city, language, category);
+  const geoCtx = { city, range: "daily", metric: "sales", channel: "All channels" };
+  const geoRows = geoAreaRows(geoCtx).sort((a, b) => b.sales - a.sales);
+  const topArea = geoRows[0];
+  const videoRows = videoSampleRows({ city, language, category, platform, format: "Instagram Reel", manager: "Area manager" })
+    .map(row => ({ ...row, ctr: row.clicked / row.reached }))
+    .sort((a, b) => b.ctr - a.ctr);
+  const topVideoAudience = videoRows[0];
+  const signal = marketSignals?.signals?.find(s => {
+    const group = getSignalBrandGroup(s).toLowerCase();
+    return platform.name.toLowerCase().includes(group) || group.includes(platform.name.split(" ")[0].toLowerCase());
+  });
+
+  const newsLine = signal
+    ? `Latest saved market signal: ${signal.signal_summary}.`
+    : "Real-time news API is not connected yet, so I am using saved dashboard signals and local planning data.";
+
+  const action = score.score >= 70
+    ? `Proceed with a measured pilot in ${topArea.area}.`
+    : `Do not scale yet. Validate the ${language} ${category} wedge with a small pilot first.`;
+
+  const videoAction = topVideoAudience
+    ? `For video, focus on ${topVideoAudience.segment}, because it has the strongest estimated click intent.`
+    : "For video, run one hook test before increasing spend.";
+
+  const text = [
+    `Here is your ${command.includes("market") ? "market update" : "dashboard brief"}.`,
+    `${platform.name}, ${city.city}, ${language}, ${category}. Opportunity score is ${score.score} out of 100, confidence ${score.confidence}.`,
+    newsLine,
+    `Sales area to watch: ${topArea.area}, estimated daily sales ${formatNumber(topArea.sales)} rupees. Recommended action: ${topArea.action}.`,
+    videoAction,
+    `My recommendation: ${action} Keep tracking clicks, replies, orders, repeat rate, and local stock issues before claiming performance.`
+  ].join(" ");
+
+  return text;
+}
+
+function pickShellyVoice(langCode) {
+  if (!("speechSynthesis" in window)) return null;
+  shellyVoices = shellyVoices.length ? shellyVoices : window.speechSynthesis.getVoices();
+  const exact = shellyVoices.find(v => v.lang === langCode && /natural|neural|online|female|zira|heera|kalpana/i.test(v.name));
+  if (exact) return exact;
+  return shellyVoices.find(v => v.lang === langCode) || shellyVoices.find(v => v.lang?.startsWith(langCode.split("-")[0])) || null;
+}
+
+function stopShellyListening() {
+  if (voiceRecognition && voiceListening) {
+    try { voiceRecognition.stop(); } catch { /* browser may already be stopping */ }
+  }
+  voiceListening = false;
+  $("voiceCommandBtn")?.classList.remove("listening");
+}
+
+function speakVoiceBrief(text, language = "English", options = {}) {
+  if (!("speechSynthesis" in window)) {
+    $("voiceAssistantStatus").textContent = "Speech output is not supported in this browser.";
+    return;
+  }
+  stopShellyListening();
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const lang = SHELLY_LANG[language] || SHELLY_LANG.English;
+  utterance.lang = lang.code;
+  utterance.voice = pickShellyVoice(lang.code);
+  utterance.rate = 0.96;
+  utterance.pitch = 1.04;
+  utterance.volume = 1;
+  utterance.onstart = () => {
+    shellySpeaking = true;
+    $("voiceAssistantStatus").textContent = "Shelly is speaking...";
+  };
+  utterance.onend = () => {
+    shellySpeaking = false;
+    if (options.stopAfter || shellyStopAfterAnswer) {
+      shellyStopAfterAnswer = false;
+      shellyStandby = false;
+      $("voiceCommandBtn").lastChild.nodeValue = " Shelly Ready";
+      $("voiceAssistantStatus").textContent = "Shelly is quiet now.";
+      return;
+    }
+    $("voiceAssistantStatus").textContent = shellyStandby ? "Shelly is listening. Ask naturally, or say Shelly stop please." : "Done.";
+    restartShellyStandby();
+  };
+  window.speechSynthesis.speak(utterance);
+}
+
+function handleVoiceCommand(command) {
+  const normalized = command.toLowerCase();
+  $("voiceAssistantStatus").textContent = `Heard: "${command}"`;
+  const hasWake = SHELLY_WAKE_RE.test(command);
+  if (!shellyStandby && !hasWake) {
+    restartShellyStandby();
+    return;
+  }
+
+  const language = currentAssistantLanguage(command);
+  const mood = detectShellyMood(command);
+  const intent = stripWakeName(command);
+  const wantsStop = /(stop|sleep|quiet|pause|shut up|band|ruko|ruk ja|बस|रुको|बंद|ఆపు|நிறுத்து|थांब)/i.test(intent);
+  const saysPlease = /\bplease\b/i.test(intent) || /कृपया|प्लीज/i.test(intent);
+  if (wantsStop) {
+    shellyStandby = false;
+    speakVoiceBrief(`${moodOpener(mood, language)} Okay, I will stay quiet.`, language, { stopAfter: true });
+    return;
+  }
+  shellyStopAfterAnswer = saysPlease;
+  const tab = tabFromVoice(intent);
+  if (tab && /(take|go|open|show|switch|ले|जाओ|खोल|open)/i.test(intent)) {
+    goToTab(tab);
+    const tabLabel = document.querySelector(`.tab[data-tab="${tab}"]`)?.textContent || tab;
+    speakVoiceBrief(`${moodOpener(mood, language)} Taking you to ${tabLabel}.`, language);
+    return;
+  }
+
+  const answer = answerSpecificQuestion(intent || command, language);
+  speakVoiceBrief(`${moodOpener(mood, language)} ${answer}`, language);
+}
+
+function restartShellyStandby() {
+  if (!shellyStandby || !voiceRecognition || shellySpeaking) return;
+  if (voiceListening) return;
+  try {
+    const language = currentAssistantLanguage();
+    voiceRecognition.lang = SHELLY_LANG[language]?.code || "en-IN";
+    voiceRecognition.start();
+    voiceListening = true;
+    $("voiceCommandBtn")?.classList.add("listening");
+    $("voiceAssistantStatus").textContent = "Shelly is listening. Ask naturally, or say Shelly stop please.";
+  } catch {
+    // Browser may still be closing the previous recognition session.
+    setTimeout(restartShellyStandby, 500);
+  }
+}
+
+function setupVoiceAssistant() {
+  const btn = $("voiceCommandBtn");
+  const panel = $("voiceAssistantPanel");
+  if (!btn || !panel) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    voiceRecognition = new SpeechRecognition();
+    voiceRecognition.lang = "en-IN";
+    voiceRecognition.continuous = false;
+    voiceRecognition.interimResults = false;
+    voiceRecognition.onresult = event => {
+      const result = event.results?.[event.results.length - 1];
+      const transcript = result?.[0]?.transcript || "";
+      voiceListening = false;
+      btn.classList.remove("listening");
+      if (transcript) handleVoiceCommand(transcript);
+    };
+    voiceRecognition.onerror = () => {
+      voiceListening = false;
+      btn.classList.remove("listening");
+      shellyStandby = false;
+      btn.lastChild.nodeValue = " Shelly Ready";
+      $("voiceAssistantStatus").textContent = "Browser blocked or missed the mic. Click Shelly Ready once, then she can stay on standby.";
+    };
+    voiceRecognition.onend = () => {
+      voiceListening = false;
+      btn.classList.remove("listening");
+      restartShellyStandby();
+    };
+  }
+
+  function activateShelly({ auto = false } = {}) {
+    panel.classList.remove("hidden");
+    if (!voiceRecognition) {
+      $("voiceAssistantStatus").textContent = "Voice input is not supported here. Use Ask Shelly brief for spoken output.";
+      return;
+    }
+    if (shellyStandby) {
+      shellyStandby = false;
+      stopShellyListening();
+      btn.lastChild.nodeValue = " Shelly Ready";
+      $("voiceAssistantStatus").textContent = "Shelly is off.";
+      return;
+    }
+    shellyStandby = true;
+    voiceListening = true;
+    btn.classList.add("listening");
+    btn.lastChild.nodeValue = " Shelly On";
+    const language = currentAssistantLanguage();
+    voiceRecognition.lang = SHELLY_LANG[language]?.code || "en-IN";
+    $("voiceAssistantStatus").textContent = "Shelly is listening. Ask naturally, or say Shelly stop please.";
+    if (auto) {
+      try {
+        voiceRecognition.start();
+      } catch {
+        shellyStandby = false;
+        voiceListening = false;
+        btn.classList.remove("listening");
+        btn.lastChild.nodeValue = " Shelly Ready";
+        $("voiceAssistantStatus").textContent = "Shelly is ready, but Chrome needs one click to unlock the microphone.";
+      }
+    } else {
+      speakVoiceBrief(SHELLY_LANG[language]?.greeting || SHELLY_LANG.English.greeting, language);
+    }
+  }
+
+  btn.addEventListener("click", () => activateShelly());
+
+  $("voiceReadBrief")?.addEventListener("click", () => {
+    const language = currentAssistantLanguage();
+    speakVoiceBrief(getVoiceBriefText("today's brief"), language);
+  });
+  $("voiceStopBrief")?.addEventListener("click", () => {
+    shellyStandby = false;
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    stopShellyListening();
+    btn.lastChild.nodeValue = " Shelly Ready";
+    $("voiceAssistantStatus").textContent = "Stopped.";
+  });
+
+  if ("speechSynthesis" in window) {
+    shellyVoices = window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => { shellyVoices = window.speechSynthesis.getVoices(); };
+  }
+
+  setTimeout(() => activateShelly({ auto: true }), 900);
+}
+
 function selectedMulti(id) {
   return Array.from($(id).selectedOptions).map(option => option.value);
 }
@@ -2230,8 +3141,8 @@ function attachEvents() {
   });
   $("benchmarkLensSelect").addEventListener("change", renderPlatformIntelligence);
   ["marketMetricSelect", "marketViewSelect"].forEach(id => $(id).addEventListener("change", renderMarketPulse));
-  [["citySelect", "languageSelect"], ["plannerCitySelect", "plannerLanguageSelect"], ["reportCitySelect", "reportLanguageSelect"]].forEach(([cityId, langId]) => $(cityId).addEventListener("change", () => { updateLanguageOptions(cityId, langId); renderScore(); renderExperimentPlan(); renderReport(); renderCampaignAutopilot(); renderBenchmarkCockpit(); }));
-  ["languageSelect", "categorySelect", "scorerPlatformSelect", "objectiveSelect"].forEach(id => $(id).addEventListener("change", () => { renderScore(); renderCampaignAutopilot(); renderBenchmarkCockpit(); }));
+  [["citySelect", "languageSelect"], ["plannerCitySelect", "plannerLanguageSelect"], ["reportCitySelect", "reportLanguageSelect"], ["videoCitySelect", "videoLanguageSelect"]].forEach(([cityId, langId]) => $(cityId).addEventListener("change", () => { updateLanguageOptions(cityId, langId); renderScore(); renderExperimentPlan(); renderReport(); renderCampaignAutopilot(); renderBenchmarkCockpit(); renderVideoCampaignStudio(); }));
+  ["languageSelect", "categorySelect", "scorerPlatformSelect", "objectiveSelect"].forEach(id => $(id).addEventListener("change", () => { renderScore(); renderCampaignAutopilot(); renderBenchmarkCockpit(); renderVideoCampaignStudio(); }));
   $("channelSelect")?.addEventListener("change", () => { renderScore(); });
   $("oeGenerateBrief").addEventListener("click", generateBrief);
   $("oeCopyBrief").addEventListener("click", copyBrief);
@@ -2255,6 +3166,8 @@ function attachEvents() {
   $("caSaveNote").addEventListener("click", () => { localStorage.setItem("caLearningNote", $("caLearningNote").value); $("caSaveNote").textContent = "Saved!"; setTimeout(() => { $("caSaveNote").textContent = "Save learning note"; }, 2000); });
   $("caClearNote").addEventListener("click", () => { $("caLearningNote").value = ""; localStorage.removeItem("caLearningNote"); });
   $("caResetCampaign").addEventListener("click", resetCampaign);
+  ["videoPlatformSelect", "videoLanguageSelect", "videoCategorySelect", "videoFormatSelect", "videoManagerSelect"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", renderVideoCampaignStudio); });
+  ["geoCitySelect", "geoRangeSelect", "geoMetricSelect", "geoChannelSelect"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", renderGeoSalesCommandCenter); });
   ["plannerPlatformSelect", "plannerLanguageSelect", "plannerCategorySelect", "plannerObjectiveSelect", "plannerBudgetSelect", "plannerDurationSelect", "plannerOfferSelect", "plannerChannelSelect"].forEach(id => $(id).addEventListener("change", renderExperimentPlan));
   $("generateExperimentPlan").addEventListener("click", renderExperimentPlan);
   ["unitAovInput", "unitMarginInput", "unitRepeatInput", "unitCacInput", "unitLifetimeInput"].forEach(id => $(id).addEventListener("input", renderUnitEconomics));
@@ -2300,6 +3213,10 @@ function attachEvents() {
   $("signalModalClose")?.addEventListener("click", () => $("signalDetailModal").classList.add("hidden"));
   $("signalDetailModal")?.addEventListener("click", (e) => { if (e.target === $("signalDetailModal")) $("signalDetailModal").classList.add("hidden"); });
   setupScrollLinks();
+  if (geoRefreshTimer) clearInterval(geoRefreshTimer);
+  geoRefreshTimer = setInterval(() => {
+    if ($("geo")?.classList.contains("active-panel")) renderGeoSalesCommandCenter();
+  }, 30000);
 }
 
 async function init() {
@@ -2318,6 +3235,8 @@ async function init() {
   renderSources();
   renderScore();
   renderCampaignAutopilot();
+  renderVideoCampaignStudio();
+  renderGeoSalesCommandCenter();
   renderExperimentPlan();
   renderUnitEconomics();
   renderReport();

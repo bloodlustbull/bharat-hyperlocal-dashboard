@@ -2,17 +2,17 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 
 const BRANDS = [
-  { id: 'blinkit', name: 'Blinkit', color: 0xf7c948, emissive: 0xf7c948, textColor: '#f7c948', position: [-5.5, 2.5, 0] },
-  { id: 'zepto', name: 'Zepto', color: 0x8b3cf7, emissive: 0x8b3cf7, textColor: '#8b3cf7', position: [5.5, 2.5, 0] },
-  { id: 'instamart', name: 'Swiggy Instamart', color: 0xff5722, emissive: 0xff5722, textColor: '#ff5722', position: [-6, -2.5, 0] },
-  { id: 'bigbasket_now', name: 'BigBasket Now', color: 0x22c55e, emissive: 0x22c55e, textColor: '#22c55e', accentColor: 0xef4444, position: [6, -2, 1] },
-  { id: 'dunzo', name: 'Dunzo', color: 0x60a5fa, emissive: 0x60a5fa, textColor: '#60a5fa', accentColor: 0x22c55e, position: [0, -4.5, 0.5] },
+  { id: 'blinkit', name: 'Blinkit', color: 0xf7c948, emissive: 0xf7c948, textColor: '#f7c948', position: [-8.2, 2.7, -1.6] },
+  { id: 'zepto', name: 'Zepto', color: 0x8b3cf7, emissive: 0x8b3cf7, textColor: '#8b3cf7', position: [8.2, 2.6, -1.6] },
+  { id: 'instamart', name: 'Swiggy Instamart', color: 0xff5722, emissive: 0xff5722, textColor: '#ff5722', position: [-8.7, -2.65, -1.7] },
+  { id: 'bigbasket_now', name: 'BigBasket Now', color: 0x22c55e, emissive: 0x22c55e, textColor: '#22c55e', accentColor: 0xef4444, position: [8.6, -2.55, -1.5] },
+  { id: 'dunzo', name: 'Dunzo', color: 0x60a5fa, emissive: 0x60a5fa, textColor: '#60a5fa', accentColor: 0x22c55e, position: [0, -6.6, -2.4] },
 ];
 
 function createCardMesh(brand) {
   const group = new THREE.Group();
 
-  const cardGeo = new THREE.PlaneGeometry(2.8, 3.6, 1, 1);
+  const cardGeo = new THREE.PlaneGeometry(2.05, 2.72, 1, 1);
   const cardMat = new THREE.MeshPhysicalMaterial({
     color: 0x0c1225,
     emissive: brand.emissive,
@@ -20,7 +20,7 @@ function createCardMesh(brand) {
     metalness: 0.3,
     roughness: 0.4,
     transparent: true,
-    opacity: 0.88,
+    opacity: 0.58,
     side: THREE.DoubleSide,
     clearcoat: 0.4,
     clearcoatRoughness: 0.2,
@@ -33,7 +33,7 @@ function createCardMesh(brand) {
   const border = new THREE.LineSegments(borderGeo, borderMat);
   group.add(border);
 
-  const glowGeo = new THREE.PlaneGeometry(3.2, 4.0);
+  const glowGeo = new THREE.PlaneGeometry(2.55, 3.2);
   const glowMat = new THREE.MeshBasicMaterial({
     color: brand.color,
     transparent: true,
@@ -45,7 +45,7 @@ function createCardMesh(brand) {
   glow.position.z = -0.05;
   group.add(glow);
 
-  const sphereGeo = new THREE.SphereGeometry(0.55, 32, 32);
+  const sphereGeo = new THREE.SphereGeometry(0.42, 32, 32);
   const sphereMat = new THREE.MeshPhysicalMaterial({
     color: brand.color,
     emissive: brand.emissive,
@@ -58,7 +58,7 @@ function createCardMesh(brand) {
   sphere.position.y = 0.5;
   group.add(sphere);
 
-  const ringGeo = new THREE.RingGeometry(0.6, 0.68, 48);
+  const ringGeo = new THREE.RingGeometry(0.47, 0.54, 48);
   const ringMat = new THREE.MeshBasicMaterial({
     color: brand.color,
     transparent: true,
@@ -72,7 +72,7 @@ function createCardMesh(brand) {
   group.add(ring);
 
   if (brand.accentColor) {
-    const accentRingGeo = new THREE.RingGeometry(0.72, 0.78, 48, 1, Math.PI * 0.6, Math.PI * 0.8);
+    const accentRingGeo = new THREE.RingGeometry(0.58, 0.64, 48, 1, Math.PI * 0.6, Math.PI * 0.8);
     const accentRingMat = new THREE.MeshBasicMaterial({
       color: brand.accentColor,
       transparent: true,
@@ -126,9 +126,9 @@ export function animateBrandEntry(brandMeshes, onComplete) {
       ease: 'power3.out',
     });
     gsap.to(mesh.scale, {
-      x: 1,
-      y: 1,
-      z: 1,
+      x: 0.78,
+      y: 0.78,
+      z: 0.78,
       duration: 1.2,
       delay: i * 0.18 + 0.3,
       ease: 'back.out(1.4)',
@@ -157,16 +157,16 @@ export function hoverBrand(mesh, isHovered) {
   mesh.userData.hovered = isHovered;
 
   gsap.to(mesh.scale, {
-    x: isHovered ? 1.12 : 1,
-    y: isHovered ? 1.12 : 1,
-    z: isHovered ? 1.12 : 1,
+    x: isHovered ? 0.88 : 0.78,
+    y: isHovered ? 0.88 : 0.78,
+    z: isHovered ? 0.88 : 0.78,
     duration: 0.4,
     ease: 'power2.out',
   });
 
   gsap.to(mesh.userData.card.material, {
     emissiveIntensity: isHovered ? 0.2 : 0.08,
-    opacity: isHovered ? 0.95 : 0.88,
+    opacity: isHovered ? 0.74 : 0.58,
     duration: 0.35,
   });
 

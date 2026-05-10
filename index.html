@@ -15,6 +15,22 @@
   <div id="three-container" class="active"></div>
 
   <div id="three-overlay">
+    <div class="hero-random-floats" aria-hidden="true">
+      <img class="hero-float-sprite sprite-01" src="assets/hero/items/grocery-item-02.png" alt="" />
+      <img class="hero-float-sprite sprite-02" src="assets/hero/items/grocery-item-04.png" alt="" />
+      <img class="hero-float-sprite sprite-03" src="assets/hero/items/grocery-item-06.png" alt="" />
+      <img class="hero-float-sprite sprite-04" src="assets/hero/items/grocery-item-07.png" alt="" />
+      <img class="hero-float-sprite sprite-05" src="assets/hero/items/grocery-item-08.png" alt="" />
+      <img class="hero-float-sprite sprite-06" src="assets/hero/items/grocery-item-09.png" alt="" />
+      <img class="hero-float-sprite sprite-07" src="assets/hero/items/grocery-item-10.png" alt="" />
+      <img class="hero-float-sprite sprite-08" src="assets/hero/items/grocery-item-11.png" alt="" />
+      <img class="hero-float-sprite sprite-09" src="assets/hero/items/grocery-item-03.png" alt="" />
+      <img class="hero-float-sprite sprite-10" src="assets/hero/items/grocery-item-05.png" alt="" />
+      <img class="hero-float-sprite sprite-11" src="assets/hero/items/grocery-item-02.png" alt="" />
+      <img class="hero-float-sprite sprite-12" src="assets/hero/items/grocery-item-08.png" alt="" />
+      <img class="hero-float-sprite sprite-13" src="assets/hero/items/grocery-item-04.png" alt="" />
+      <img class="hero-float-sprite sprite-14" src="assets/hero/items/grocery-item-10.png" alt="" />
+    </div>
     <div id="intro-content">
       <div id="intro-eyebrow">
         <span class="pulse-dot"></span>
@@ -294,19 +310,21 @@
     </header>
 
     <nav class="tabbar" aria-label="Dashboard sections">
-      <button class="tab active" data-tab="market">Market</button>
-      <button class="tab" data-tab="scorer">Opportunity Engine</button>
-      <button class="tab" data-tab="campaign">Campaign</button>
-      <button class="tab" data-tab="planner">Planner</button>
-      <button class="tab" data-tab="unit">Unit Economics</button>
-      <button class="tab" data-tab="report">Report</button>
-      <button class="tab" data-tab="experiments">Tracker</button>
-      <button class="tab" data-tab="sources">Sources</button>
-      <button class="tab" data-tab="signals">Signals</button>
+      <button class="tab active" data-tab="market" data-assistant-section="market" data-assistant-label="Market">Market</button>
+      <button class="tab" data-tab="scorer" data-assistant-section="opportunity" data-assistant-label="Opportunity Engine">Opportunity Engine</button>
+      <button class="tab" data-tab="campaign" data-assistant-section="campaign" data-assistant-label="Campaign">Campaign</button>
+      <button class="tab" data-tab="video" data-assistant-section="video" data-assistant-label="Video Campaigns">Video Campaigns</button>
+      <button class="tab" data-tab="geo" data-assistant-section="geo" data-assistant-label="Geo Sales">Geo Sales</button>
+      <button class="tab" data-tab="planner" data-assistant-section="planner" data-assistant-label="Planner">Planner</button>
+      <button class="tab" data-tab="unit" data-assistant-section="unit" data-assistant-label="Unit Economics">Unit Economics</button>
+      <button class="tab" data-tab="report" data-assistant-section="report" data-assistant-label="Report">Report</button>
+      <button class="tab" data-tab="experiments" data-assistant-section="tracker" data-assistant-label="Tracker">Tracker</button>
+      <button class="tab" data-tab="sources" data-assistant-section="sources" data-assistant-label="Sources">Sources</button>
+      <button class="tab" data-tab="signals" data-assistant-section="signals" data-assistant-label="Signals">Signals</button>
     </nav>
 
     <main>
-      <section id="market" class="panel active-panel">
+      <section id="market" class="panel active-panel" data-assistant-section="market" data-assistant-label="Market">
         <section class="kpi-strip" id="kpiStrip" aria-label="KPI benchmark cards"></section>
         <section id="kpiDetail" class="detail-drawer hidden"></section>
 
@@ -377,7 +395,7 @@
         </section>
       </section>
 
-      <section id="scorer" class="panel">
+      <section id="scorer" class="panel" data-assistant-section="opportunity" data-assistant-label="Opportunity Engine">
         <div class="section-title"><p class="eyebrow">Opportunity Engine</p><h2>Automated hyperlocal decision workflow</h2></div>
 
         <!-- Workflow timeline -->
@@ -503,14 +521,14 @@
         </article>
       </section>
 
-      <section id="campaign" class="panel">
+      <section id="campaign" class="panel" data-assistant-section="campaign" data-assistant-label="Campaign">
         <!-- A) Campaign Control Panel -->
         <article class="card ca-control-panel">
           <div class="section-title"><p class="eyebrow">Campaign Autopilot</p><h2>Turn opportunity into action</h2></div>
           <div id="caConnectionStatus" class="ca-connection-grid"></div>
           <div class="form-grid slim">
             <label>Campaign objective<select id="caObjective"><option value="">Select objective</option><option>Awareness</option><option>Trial</option><option>Conversion</option><option>Retention</option><option>Repeat purchase</option><option>Win-back</option></select></label>
-            <label>Channel<select id="caChannel"><option value="">Select channel</option><option>WhatsApp</option><option>SMS</option><option>Push notification</option><option>In-app banner</option><option>Quick-commerce listing copy</option><option>Local social creative</option></select></label>
+            <label>Channel<select id="caChannel"><option value="">Select channel</option><option>WhatsApp</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Instagram Stories</option><option>YouTube Community</option><option>SMS</option><option>Push notification</option><option>In-app banner</option><option>Quick-commerce listing copy</option><option>Local social creative</option></select></label>
             <label>Offer angle<select id="caOffer"><option value="">Select offer type</option><option>First-order coupon</option><option>Free delivery</option><option>Category bundle</option><option>Festival / local offer</option><option>No discount / content-led test</option></select></label>
             <label>Tone<select id="caTone"><option value="Premium">Premium</option><option value="Local">Local</option><option value="Urgent">Urgent</option><option value="Trust-building">Trust-building</option><option value="Festive">Festive</option><option value="Youthful">Youthful</option><option value="Household reliability">Household reliability</option><option value="Operational">Operational / performance-focused</option></select></label>
           </div>
@@ -534,6 +552,16 @@
             <div id="caLocalInfo" class="ca-local-output"><p class="note">Select a city and language to see localization context.</p></div>
           </article>
         </div>
+
+        <article class="card ca-whatsapp-card">
+          <div class="section-title"><p class="eyebrow">WhatsApp Visual Lab</p><h3>Native-language message previews</h3></div>
+          <div id="waPreviewGrid" class="wa-preview-grid"></div>
+        </article>
+
+        <article class="card social-preview-card">
+          <div class="section-title"><p class="eyebrow">Instagram + YouTube</p><h3>Social campaign previews</h3></div>
+          <div id="socialCampaignPreview" class="social-preview-grid"></div>
+        </article>
 
         <!-- D) Measurement Tracker -->
         <article class="card ca-tracker-card">
@@ -604,7 +632,93 @@
         </div>
       </section>
 
-      <section id="planner" class="panel">
+      <section id="video" class="panel" data-assistant-section="video" data-assistant-label="Video Campaigns">
+        <div class="section-title"><p class="eyebrow">Video Campaign Studio</p><h2>Design reels, track CTR, and guide area managers</h2></div>
+        <article class="card video-control-panel">
+          <div class="form-grid slim">
+            <label>Platform<select id="videoPlatformSelect"></select></label>
+            <label>City<select id="videoCitySelect"></select></label>
+            <label>Language<select id="videoLanguageSelect"></select></label>
+            <label>Category<select id="videoCategorySelect"></select></label>
+            <label>Video format<select id="videoFormatSelect"><option>Instagram Reel</option><option>YouTube Short</option><option>WhatsApp Status</option><option>Influencer UGC</option><option>Store demo clip</option></select></label>
+            <label>Manager view<select id="videoManagerSelect"><option>Area manager</option><option>City growth lead</option><option>Brand manager</option><option>Performance marketer</option></select></label>
+          </div>
+        </article>
+
+        <article class="card video-output-card">
+          <div class="section-title"><p class="eyebrow">Platform Video Outputs</p><h3>Instagram, YouTube, WhatsApp previews</h3></div>
+          <div id="videoPlatformOutputs" class="video-output-grid"></div>
+        </article>
+
+        <div class="grid two-col">
+          <article class="card video-script-card">
+            <div class="section-title"><p class="eyebrow">Reel Blueprint</p><h3>Hook, scenes, CTA</h3></div>
+            <div id="videoBlueprint" class="video-blueprint"></div>
+          </article>
+          <article class="card video-preview-card">
+            <div class="section-title"><p class="eyebrow">Creative Preview</p><h3>Short-form storyboard</h3></div>
+            <div id="videoStoryboard" class="video-storyboard"></div>
+          </article>
+        </div>
+
+        <div class="grid two-col">
+          <article class="card video-graph-card">
+            <div class="section-title"><p class="eyebrow">Area Manager Graph</p><h3>CTR and user journey monitor</h3></div>
+            <div id="videoCtrGraph" class="video-graph"></div>
+          </article>
+          <article class="card video-checklist-card">
+            <div class="section-title"><p class="eyebrow">CTR Measurement Checklist</p><h3>Data needed before scaling videos</h3></div>
+            <div id="videoChecklist" class="video-checklist"></div>
+          </article>
+        </div>
+
+        <article class="card video-database-card">
+          <div class="section-title"><p class="eyebrow">User Database Lens</p><h3>What each manager should inspect</h3></div>
+          <div id="videoUserDatabase" class="table-wrap"></div>
+        </article>
+
+        <article class="card video-agent-card">
+          <div class="section-title"><p class="eyebrow">Future AI Integration</p><h3>Whisperflow and autonomous reel agents</h3></div>
+          <div id="videoAgentPlan" class="video-agent-plan"></div>
+        </article>
+      </section>
+
+      <section id="geo" class="panel" data-assistant-section="geo" data-assistant-label="Geo Sales">
+        <div class="section-title"><p class="eyebrow">Geo Sales Command Center</p><h2>Live area sales, video CTR, and manager action map</h2></div>
+        <article class="card geo-control-panel">
+          <div class="form-grid slim">
+            <label>City<select id="geoCitySelect"></select></label>
+            <label>Time window<select id="geoRangeSelect"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="three_month">3 month</option><option value="six_month">6 month</option></select></label>
+            <label>Metric<select id="geoMetricSelect"><option value="sales">Sales</option><option value="orders">Orders</option><option value="ctr">Video CTR</option><option value="repeat">Repeat rate</option></select></label>
+            <label>Channel<select id="geoChannelSelect"><option>All channels</option><option>WhatsApp</option><option>Instagram Reels</option><option>YouTube Shorts</option></select></label>
+          </div>
+        </article>
+
+        <div class="grid two-col geo-layout">
+          <article class="card geo-map-card">
+            <div class="section-title"><p class="eyebrow">Real-world Map Layer</p><h3>Area performance heat map</h3></div>
+            <div id="geoMapStatus" class="geo-status"></div>
+            <div id="geoMap" class="geo-map"></div>
+          </article>
+          <article class="card geo-detail-card">
+            <div class="section-title"><p class="eyebrow">Manager Decision Panel</p><h3>Which area needs action</h3></div>
+            <div id="geoAreaPanel" class="geo-area-panel"></div>
+          </article>
+        </div>
+
+        <div class="grid two-col">
+          <article class="card geo-trend-card">
+            <div class="section-title"><p class="eyebrow">Sales Trend</p><h3>Daily, weekly, 3 month, 6 month</h3></div>
+            <div id="geoTrendGraph" class="geo-trend-graph"></div>
+          </article>
+          <article class="card geo-audience-card">
+            <div class="section-title"><p class="eyebrow">Video Audience CTR</p><h3>Who is clicking more</h3></div>
+            <div id="geoAudienceGraph" class="geo-audience-graph"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="planner" class="panel" data-assistant-section="planner" data-assistant-label="Planner">
         <div class="section-title"><p class="eyebrow">Experiment designer</p><h2>Structure a measured pilot</h2></div>
         <article class="card">
           <div class="form-grid">
@@ -625,7 +739,7 @@
         <div id="experimentPlanOutput" class="planner-output"></div>
       </section>
 
-      <section id="unit" class="panel">
+      <section id="unit" class="panel" data-assistant-section="unit" data-assistant-label="Unit Economics">
         <div class="section-title"><p class="eyebrow">Unit economics modeler</p><h2>User-adjustable assumption model</h2></div>
         <article class="card">
           <div class="form-grid">
@@ -639,7 +753,7 @@
         <div id="unitEconomicsOutput" class="kpi-strip"></div>
       </section>
 
-      <section id="report" class="panel">
+      <section id="report" class="panel" data-assistant-section="report" data-assistant-label="Report">
         <div class="section-title"><p class="eyebrow">Report generator</p><h2>Stakeholder-ready GTM brief</h2></div>
         <article class="card">
           <div class="form-grid">
@@ -665,7 +779,7 @@
         <article id="briefOutput" class="report-document"></article>
       </section>
 
-      <section id="experiments" class="panel">
+      <section id="experiments" class="panel" data-assistant-section="tracker" data-assistant-label="Tracker">
         <div class="section-title"><p class="eyebrow">Pilot tracker</p><h2>CSV-based campaign metrics</h2></div>
         <article class="card upload-card">
           <div><h3>Upload real pilot CSV</h3><p class="note">Use <code>data/campaign_template.csv</code>. CTR, CAC, CVR, repeat rate, and revenue stay unavailable until upload.</p></div>
@@ -675,12 +789,12 @@
         <div id="campaignDashboard" class="hidden"><div id="campaignKpis" class="kpi-strip"></div><div id="campaignChart" class="chart"></div><div id="campaignTable" class="table-wrap"></div></div>
       </section>
 
-      <section id="sources" class="panel">
+      <section id="sources" class="panel" data-assistant-section="sources" data-assistant-label="Sources">
         <div class="section-title"><p class="eyebrow">Source audit trail</p><h2>Verified sources and confidence tiers</h2></div>
         <div id="sourceTable" class="source-grid"></div>
       </section>
 
-      <section id="signals" class="panel">
+      <section id="signals" class="panel" data-assistant-section="signals" data-assistant-label="Signals">
         <div class="section-title"><p class="eyebrow">Market signal layer</p><h2>Live Market Signal Snapshot</h2></div>
         <p class="note signal-disclaimer">Market signal snapshot — last updated from Tavily research (May 2025–May 2026). This is not a real-time API feed.</p>
 
@@ -758,7 +872,47 @@
     </div>
   </div>
 
+  <div id="voiceAssistantRoot" class="voice-assistant" aria-live="polite">
+    <button id="voiceTogglePanel" class="voice-orb-button" type="button" aria-label="Open Shelly voice assistant">
+      <span class="voice-orb-core"></span>
+    </button>
+    <section id="voiceAssistantPanel" class="voice-assistant-panel hidden" aria-label="Shelly voice assistant">
+      <header class="voice-panel-header">
+        <div>
+          <div class="voice-panel-title">Shelly</div>
+          <p id="voiceStateLabel">Disabled</p>
+        </div>
+        <button id="voiceClosePanel" class="voice-icon-btn" type="button" aria-label="Collapse assistant">×</button>
+      </header>
+      <div class="voice-orb-large" aria-hidden="true">
+        <span></span>
+      </div>
+      <div id="voiceWaveform" class="voice-waveform" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="voice-status-grid">
+        <div><span>Status</span><strong id="voiceStatusText">disabled</strong></div>
+        <div><span>Wake phrases</span><strong>Hey Shelly · Shelly · Yoo Shelly</strong></div>
+      </div>
+      <div class="voice-transcript-box">
+        <span>You said</span>
+        <p id="voiceTranscript">Nothing yet.</p>
+      </div>
+      <div class="voice-response-box">
+        <span>Shelly</span>
+        <p id="voiceResponse">Enable the assistant, then say “Hey Shelly” to start. Say “stop” anytime.</p>
+      </div>
+      <div class="voice-controls">
+        <button id="voiceEnableBtn" class="primary-btn" type="button" data-assistant-action="enable_voice">Enable Voice Assistant</button>
+        <button id="voiceStopBtn" class="secondary-btn" type="button" data-assistant-action="stop_voice">Stop</button>
+        <label class="voice-mute-toggle"><input id="voiceMuteToggle" type="checkbox" /> Mute</label>
+      </div>
+      <p class="voice-hint">Say “Hey Shelly” to start. Say “stop” anytime.</p>
+    </section>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
   <script type="module" src="app.js"></script>
+  <script type="module" src="voice-assistant.js"></script>
 </body>
 </html>

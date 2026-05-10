@@ -19,6 +19,7 @@
   justify-content: center;
   pointer-events: none;
   transition: opacity 0.5s ease;
+  overflow: hidden;
 }
 
 #three-overlay.hidden {
@@ -31,10 +32,14 @@
 
 #intro-content {
   text-align: center;
-  max-width: 680px;
-  padding: 0 24px;
+  width: min(760px, calc(100vw - 48px));
+  max-width: 760px;
+  padding: clamp(18px, 3vw, 28px) clamp(18px, 4vw, 34px);
   position: relative;
-  z-index: 2;
+  z-index: 5;
+  border-radius: 30px;
+  background: radial-gradient(ellipse at 50% 45%, rgba(6, 9, 16, 0.84), rgba(6, 9, 16, 0.42) 56%, transparent 74%);
+  backdrop-filter: blur(2px);
 }
 
 #intro-eyebrow {
@@ -72,7 +77,7 @@
   font-size: clamp(40px, 6vw, 72px);
   font-weight: 900;
   line-height: 1.05;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   color: #f1f5f9;
   margin-bottom: 20px;
 }
@@ -92,6 +97,74 @@
   max-width: 540px;
   margin: 0 auto 32px;
 }
+
+.hero-random-floats {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  filter: brightness(0.48) saturate(0.55) contrast(0.84);
+  mask-image: radial-gradient(ellipse at 50% 52%, transparent 0%, transparent 31%, black 48%, black 100%);
+}
+
+.hero-float-sprite {
+  position: absolute;
+  width: clamp(48px, 5vw, 96px);
+  height: auto;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.13;
+  mix-blend-mode: multiply;
+  filter: blur(0.2px);
+  will-change: transform;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform, opacity;
+}
+
+.sprite-01 { left: 5%; top: 10%; animation: heroDriftA 10s -2s infinite alternate; }
+.sprite-02 { left: 18%; top: 74%; animation: heroDriftC 13s -8s infinite alternate; }
+.sprite-03 { left: 8%; top: 54%; animation: heroDriftB 11s -5s infinite alternate; }
+.sprite-04 { left: 26%; top: 18%; animation: heroDriftD 14s -11s infinite alternate; }
+.sprite-05 { left: 78%; top: 12%; animation: heroDriftC 12s -6s infinite alternate; }
+.sprite-06 { left: 90%; top: 66%; animation: heroDriftA 10.5s -9s infinite alternate; }
+.sprite-07 { left: 72%; top: 78%; animation: heroDriftB 13s -4s infinite alternate; }
+.sprite-08 { left: 88%; top: 34%; animation: heroDriftD 11s -13s infinite alternate; }
+.sprite-09 { left: 2%; top: 82%; animation: heroDriftC 14s -15s infinite alternate; }
+.sprite-10 { left: 94%; top: 6%; animation: heroDriftB 10s -7s infinite alternate; }
+.sprite-11 { left: 38%; top: 3%; animation: heroDriftA 15s -10s infinite alternate; opacity: 0.08; }
+.sprite-12 { left: 62%; top: 91%; animation: heroDriftD 14s -3s infinite alternate; opacity: 0.08; }
+.sprite-13 { left: 13%; top: 30%; animation: heroDriftB 15s -18s infinite alternate; }
+.sprite-14 { left: 83%; top: 50%; animation: heroDriftA 12s -12s infinite alternate; }
+
+@keyframes heroDriftA {
+  0% { transform: translate3d(-24px, 32px, 0) rotate(-10deg) scale(0.82); }
+  50% { transform: translate3d(34px, -28px, 0) rotate(8deg) scale(0.94); }
+  100% { transform: translate3d(-14px, -74px, 0) rotate(-4deg) scale(0.88); }
+}
+
+@keyframes heroDriftB {
+  0% { transform: translate3d(30px, -18px, 0) rotate(7deg) scale(0.9); }
+  45% { transform: translate3d(-42px, 34px, 0) rotate(-12deg) scale(0.78); }
+  100% { transform: translate3d(22px, 68px, 0) rotate(5deg) scale(0.86); }
+}
+
+@keyframes heroDriftC {
+  0% { transform: translate3d(-18px, -38px, 0) rotate(4deg) scale(0.84); }
+  55% { transform: translate3d(48px, 22px, 0) rotate(-8deg) scale(0.92); }
+  100% { transform: translate3d(-52px, 48px, 0) rotate(10deg) scale(0.8); }
+}
+
+@keyframes heroDriftD {
+  0% { transform: translate3d(18px, 28px, 0) rotate(-6deg) scale(0.78); }
+  40% { transform: translate3d(-28px, -48px, 0) rotate(13deg) scale(0.88); }
+  100% { transform: translate3d(54px, 10px, 0) rotate(-2deg) scale(0.82); }
+}
+
 
 #intro-cta {
   display: inline-flex;
@@ -217,6 +290,16 @@
 }
 
 @media (max-width: 768px) {
+  .hero-random-floats {
+    opacity: 0.75;
+    mask-image: radial-gradient(ellipse at 50% 52%, transparent 0%, transparent 35%, black 56%, black 100%);
+  }
+
+  .hero-float-sprite {
+    width: 54px;
+    opacity: 0.09;
+  }
+
   #intro-title {
     font-size: clamp(32px, 8vw, 48px);
   }
@@ -233,8 +316,9 @@
   }
 
   #intro-content {
-    max-width: 90%;
+    max-width: 92%;
     padding: 0 16px;
+    background: radial-gradient(ellipse at 50% 45%, rgba(6, 9, 16, 0.9), rgba(6, 9, 16, 0.58) 62%, transparent 82%);
   }
 
   #brand-hint {

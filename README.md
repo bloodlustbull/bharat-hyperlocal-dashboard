@@ -44,7 +44,35 @@ CTR, CAC, conversion rate, and repeat order rate are **not faked**. The dashboar
 
 ---
 
-## How to run this locally in VS Code
+## How to run this locally
+
+### Recommended: double-click launcher
+
+Double-click:
+
+```text
+Run-Dashboard.bat
+```
+
+It starts the dashboard on the fixed local address:
+
+```text
+http://127.0.0.1:3000/index.html
+```
+
+Use this instead of the VS Code Live Server extension. If your laptop sleeps or VS Code is closed, run `Run-Dashboard.bat` again and the same link will work. Do not use the old Live Server `5500` link; VS Code can take that port over.
+
+Optional Windows auto-start:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Install-Dashboard-AutoStart.ps1
+```
+
+That installs a Windows Startup shortcut so the local dashboard server starts automatically after you sign in.
+
+---
+
+## Old VS Code Live Server method
 
 ### Step 1: Open the folder
 
