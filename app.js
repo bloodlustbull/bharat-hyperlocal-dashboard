@@ -5228,3 +5228,373 @@ async function loadMarketSignals() {
     console.warn("Could not load market signals:", err);
   }
 }
+
+/* ============================================================ */
+/* CAMPAIGN FACTORY — live 5-agent chain UI                      */
+/* ============================================================ */
+const factoryState = {
+  sse: null,
+  sseOn: true,
+  activeChainId: null,
+  lastResult: null,
+  history: []
+};
+
+function factoryLogLine(text, kind) {
+  const log = document.getElementById("factoryChainLog");
+  if (!log) return;
+  const line = document.createElement("div");
+  line.className = "log-line " + (kind || "");
+  const ts = new Date().toLocaleTimeString();
+  line.textContent = "[" + ts + "] " + text;
+  log.appendChild(line);
+  while (log.children.length > 200) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+
+function factorySetAgentStatus(agent, status, timeMs) {
+  const node = document.querySelector('.factory-agent-node[data-agent="' + agent + '"]');
+  if (!node) return;
+  node.classList.remove("pending","running","complete","error");
+  node.classList.add(status);
+  const statusEl = node.querySelector(".factory-agent-status");
+  if (statusEl) statusEl.textContent = status;
+  const timeEl = node.querySelector(".factory-agent-time");
+  if (timeEl) timeEl.textContent = timeMs != null ? (timeMs/1000).toFixed(1) + "s" : "";
+}
+
+function factoryResetChainVisual() {
+  for (const a of ["research","audience","copy","channel","compliance"]) factorySetAgentStatus(a, "pending");
+  const log = document.getElementById("factoryChainLog");
+  if (log) log.innerHTML = "";
+}
+
+function factoryConnectSSE() {
+  if (factoryState.sse) try { factoryState.sse.close(); } catch {}
+  if (!factoryState.sseOn) return;
+  try {
+    const es = new EventSource("/api/campaign/events/stream");
+    factoryState.sse = es;
+    es.onmessage = (ev) => {
+      let data;
+      try { data = JSON.parse(ev.data); } catch { return; }
+      factoryHandleBusEvent(data);
+    };
+    es.onerror = () => { factoryLogLine("SSE disconnected", "chain_error"); };
+  } catch (e) {
+    factoryLogLine("SSE failed: " + e.message, "chain_error");
+  }
+}
+
+function factoryHandleBusEvent(ev) {
+  if (!ev || !ev.type) return;
+  if (ev.type === "chain_start") {
+    factoryState.activeChainId = ev.chainId;
+    factoryResetChainVisual();
+    factoryLogLine("Chain " + ev.chainId + " started for " + (ev.input?.brand || "") + "/" + (ev.input?.city || ""), "chain_start");
+    return;
+  }
+  if (ev.type === "chain_stage_start") {
+    factorySetAgentStatus(ev.stage, "running");
+    factoryLogLine("▶ " + ev.stage + " (stage " + (ev.stageIndex + 1) + "/" + ev.totalStages + ")", "agent_start");
+    return;
+  }
+  if (ev.type === "chain_stage_end") {
+    factorySetAgentStatus(ev.stage, ev.status === "error" ? "error" : "complete", ev.durationMs);
+    if (ev.error) factoryLogLine("✖ " + ev.stage + " failed: " + ev.error, "agent_error");
+    else factoryLogLine("✓ " + ev.stage + " done in " + (ev.durationMs/1000).toFixed(1) + "s", "agent_complete");
+    return;
+  }
+  if (ev.type === "chain_complete") {
+    factoryLogLine("Chain complete in " + (ev.totalDurationMs/1000).toFixed(1) + "s, score " + ev.package?.overallScore + "/100", "chain_complete");
+    factoryRenderResults(ev.package);
+    factoryState.lastResult = ev.package;
+    return;
+  }
+  if (ev.type === "chain_error") {
+    factoryLogLine("Chain error: " + ev.error, "chain_error");
+    return;
+  }
+  if (ev.type && ev.type.indexOf("agent_") === 0) {
+    if (ev.type === "agent_warn") factoryLogLine("⚠ " + ev.agent + ": " + ev.message, "agent_warn");
+    return;
+  }
+}
+
+async function factoryCheckLLMStatus() {
+  try {
+    const r = await fetch("/api/llm/status");
+    const j = await r.json();
+    const el = document.getElementById("factoryChainLlmStatus");
+    if (!el) return;
+    if (j.anyAvailable) {
+      const live = j.providers.filter(p => p.available).map(p => p.name + " (" + p.model + ")").join(", ");
+      el.innerHTML = '<span style="color:#10b981;font-weight:600;">● Live</span> — ' + live;
+    } else {
+      el.innerHTML = '<span style="color:#f59e0b;">● No providers configured</span> — agents will run in fallback mode. ' + (j.setupHint || "");
+    }
+  } catch {}
+}
+
+async function factoryRunChain() {
+  const btn = document.getElementById("factoryRunBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Running..."; }
+  factoryResetChainVisual();
+  factoryLogLine("Initiating chain run...", "chain_start");
+  const body = {
+    brand: document.getElementById("factoryBrand")?.value,
+    city: document.getElementById("factoryCity")?.value,
+    category: document.getElementById("factoryCategory")?.value,
+    language: document.getElementById("factoryLanguage")?.value,
+    budget: Number(document.getElementById("factoryBudget")?.value || 50000),
+    variantCount: Number(document.getElementById("factoryVariants")?.value || 5)
+  };
+  try {
+    const r = await fetch("/api/campaign/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error("HTTP " + r.status + ": " + txt.slice(0, 200));
+    }
+    const result = await r.json();
+    factoryState.lastResult = result;
+    factoryRenderResults(result);
+    factoryLogLine("Chain complete in " + (result.totalDurationMs/1000).toFixed(1) + "s, overall " + result.overallScore + "/100", "chain_complete");
+  } catch (e) {
+    factoryLogLine("Run failed: " + e.message, "chain_error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "▶ Run the chain"; }
+    factoryLoadHistory();
+  }
+}
+
+function factoryRenderResults(pkg) {
+  if (!pkg) return;
+  const card = document.getElementById("factoryResultsCard");
+  if (card) card.classList.remove("hidden");
+  const scoreEl = document.getElementById("factoryOverallScore");
+  if (scoreEl) {
+    const s = pkg.overallScore || 0;
+    scoreEl.textContent = s + "/100";
+    scoreEl.style.color = s >= 70 ? "#10b981" : s >= 40 ? "#f59e0b" : "#ef4444";
+  }
+  const meta = document.getElementById("factoryResultMeta");
+  if (meta) meta.textContent = "Ran in " + (pkg.totalDurationMs/1000).toFixed(1) + "s on " + new Date(pkg.startedAt).toLocaleString();
+
+  const personaEl = document.getElementById("factoryResultPersona");
+  if (personaEl && pkg.audience && pkg.audience.persona) {
+    const p = pkg.audience.persona;
+    personaEl.innerHTML = '<h5>' + factoryEscapeHtml(p.name || "Persona") + ', ' + (p.age || "") + ' (' + factoryEscapeHtml(p.occupation || "") + ')</h5>' +
+      '<p><strong>Key quote:</strong> <em>"' + factoryEscapeHtml(p.keyQuote || "") + '"</em></p>' +
+      '<p><strong>Pain points:</strong> ' + (p.painPoints || []).map(factoryEscapeHtml).join("; ") + '</p>' +
+      '<p><strong>Preferred channels:</strong> ' + (p.preferredChannels || []).map(factoryEscapeHtml).join(", ") + '</p>' +
+      '<p><strong>Willingness to pay:</strong> ₹' + (p.willingnessToPay || "—") + ' | <strong>Frequency:</strong> ' + (p.frequencyPerWeek || "—") + '/week</p>' +
+      '<p class="note">Provider: ' + (p.llmProvider || "fallback") + (p.llmModel ? " (" + p.llmModel + ")" : "") + '</p>';
+  }
+
+  const perfEl = document.getElementById("factoryResultPerformance");
+  if (perfEl && pkg.channel && pkg.channel.performance && pkg.channel.performance.predicted) {
+    const p = pkg.channel.performance.predicted;
+    const plan = pkg.channel.performance.channelPlan || [];
+    perfEl.innerHTML = '<p><strong>Predicted orders:</strong> ' + p.orders + ' | <strong>Revenue:</strong> ₹' + (p.revenue || 0).toLocaleString() + '</p>' +
+      '<p><strong>ROAS:</strong> ' + p.roas + 'x | <strong>CPA:</strong> ₹' + p.cpa + ' | <strong>Avg CTR:</strong> ' + (p.ctr*100).toFixed(2) + '%</p>' +
+      '<h5>Channel mix</h5><ul>' + plan.map(c => '<li><strong>' + factoryEscapeHtml(c.channel) + '</strong> — ₹' + (c.spend || 0).toLocaleString() + ' (' + c.share + '%) → ' + c.orders + ' orders</li>').join("") + '</ul>';
+  }
+
+  const variantsEl = document.getElementById("factoryResultVariants");
+  if (variantsEl && Array.isArray(pkg.copy && pkg.copy.variants)) {
+    variantsEl.innerHTML = pkg.copy.variants.map(v =>
+      '<div class="variant-card">' +
+        '<div class="v-channel">' + factoryEscapeHtml(v.channel || "whatsapp") + ' · ' + factoryEscapeHtml(v.tone || "") + ' · CTR: ' + factoryEscapeHtml(v.estimatedCtrBand || "—") + '</div>' +
+        '<div class="v-hook">' + factoryEscapeHtml(v.hook || "") + '</div>' +
+        '<div class="v-body">' + factoryEscapeHtml(v.body || "") + '</div>' +
+        '<div class="v-cta">' + factoryEscapeHtml(v.cta || "") + '</div>' +
+        (v.translation_en ? '<div class="v-body" style="color:#888;font-style:italic;">' + factoryEscapeHtml(v.translation_en) + '</div>' : "") +
+        '<div class="v-rationale">' + factoryEscapeHtml(v.rationale || "") + '</div>' +
+      '</div>'
+    ).join("") || '<p class="note">No variants generated (LLM unavailable).</p>';
+  }
+
+  const planEl = document.getElementById("factoryResultPlan");
+  if (planEl && pkg.channel && pkg.channel.plan) {
+    const wp = pkg.channel.plan.weeklyPlan || [];
+    const kpis = pkg.channel.plan.kpis || [];
+    const cn = pkg.channel.plan.complianceNotes || [];
+    planEl.innerHTML = '<h5>7-day plan</h5><ul>' + wp.map(d =>
+      '<li><strong>' + factoryEscapeHtml(d.day || "") + '</strong> — ' + factoryEscapeHtml(d.channel || "") + ': ' + factoryEscapeHtml(d.action || "") + ' (₹' + (d.budget || 0) + ') → ' + factoryEscapeHtml(d.expectedOutcome || "") + '</li>'
+    ).join("") + '</ul>' +
+    '<h5>KPIs</h5><ul>' + kpis.map(k =>
+      '<li>' + factoryEscapeHtml(k.name || "") + ': ' + factoryEscapeHtml(String(k.target || "")) + ' <em>(' + factoryEscapeHtml(k.rationale || "") + ')</em></li>'
+    ).join("") + '</ul>' +
+    (cn.length ? '<h5>Compliance notes</h5><ul>' + cn.map(n => '<li>' + factoryEscapeHtml(n) + '</li>').join("") + '</ul>' : "");
+  }
+
+  const compEl = document.getElementById("factoryResultCompliance");
+  if (compEl && pkg.compliance) {
+    const c = pkg.compliance;
+    const verdict = c.overallVerdict || "unknown";
+    const color = verdict === "pass" ? "#10b981" : verdict === "block" ? "#ef4444" : "#f59e0b";
+    const pattern = c.patternFindings || [];
+    const llmFindings = (c.llmAudit && c.llmAudit.findings) || [];
+    compEl.innerHTML = '<p><strong>Verdict:</strong> <span style="color:' + color + ';text-transform:uppercase;font-weight:700;">' + factoryEscapeHtml(verdict) + '</span> · <strong>Risk score:</strong> ' + (c.riskScore || 0) + '/100</p>' +
+      (c.requiredDisclaimers && c.requiredDisclaimers.length ? '<p><strong>Required disclaimers:</strong> ' + c.requiredDisclaimers.map(factoryEscapeHtml).join("; ") + '</p>' : "") +
+      (pattern.length ? '<h5>Pattern findings (' + pattern.length + ')</h5><ul>' + pattern.map(f =>
+        '<li><strong>' + factoryEscapeHtml(f.severity) + '</strong> [' + factoryEscapeHtml(f.variantId) + '] — ' + factoryEscapeHtml(f.issue) + ' <em>(' + factoryEscapeHtml(f.recommendation) + ')</em></li>'
+      ).join("") + '</ul>' : "") +
+      (llmFindings.length ? '<h5>LLM audit findings (' + llmFindings.length + ')</h5><ul>' + llmFindings.map(f =>
+        '<li><strong>' + factoryEscapeHtml(f.severity || "—") + '</strong> [' + factoryEscapeHtml(f.variantId || "—") + '] — ' + factoryEscapeHtml(f.issue || "") + ' <em>' + factoryEscapeHtml(f.recommendation || "") + '</em></li>'
+      ).join("") + '</ul>' : "");
+  }
+}
+
+async function factoryRefreshResearch() {
+  const brand = document.getElementById("factoryBrand")?.value;
+  const city = document.getElementById("factoryCity")?.value;
+  const meta = document.getElementById("factoryResearchMeta");
+  const feed = document.getElementById("factoryResearchFeed");
+  if (!feed) return;
+  if (meta) meta.textContent = "Loading...";
+  feed.innerHTML = '<p class="note">Running Research agent (Tavily + Google News RSS + LLM)...</p>';
+  try {
+    const r = await fetch("/api/research/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brand: brand, city: city, force: true })
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    factoryRenderResearch(j);
+    if (meta) meta.textContent = (j.sources || 0) + " sources, " + (j.durationMs/1000).toFixed(1) + "s";
+  } catch (e) {
+    if (meta) meta.textContent = "Error: " + e.message;
+    feed.innerHTML = '<p class="note">Failed: ' + factoryEscapeHtml(e.message) + '</p>';
+  }
+}
+
+function factoryRenderResearch(j) {
+  const feed = document.getElementById("factoryResearchFeed");
+  if (!feed) return;
+  const summary = j.summary;
+  let html = "";
+  if (summary && summary.summary) {
+    html += '<div class="research-item"><h5>📊 LLM summary</h5><p>' + factoryEscapeHtml(summary.summary) + '</p>' +
+      (summary.competitiveImplications ? '<p><em>' + factoryEscapeHtml(summary.competitiveImplications) + '</em></p>' : "") + '</div>';
+  }
+  const developments = (summary && summary.keyDevelopments) || [];
+  for (const d of developments.slice(0, 8)) {
+    html += '<div class="research-item"><h5>' + factoryEscapeHtml(d.headline || "") + '</h5>' +
+      '<p>' + factoryEscapeHtml(d.whyItMatters || "") + '</p>' +
+      (d.citation ? '<p><a href="' + factoryEscapeHtml(d.citation) + '" target="_blank" rel="noopener">' + factoryEscapeHtml(d.citation) + '</a></p>' : "") +
+      (d.sentiment ? '<span class="sentiment ' + factoryEscapeHtml(d.sentiment) + '">' + factoryEscapeHtml(d.sentiment) + '</span>' : "") +
+      '</div>';
+  }
+  if (!html) html = '<p class="note">No research data. Configure TAVILY_API_KEY for live intelligence.</p>';
+  feed.innerHTML = html;
+}
+
+async function factoryGenerateBrief() {
+  const meta = document.getElementById("factoryBriefMeta");
+  const out = document.getElementById("factoryBriefOutput");
+  if (!out) return;
+  if (meta) meta.textContent = "Generating brief...";
+  out.innerHTML = '<p class="note">Running Copy agent (LLM call)...</p>';
+  try {
+    const brand = document.getElementById("factoryBrand")?.value;
+    const city = document.getElementById("factoryCity")?.value;
+    const category = document.getElementById("factoryCategory")?.value;
+    const language = document.getElementById("factoryLanguage")?.value;
+    const r = await fetch("/api/brief/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brand: brand, city: city, category: category, language: language })
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const brief = j.brief;
+    if (!brief) { out.innerHTML = '<p class="note">No brief returned (LLM unavailable).</p>'; return; }
+    out.innerHTML = '<div class="brief-title">' + factoryEscapeHtml(brief.title || "") + '</div>' +
+      '<div class="brief-tagline">"' + factoryEscapeHtml(brief.tagline || "") + '"' + (brief.taglineAlt ? ' — ' + factoryEscapeHtml(brief.taglineAlt) : "") + '</div>' +
+      '<div class="brief-section"><h5>Concept</h5><p>' + factoryEscapeHtml(brief.concept || "") + '</p></div>' +
+      '<div class="brief-section"><h5>Key message</h5><p>' + factoryEscapeHtml(brief.keyMessage || "") + '</p></div>' +
+      '<div class="brief-section"><h5>Tone</h5><p>' + factoryEscapeHtml(brief.tone || "") + '</p></div>' +
+      '<div class="brief-section"><h5>Deliverables</h5><ul>' + (brief.deliverables || []).map(d =>
+        '<li><strong>' + factoryEscapeHtml(d.type || "") + '</strong> — ' + factoryEscapeHtml(d.spec || "") + ' <em>' + factoryEscapeHtml(d.outline || "") + '</em></li>'
+      ).join("") + '</ul></div>' +
+      '<div class="brief-section"><h5>Do</h5><ul>' + (brief.doList || []).map(d => '<li>' + factoryEscapeHtml(d) + '</li>').join("") + '</ul></div>' +
+      '<div class="brief-section"><h5>Don&#39;t</h5><ul>' + (brief.dontList || []).map(d => '<li>' + factoryEscapeHtml(d) + '</li>').join("") + '</ul></div>' +
+      '<p class="note">Provider: ' + (j.provider || "fallback") + (j.model ? " (" + j.model + ")" : "") + '</p>';
+    if (meta) meta.textContent = "Done in " + (j.durationMs/1000).toFixed(1) + "s";
+  } catch (e) {
+    if (meta) meta.textContent = "Error: " + e.message;
+    out.innerHTML = '<p class="note">Failed: ' + factoryEscapeHtml(e.message) + '</p>';
+  }
+}
+
+async function factoryLoadHistory() {
+  try {
+    const r = await fetch("/api/campaign/history");
+    const j = await r.json();
+    factoryState.history = j.history || [];
+    renderFactoryHistory();
+  } catch {}
+}
+
+function renderFactoryHistory() {
+  const list = document.getElementById("factoryHistoryList");
+  if (!list) return;
+  if (!factoryState.history.length) { list.innerHTML = '<p class="note">No runs yet.</p>'; return; }
+  list.innerHTML = factoryState.history.map(h =>
+    '<div class="history-row"><span>' + new Date(h.startedAt).toLocaleString() + ' — ' +
+    factoryEscapeHtml(h.input?.brand || "") + '/' + factoryEscapeHtml(h.input?.city || "") + ' (' +
+    (h.totalDurationMs/1000).toFixed(1) + 's)</span><span class="score">' + (h.overallScore || 0) + '/100</span></div>'
+  ).join("");
+}
+
+function factoryEscapeHtml(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function factoryInit() {
+  factoryCheckLLMStatus();
+  factoryConnectSSE();
+  factoryLoadHistory();
+
+  document.getElementById("factoryRunBtn")?.addEventListener("click", factoryRunChain);
+  document.getElementById("factoryRefreshResearch")?.addEventListener("click", factoryRefreshResearch);
+  document.getElementById("factoryGenerateBrief")?.addEventListener("click", factoryGenerateBrief);
+  document.getElementById("factoryHistoryBtn")?.addEventListener("click", () => {
+    const p = document.getElementById("factoryHistoryPanel");
+    if (p) p.classList.toggle("hidden");
+  });
+  document.getElementById("factorySseToggle")?.addEventListener("click", (e) => {
+    factoryState.sseOn = !factoryState.sseOn;
+    e.target.textContent = "Live stream: " + (factoryState.sseOn ? "ON" : "OFF");
+    if (factoryState.sseOn) factoryConnectSSE();
+    else if (factoryState.sse) { try { factoryState.sse.close(); } catch {} factoryState.sse = null; }
+  });
+  document.getElementById("factoryClearResults")?.addEventListener("click", () => {
+    const card = document.getElementById("factoryResultsCard");
+    if (card) card.classList.add("hidden");
+    factoryState.lastResult = null;
+  });
+  document.getElementById("factoryExportJson")?.addEventListener("click", () => {
+    if (!factoryState.lastResult) return;
+    const blob = new Blob([JSON.stringify(factoryState.lastResult, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "campaign-" + factoryState.lastResult.chainId + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", factoryInit);
+} else {
+  factoryInit();
+}

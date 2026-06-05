@@ -313,6 +313,7 @@
       <button class="tab active" data-tab="market">Market</button>
       <button class="tab" data-tab="scorer">Opportunity Engine</button>
       <button class="tab" data-tab="campaign">Campaign</button>
+      <button class="tab" data-tab="factory" id="campaignFactoryTab">Campaign Factory <span class="factory-indicator">5 agents</span></button>
       <button class="tab" data-tab="pricewatch">Price Watch</button>
       <button class="tab" data-tab="video">Video Campaigns</button>
       <button class="tab" data-tab="geo">Geo Sales</button>
@@ -667,6 +668,93 @@
 
         <div class="button-row" style="justify-content: flex-end;">
           <button class="secondary-btn" id="caResetCampaign">Reset campaign</button>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- CAMPAIGN FACTORY — 5-agent live AI chain                        -->
+      <!-- ============================================================== -->
+      <section id="factory" class="panel">
+        <div class="section-title">
+          <p class="eyebrow">Campaign Factory</p>
+          <h2>5-agent live AI chain — real LLM calls, end-to-end</h2>
+          <p class="note" id="factoryChainLlmStatus">Checking LLM providers...</p>
+        </div>
+
+        <article class="card factory-chain-card">
+          <div class="section-title"><p class="eyebrow">Live Agent Chain</p><h3>Research → Audience → Copy → Channel → Compliance</h3></div>
+          <div id="factoryChainVisual" class="factory-chain-visual">
+            <div class="factory-agent-node" data-agent="research"><div class="factory-agent-icon">🔍</div><div class="factory-agent-name">Research</div><div class="factory-agent-status">pending</div><div class="factory-agent-time"></div></div>
+            <div class="factory-arrow">→</div>
+            <div class="factory-agent-node" data-agent="audience"><div class="factory-agent-icon">👥</div><div class="factory-agent-name">Audience</div><div class="factory-agent-status">pending</div><div class="factory-agent-time"></div></div>
+            <div class="factory-arrow">→</div>
+            <div class="factory-agent-node" data-agent="copy"><div class="factory-agent-icon">✍️</div><div class="factory-agent-name">Copy</div><div class="factory-agent-status">pending</div><div class="factory-agent-time"></div></div>
+            <div class="factory-arrow">→</div>
+            <div class="factory-agent-node" data-agent="channel"><div class="factory-agent-icon">📡</div><div class="factory-agent-name">Channel</div><div class="factory-agent-status">pending</div><div class="factory-agent-time"></div></div>
+            <div class="factory-arrow">→</div>
+            <div class="factory-agent-node" data-agent="compliance"><div class="factory-agent-icon">⚖️</div><div class="factory-agent-name">Compliance</div><div class="factory-agent-status">pending</div><div class="factory-agent-time"></div></div>
+          </div>
+          <div class="factory-controls">
+            <label>Brand<select id="factoryBrand"><option value="blinkit">Blinkit</option><option value="zepto">Zepto</option><option value="instamart">Swiggy Instamart</option><option value="bigbasket">BigBasket</option></select></label>
+            <label>City<select id="factoryCity"><option>Hyderabad</option><option>Mumbai</option><option>Delhi</option><option>Bangalore</option><option>Chennai</option><option>Pune</option><option>Kochi</option><option>Bhubaneswar</option><option>Mysuru</option><option>Nagpur</option><option>Ludhiana</option></select></label>
+            <label>Category<select id="factoryCategory"><option>Grocery</option><option>Snacks</option><option>Dairy</option><option>Beauty</option><option>Personal Care</option><option>Electronics</option></select></label>
+            <label>Language<select id="factoryLanguage"><option>Hindi</option><option>Telugu</option><option>Tamil</option><option>Marathi</option><option>Kannada</option><option>Bengali</option><option>English</option></select></label>
+            <label>Budget (₹)<input type="number" id="factoryBudget" value="50000" min="5000" step="5000"></label>
+            <label>Variants<input type="number" id="factoryVariants" value="5" min="1" max="10"></label>
+          </div>
+          <div class="button-row">
+            <button class="primary-btn" id="factoryRunBtn">▶ Run the chain</button>
+            <button class="secondary-btn" id="factorySseToggle">Live stream: ON</button>
+            <button class="secondary-btn" id="factoryHistoryBtn">History</button>
+          </div>
+          <div id="factoryChainLog" class="factory-chain-log"></div>
+        </article>
+
+        <div class="grid two-col">
+          <article class="card factory-research-card">
+            <div class="section-title"><p class="eyebrow">Live Research</p><h3>Market intelligence feed</h3></div>
+            <div class="button-row">
+              <button class="secondary-btn" id="factoryRefreshResearch">Refresh research</button>
+              <span class="note" id="factoryResearchMeta"></span>
+            </div>
+            <div id="factoryResearchFeed" class="factory-research-feed"></div>
+          </article>
+
+          <article class="card factory-brief-card">
+            <div class="section-title"><p class="eyebrow">Content Brief Generator</p><h3>Ready-to-publish campaign brief</h3></div>
+            <div class="button-row">
+              <button class="primary-btn" id="factoryGenerateBrief">Generate brief</button>
+              <span class="note" id="factoryBriefMeta"></span>
+            </div>
+            <div id="factoryBriefOutput" class="factory-brief-output"></div>
+          </article>
+        </div>
+
+        <article class="card factory-results-card hidden" id="factoryResultsCard">
+          <div class="section-title">
+            <p class="eyebrow">Final Campaign Package</p>
+            <h3>Overall score: <span id="factoryOverallScore">—</span></h3>
+            <p class="note" id="factoryResultMeta"></p>
+          </div>
+
+          <div class="grid two-col">
+            <section class="factory-result-block"><h4>👥 Persona</h4><div id="factoryResultPersona"></div></section>
+            <section class="factory-result-block"><h4>📊 Performance prediction</h4><div id="factoryResultPerformance"></div></section>
+          </div>
+
+          <section class="factory-result-block"><h4>✍️ Copy variants</h4><div id="factoryResultVariants"></div></section>
+          <section class="factory-result-block"><h4>📅 Media plan</h4><div id="factoryResultPlan"></div></section>
+          <section class="factory-result-block"><h4>⚖️ Compliance audit</h4><div id="factoryResultCompliance"></div></section>
+
+          <div class="button-row">
+            <button class="secondary-btn" id="factoryExportJson">Export campaign JSON</button>
+            <button class="secondary-btn" id="factoryClearResults">Clear</button>
+          </div>
+        </article>
+
+        <div id="factoryHistoryPanel" class="factory-history-panel hidden">
+          <h3>Run history</h3>
+          <div id="factoryHistoryList"></div>
         </div>
       </section>
 

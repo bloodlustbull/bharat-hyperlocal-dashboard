@@ -12,6 +12,14 @@ import * as briefCache from "./brief-cache.js";
 import * as rateLimiter from "./rate-limiter.js";
 import * as alerts from "./alerts.js";
 import { startAutoFlush as startMetricsHistory, stopAutoFlush as stopMetricsHistory, getHistory as getMetricsHistory, getSummary as getMetricsSummary } from "./metrics-history.js";
+import { llm, getLLMProviderStatus } from "./llm.js";
+import researchAgent, { getAllResearch as getAllResearchSummaries } from "./agents/research-agent.js";
+import audienceAgent from "./agents/audience-agent.js";
+import copyAgent from "./agents/copy-agent.js";
+import channelAgent from "./agents/channel-agent.js";
+import complianceAgent from "./agents/compliance-agent.js";
+import { runCampaignChain, getActiveRuns as getActiveCampaignRuns, getHistory as getCampaignHistory, shutdown as shutdownOrchestrator, DEFAULT_INPUT as CAMPAIGN_DEFAULTS } from "./agents/orchestrator.js";
+import { subscribe as subscribeBus, size as busSize } from "./agents/event-bus.js";
 import { WebSocketServer } from "ws";
 import { handleClient as wsHandleClient, startBroadcaster as startWsBroadcaster, stopBroadcaster as stopWsBroadcaster, broadcast as wsBroadcast, getStats as getWsStats } from "./ws-broadcaster.js";
 
@@ -826,6 +834,103 @@ async function router(req, res) {
   if (req.method === "GET" && url.pathname === "/ws/stats") {
     return sendJson(res, 200, getWsStats());
   }
+
+  // ==========================================================================
+  // CAMPAIGN FACTORY — 5-agent chain, real LLM calls (Groq + Mistral)
+  // ==========================================================================
+  if (req.method === "GET" && url.pathname === "/api/llm/status") {
+    const providers = getLLMProviderStatus();
+    const order = (process.env.LLM_PROVIDER_ORDER || "groq,mistral,ollama").split(",").map(s => s.trim()).filter(Boolean);
+    const anyAvailable = providers.some(p => p.available);
+    const setupHint = anyAvailable
+      ? null
+      : "Add GROQ_API_KEY or MISTRAL_API_KEY to backend/.env.local and restart. Get free keys at https://console.groq.com and https://console.mistral.ai";
+    return sendJson(res, 200, { providers, order, anyAvailable, setupHint });
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/brief/generate") {
+    const body = await readBody(req);
+    const { city, category, language, brand, persona } = body;
+    const p = persona || { name: "Target customer", preferredLanguage: language, willingnessToPay: 300, preferredChannels: ["WhatsApp", "Instagram"] };
+    const result = await copyAgent.run({ persona: p, city: city || "Hyderabad", category: category || "Grocery", language: language || "Hindi", brand: brand || "blinkit", objective: body.objective || "First order", variantCount: body.variantCount || 5 });
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/agent/research") {
+    const body = await readBody(req);
+    const result = await researchAgent.run({ brand: body.brand || "blinkit", city: body.city || "" });
+    return sendJson(res, 200, result);
+  }
+  if (req.method === "POST" && url.pathname === "/api/agent/audience") {
+    const body = await readBody(req);
+    const result = await audienceAgent.run({
+      city: body.city || "Hyderabad", category: body.category || "Grocery",
+      language: body.language || "Hindi", brand: body.brand || "blinkit"
+    });
+    return sendJson(res, 200, result);
+  }
+  if (req.method === "POST" && url.pathname === "/api/agent/copy") {
+    const body = await readBody(req);
+    const result = await copyAgent.run({
+      persona: body.persona, city: body.city, category: body.category,
+      language: body.language, brand: body.brand, objective: body.objective, variantCount: body.variantCount
+    });
+    return sendJson(res, 200, result);
+  }
+  if (req.method === "POST" && url.pathname === "/api/agent/channel") {
+    const body = await readBody(req);
+    const result = await channelAgent.run({
+      persona: body.persona, variants: body.variants || [],
+      city: body.city, category: body.category, language: body.language,
+      brand: body.brand, budget: body.budget || 50000
+    });
+    return sendJson(res, 200, result);
+  }
+  if (req.method === "POST" && url.pathname === "/api/agent/compliance") {
+    const body = await readBody(req);
+    const result = await complianceAgent.run({ variants: body.variants || [], category: body.category, brand: body.brand });
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/research/latest") {
+    return sendJson(res, 200, { summaries: getAllResearchSummaries() });
+  }
+  if (req.method === "POST" && url.pathname === "/api/research/refresh") {
+    const body = await readBody(req);
+    const brand = body.brand || "blinkit";
+    const result = await researchAgent.run({ brand, city: body.city || "" });
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/campaign/run") {
+    const body = await readBody(req);
+    const result = await runCampaignChain(body);
+    return sendJson(res, 200, result);
+  }
+  if (req.method === "GET" && url.pathname === "/api/campaign/active") {
+    return sendJson(res, 200, { active: getActiveCampaignRuns() });
+  }
+  if (req.method === "GET" && url.pathname === "/api/campaign/history") {
+    return sendJson(res, 200, { history: getCampaignHistory(50), defaults: CAMPAIGN_DEFAULTS });
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/campaign/events/stream") {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*",
+      "X-Accel-Buffering": "no"
+    });
+    res.write(": connected\n\n");
+    const unsubscribe = subscribeBus((event) => {
+      try { res.write(`data: ${JSON.stringify(event)}\n\n`); } catch {}
+    });
+    const heartbeat = setInterval(() => { try { res.write(`: ping\n\n`); } catch {} }, 15000);
+    req.on("close", () => { clearInterval(heartbeat); unsubscribe(); try { res.end(); } catch {} });
+    return;
+  }
+
   return sendJson(res, 404, { error: "Not found", path: url.pathname });
 }
 
@@ -875,6 +980,6 @@ httpServer.listen(PORT, "127.0.0.1", () => {
   console.log("Multi-agent pipeline started (ingestion every 3h, score after ingestion, brief on demand)");
   console.log("Brief cache, alerts, rate limiting, metrics history, WebSocket all active");
 
-  process.on("SIGTERM", () => { stopWsBroadcaster(); stopMetricsHistory(); });
-  process.on("SIGINT", () => { stopWsBroadcaster(); stopMetricsHistory(); process.exit(0); });
+  process.on("SIGTERM", () => { shutdownOrchestrator(); stopWsBroadcaster(); stopMetricsHistory(); });
+  process.on("SIGINT", () => { shutdownOrchestrator(); stopWsBroadcaster(); stopMetricsHistory(); process.exit(0); });
 });

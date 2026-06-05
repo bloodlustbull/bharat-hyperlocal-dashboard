@@ -6514,3 +6514,148 @@ code {
 .toast-warn { border-left-color: #f59e0b; }
 .toast-error { border-left-color: #ef4444; }
 .toast-info { border-left-color: #3b82f6; }
+
+/* ============================================================ */
+/* CAMPAIGN FACTORY — 5-agent live chain                         */
+/* ============================================================ */
+.factory-indicator {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10px;
+  background: linear-gradient(135deg,#7c3aed,#3b82f6);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.factory-chain-visual {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  background: linear-gradient(180deg, rgba(124,58,237,0.04), transparent);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.factory-agent-node {
+  flex: 1 1 140px;
+  min-width: 140px;
+  background: var(--surface-1, #1a1d24);
+  border: 2px solid rgba(124,58,237,0.2);
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+.factory-agent-icon { font-size: 26px; margin-bottom: 4px; }
+.factory-agent-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.factory-agent-status {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  background: rgba(120,120,140,0.2);
+  color: #aaa;
+  margin-bottom: 4px;
+}
+.factory-agent-time { font-size: 11px; color: #888; font-variant-numeric: tabular-nums; }
+.factory-agent-node.running {
+  border-color: #f59e0b;
+  box-shadow: 0 0 24px rgba(245,158,11,0.4);
+  animation: factoryPulse 1.4s ease-in-out infinite;
+}
+.factory-agent-node.running .factory-agent-status { background: rgba(245,158,11,0.25); color: #f59e0b; }
+.factory-agent-node.complete {
+  border-color: #10b981;
+  background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(124,58,237,0.08));
+}
+.factory-agent-node.complete .factory-agent-status { background: rgba(16,185,129,0.25); color: #10b981; }
+.factory-agent-node.error { border-color: #ef4444; background: rgba(239,68,68,0.08); }
+.factory-agent-node.error .factory-agent-status { background: rgba(239,68,68,0.25); color: #ef4444; }
+.factory-arrow { display: flex; align-items: center; font-size: 22px; color: #666; font-weight: 700; }
+@keyframes factoryPulse {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); box-shadow: 0 0 32px rgba(245,158,11,0.6); }
+}
+.factory-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.factory-controls label { display: flex; flex-direction: column; font-size: 12px; gap: 4px; }
+.factory-controls select,
+.factory-controls input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(124,58,237,0.3);
+  background: var(--surface-2, #22252d);
+  color: inherit;
+  font-size: 14px;
+}
+.factory-chain-log {
+  max-height: 180px;
+  overflow-y: auto;
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-size: 12px;
+  background: #0e0f12;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.factory-chain-log .log-line { padding: 2px 0; color: #cbd5e1; }
+.factory-chain-log .log-line.chain_start { color: #a78bfa; font-weight: 600; }
+.factory-chain-log .log-line.chain_complete { color: #10b981; font-weight: 600; }
+.factory-chain-log .log-line.chain_error { color: #ef4444; font-weight: 600; }
+.factory-chain-log .log-line.agent_start { color: #f59e0b; }
+.factory-chain-log .log-line.agent_complete { color: #34d399; }
+.factory-chain-log .log-line.agent_error { color: #f87171; }
+.factory-research-feed { max-height: 320px; overflow-y: auto; font-size: 13px; }
+.factory-research-feed .research-item {
+  padding: 10px 12px;
+  border-left: 3px solid #7c3aed;
+  background: rgba(124,58,237,0.06);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.factory-research-feed .research-item h5 { margin: 0 0 4px 0; font-size: 13px; }
+.factory-research-feed .research-item a { color: #a78bfa; text-decoration: none; font-size: 11px; word-break: break-all; }
+.factory-research-feed .research-item .sentiment { font-size: 10px; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; }
+.factory-research-feed .research-item .sentiment.positive { background: rgba(16,185,129,0.2); color: #10b981; }
+.factory-research-feed .research-item .sentiment.negative { background: rgba(239,68,68,0.2); color: #ef4444; }
+.factory-research-feed .research-item .sentiment.neutral { background: rgba(120,120,140,0.2); color: #aaa; }
+.factory-brief-output { min-height: 80px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.factory-brief-output .brief-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.factory-brief-output .brief-tagline { font-style: italic; color: #a78bfa; margin-bottom: 12px; }
+.factory-brief-output .brief-section { margin-bottom: 10px; }
+.factory-brief-output .brief-section h5 { font-size: 12px; text-transform: uppercase; color: #888; margin: 0 0 4px 0; }
+.factory-brief-output ul { margin: 4px 0 0 18px; padding: 0; }
+.factory-result-block { background: rgba(124,58,237,0.04); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+.factory-result-block h4 { margin: 0 0 10px 0; font-size: 14px; }
+.factory-result-block .variant-card {
+  background: var(--surface-1, #1a1d24);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid #7c3aed;
+}
+.factory-result-block .variant-card .v-channel { font-size: 10px; text-transform: uppercase; color: #a78bfa; letter-spacing: 0.5px; }
+.factory-result-block .variant-card .v-hook { font-weight: 700; margin: 4px 0; }
+.factory-result-block .variant-card .v-body { font-size: 13px; line-height: 1.5; margin-bottom: 4px; }
+.factory-result-block .variant-card .v-cta { font-size: 12px; color: #10b981; margin-top: 4px; }
+.factory-result-block .variant-card .v-rationale { font-size: 11px; color: #888; margin-top: 4px; font-style: italic; }
+.factory-history-panel { margin-top: 18px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+.factory-history-panel .history-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+}
+.factory-history-panel .history-row .score { font-weight: 700; color: #a78bfa; }

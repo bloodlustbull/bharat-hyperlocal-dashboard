@@ -13,13 +13,14 @@ The old project was broad vernacular GTM. This version is focused on quick comme
 
 Think of this dashboard like a control room.
 
-It has five main rooms:
+It has six main rooms:
 
 1. **Market Pulse** — shows real public quick-commerce data.
 2. **City-Language Scorer** — scores which city-language-category wedge to test.
 3. **Content Brief Generator** — creates a campaign brief for the selected wedge.
 4. **WhatsApp Funnel** — creates a funnel/copy skeleton.
 5. **Experiment Tracker** — lets you upload real pilot campaign data later.
+6. **Campaign Factory** — runs a 5-agent live AI chain (Research → Audience → Copy → Channel → Compliance) with real LLM calls and a live visualizer. See [docs/CAMPAIGN_FACTORY.md](docs/CAMPAIGN_FACTORY.md).
 
 ---
 
@@ -194,9 +195,48 @@ data/public_market_data.json Real public market data used in dashboard
 data/city_language_seed.json Scoring model seed data and assumptions
 data/campaign_template.csv  Empty template for your future pilot data
 docs/SOURCES.md             Source list and confidence rules
+
+# Campaign Factory (5-agent live AI chain)
+backend/llm.js              Provider abstraction (Groq + Mistral + Ollama) with auto-failover
+backend/agents/event-bus.js Pub/sub for agent events
+backend/agents/research-agent.js     Tavily + Google News RSS + LLM summary
+backend/agents/audience-agent.js     11-city demographics + LLM persona
+backend/agents/copy-agent.js         5 ad variants + content brief
+backend/agents/channel-agent.js      Performance prediction + 7-day media plan
+backend/agents/compliance-agent.js   ASCI/FSSAI pattern + LLM audit
+backend/agents/orchestrator.js       5-agent state machine + SSE wiring
+docs/CAMPAIGN_FACTORY.md    Full architecture + API reference for the factory
 ```
 
 ---
+
+## Campaign Factory
+
+A real, end-to-end AI pipeline that turns one input into a publishable hyperlocal campaign. Five agents chain together: **Research → Audience → Copy → Channel → Compliance**. Every agent makes **real LLM calls** (Groq or Mistral) — no templates, no mocks. The UI shows each agent firing in real-time via Server-Sent Events.
+
+### Run a chain
+
+1. Open the dashboard, click the **Campaign Factory** tab.
+2. Pick brand, city, category, language, budget.
+3. Click **▶ Run the chain**.
+4. Watch the 5 nodes turn orange (running) → green (complete) in order.
+5. Read the campaign package below: persona, performance prediction, variants, media plan, compliance verdict.
+
+### Configuration
+
+Add at least one of these to `backend/.env.local` (all have free tiers):
+
+```bash
+GROQ_API_KEY=gsk_...            # https://console.groq.com
+MISTRAL_API_KEY=...             # https://console.mistral.ai
+# OLLAMA_ENABLED=true           # local Ollama fallback
+LLM_PROVIDER_ORDER=groq,mistral,ollama
+TAVILY_API_KEY=tvly-...         # optional, for live research feed
+```
+
+Without keys, the agents still run on deterministic fallbacks. With keys, the chain uses real LLM reasoning end-to-end.
+
+Full architecture and API reference: see **[docs/CAMPAIGN_FACTORY.md](docs/CAMPAIGN_FACTORY.md)**.
 
 ## How to explain the scoring model
 
