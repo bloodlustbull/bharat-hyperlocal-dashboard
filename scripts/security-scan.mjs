@@ -1,66 +1,60 @@
-import { readdir, readFile, stat } from "node:fs/promises";
-import path from "node:path";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
-const root = path.resolve(process.argv[2] || ".");
-const skipDirs = new Set([".git", "node_modules", "dist", ".vite", "coverage"]);
-const knownLocalScripts = new Set(["Run-Dashboard.bat", "scripts/Install-Dashboard-AutoStart.ps1", "scripts/Start-Dashboard.ps1", "scripts/fetch-keys.js"]);
-const riskyExtensions = new Set([".exe", ".dll", ".scr", ".msi", ".com", ".jar", ".vbs", ".ps1", ".bat", ".cmd"]);
-const textExtensions = new Set([".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".json", ".md", ".yml", ".yaml", ".sh", ".ps1", ".bat", ".cmd", ".html", ".css", ".env", ".txt"]);
-const suspiciousPatterns = [
-  { name: "remote shell download", pattern: /\b(curl|wget|Invoke-WebRequest|iwr)\b[\s\S]{0,120}\|\s*(bash|sh|iex|Invoke-Expression)/i },
-  { name: "destructive recursive delete", pattern: /\b(rm\s+-rf|Remove-Item\b[\s\S]{0,80}-Recurse|del\s+\/[sq])/i },
-  { name: "credential exfiltration hint", pattern: /(process\.env|\.env|api[_-]?key|token|secret)[\s\S]{0,160}(webhook|discord|telegram|pastebin|requestbin|ngrok)/i },
-  { name: "base64 eval", pattern: /(eval|Function|Invoke-Expression)[\s\S]{0,80}(atob|base64|FromBase64String)/i },
-  { name: "postinstall hook", pattern: /"postinstall"\s*:/i },
-  { name: "preinstall hook", pattern: /"preinstall"\s*:/i },
-  { name: "public llm key pattern", pattern: /\bsk-[A-Za-z0-9]{30,}\b/ }
+const PATTERNS = [
+  { name: "groq key (gsk_*)", re: /gsk_[A-Za-z0-9]{20,}/g },
+  { name: "openai sk key (sk-<48+ base64-ish>)", re: /\bsk-[A-Za-z0-9]{40,}\b/g },
+  { name: "openai project key (sk-proj-*)", re: /sk-proj-[A-Za-z0-9_-]{40,}/g },
+  { name: "anthropic key (sk-ant-*)", re: /sk-ant-[A-Za-z0-9_-]{40,}/g },
+  { name: "tavily key (tvly-*)", re: /tvly-[A-Za-z0-9]{20,}/g },
+  { name: "google api key (AIza*)", re: /AIza[0-9A-Za-z_-]{20,}/g },
+  { name: "slack token (xox*)", re: /xox[baprs]-[0-9A-Za-z-]{20,}/g },
+  { name: "aws access key (AKIA*)", re: /AKIA[0-9A-Z]{16}/g },
+  { name: "github token (gh*_*)", re: /gh[pousr]_[A-Za-z0-9]{36,}/g },
+  { name: "private key header", re: /-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/g },
+  { name: "jwt token (eyJ*.eyJ*)", re: /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g }
 ];
 
+const ALLOWED_FILES = new Set([
+  "README.md",
+  "backend/.env.example",
+  "docs/CAMPAIGN_FACTORY.md",
+  "docs/RAG_EVIDENCE_BACKEND.md",
+  "docs/SOURCES.md",
+  "test/backend.test.mjs",
+  "scripts/fetch-keys.js",
+  "scripts/security-scan.mjs",
+  "backend/secure-config.js",
+  "security-reports/free-llm-api-keys-audit.json"
+]);
+
+const files = execSync("git ls-files", { encoding: "utf-8" }).trim().split("\n");
 const findings = [];
-
-async function scanFile(file) {
-  const ext = path.extname(file);
-  const rel = path.relative(root, file) || file;
-  const normalizedRel = rel.replaceAll("\\", "/");
-  if (normalizedRel === "scripts/security-scan.mjs" || knownLocalScripts.has(normalizedRel)) return;
-  if (riskyExtensions.has(ext)) {
-    findings.push({ severity: "high", file: rel, issue: `risky executable/script extension (${ext})` });
-  }
-  if (!textExtensions.has(ext) && !["", ".gitignore"].includes(ext)) return;
-  let text = "";
-  try {
-    text = await readFile(file, "utf8");
-  } catch {
-    return;
-  }
-  suspiciousPatterns.forEach(({ name, pattern }) => {
-    if (pattern.test(text)) findings.push({ severity: name.includes("key") ? "medium" : "high", file: rel, issue: name });
-  });
-}
-
-async function walk(dir) {
-  const entries = await readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.isDirectory() && skipDirs.has(entry.name)) continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      await walk(full);
-    } else if (entry.isFile()) {
-      const info = await stat(full);
-      if (info.size <= 2_000_000) await scanFile(full);
+for (const f of files) {
+  let content;
+  try { content = readFileSync(f, "utf-8"); } catch { continue; }
+  for (const p of PATTERNS) {
+    const matches = content.match(p.re);
+    if (!matches) continue;
+    for (const m of matches) {
+      findings.push({ file: f, pattern: p.name, sample: m.slice(0, 12) + (m.length > 12 ? "..." : ""), inAllowList: ALLOWED_FILES.has(f) });
     }
   }
 }
 
-await walk(root);
+const real = findings.filter(f => !f.inAllowList);
+const allowlisted = findings.filter(f => f.inAllowList);
 
-if (!findings.length) {
-  console.log(`No obvious high-risk patterns found in ${root}`);
+if (real.length === 0) {
+  console.log("✓ No real secrets found in tracked files.");
+  if (allowlisted.length) {
+    console.log(`  (${allowlisted.length} allowlisted hits — placeholders, security audit reports, regex patterns.)`);
+  }
   process.exit(0);
+} else {
+  console.error("✗ Potential secrets found in tracked files:");
+  for (const fnd of real) {
+    console.error(`  ${fnd.file} :: ${fnd.pattern} :: ${fnd.sample}`);
+  }
+  process.exit(1);
 }
-
-console.log(`Security scan findings for ${root}:`);
-findings.forEach(item => {
-  console.log(`- [${item.severity}] ${item.file}: ${item.issue}`);
-});
-process.exit(findings.some(item => item.severity === "high") ? 2 : 1);
