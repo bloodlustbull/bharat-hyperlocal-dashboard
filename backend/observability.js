@@ -8,6 +8,24 @@ let totalErrors = 0;
 let pipelineRuns = 0;
 let lastReset = Date.now();
 
+const SLOW_ENDPOINT_PREFIXES = [
+  "/api/campaign/run",
+  "/api/brief/generate",
+  "/api/agent/",
+  "/api/rag/brief",
+  "/api/rag/ingest",
+  "/api/assistant",
+  "/api/research/refresh",
+  "/pipeline/run"
+];
+
+function isSlowEndpoint(path) {
+  for (const prefix of SLOW_ENDPOINT_PREFIXES) {
+    if (path === prefix || path.startsWith(prefix)) return true;
+  }
+  return false;
+}
+
 function recordRequest(method, path, status, durationMs) {
   const key = `${method} ${path}`;
   if (!requestTimings.has(key)) {
@@ -54,6 +72,7 @@ function getMetrics() {
       p50Ms: p50,
       p95Ms: p95,
       p99Ms: p99,
+      bucket: isSlowEndpoint(entry.path) ? "slow" : "fast",
       lastCalled: entry.lastCalled ? new Date(entry.lastCalled).toISOString() : null,
       lastStatus: entry.lastStatus,
       lastDurationMs: entry.lastDuration
@@ -61,8 +80,16 @@ function getMetrics() {
   }
   endpoints.sort((a, b) => b.count - a.count);
 
-  const allSamples = [];
-  for (const e of requestTimings.values()) allSamples.push(...e.samples);
+  const fastSamples = [];
+  const slowSamples = [];
+  for (const e of requestTimings.values()) {
+    if (isSlowEndpoint(e.path)) {
+      for (const s of e.samples) slowSamples.push(s);
+    } else {
+      for (const s of e.samples) fastSamples.push(s);
+    }
+  }
+  const allSamples = [...fastSamples, ...slowSamples];
 
   return {
     service: "bharat-rag-backend",
@@ -79,7 +106,21 @@ function getMetrics() {
       p50Ms: percentile(allSamples, 50),
       p95Ms: percentile(allSamples, 95),
       p99Ms: percentile(allSamples, 99),
-      avgMs: allSamples.length ? Math.round(allSamples.reduce((a, b) => a + b, 0) / allSamples.length) : 0
+      avgMs: allSamples.length ? Math.round(allSamples.reduce((a, b) => a + b, 0) / allSamples.length) : 0,
+      fast: {
+        sampleCount: fastSamples.length,
+        p50Ms: percentile(fastSamples, 50),
+        p95Ms: percentile(fastSamples, 95),
+        p99Ms: percentile(fastSamples, 99),
+        avgMs: fastSamples.length ? Math.round(fastSamples.reduce((a, b) => a + b, 0) / fastSamples.length) : 0
+      },
+      slow: {
+        sampleCount: slowSamples.length,
+        p50Ms: percentile(slowSamples, 50),
+        p95Ms: percentile(slowSamples, 95),
+        p99Ms: percentile(slowSamples, 99),
+        avgMs: slowSamples.length ? Math.round(slowSamples.reduce((a, b) => a + b, 0) / slowSamples.length) : 0
+      }
     },
     endpoints
   };
@@ -145,4 +186,4 @@ function normalizePath(pathname) {
   return pathname;
 }
 
-export { recordRequest, recordPipelineRun, getMetrics, getPrometheusMetrics, resetMetrics, timingMiddleware };
+export { recordRequest, recordPipelineRun, getMetrics, getPrometheusMetrics, resetMetrics, timingMiddleware, isSlowEndpoint, SLOW_ENDPOINT_PREFIXES };

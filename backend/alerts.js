@@ -2,7 +2,8 @@ const alerts = [];
 let listeners = new Set();
 const RULES = {
   errorRate: { threshold: 5, severity: "warning", message: "Error rate above 5% over last 5 min" },
-  highLatency: { threshold: 1000, severity: "warning", message: "P95 latency above 1000ms" },
+  highLatency: { threshold: 1000, severity: "warning", message: "P95 latency above 1000ms on fast endpoints" },
+  highLatencyLLM: { threshold: 30000, severity: "warning", message: "P95 latency above 30s on LLM/chain endpoints" },
   evidenceStale: { threshold: 24 * 60 * 60 * 1000, severity: "warning", message: "Evidence store has not been updated in 24h" },
   diskFull: { severity: "critical", message: "Disk not writable" },
   pipelineError: { severity: "critical", message: "Pipeline agent errored" },
@@ -35,7 +36,13 @@ function evaluate(metrics, health) {
   if (!metrics) return;
   const errRate = parseFloat(metrics.total?.errorRate || "0");
   if (errRate > RULES.errorRate.threshold) emit("errorRate", { errorRate: errRate });
-  if (metrics.latency?.p95Ms > RULES.highLatency.threshold) emit("highLatency", { p95Ms: metrics.latency.p95Ms });
+  const fastP95 = metrics.latency?.fast?.p95Ms ?? 0;
+  if (fastP95 > RULES.highLatency.threshold) emit("highLatency", { p95Ms: fastP95, scope: "fast" });
+  const slowP95 = metrics.latency?.slow?.p95Ms ?? 0;
+  const slowSamples = metrics.latency?.slow?.sampleCount ?? 0;
+  if (slowSamples > 0 && slowP95 > RULES.highLatencyLLM.threshold) {
+    emit("highLatencyLLM", { p95Ms: slowP95, scope: "slow", sampleCount: slowSamples });
+  }
   if (health) {
     if (health.checks?.evidence_store?.ageMs > RULES.evidenceStale.threshold) {
       emit("evidenceStale", { ageMs: health.checks.evidence_store.ageMs });
