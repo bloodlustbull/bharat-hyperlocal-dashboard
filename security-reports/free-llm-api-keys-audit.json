@@ -1,0 +1,157 @@
+{
+  "scannedAt": "2026-05-27T08:48:32.110Z",
+  "source": "https://raw.githubusercontent.com/alistaitsacle/free-llm-api-keys/main/README.md",
+  "byteLength": 121870,
+  "decision": "refused_key_import",
+  "reason": "Public third-party API keys are treated as leaked or unauthorized credentials. This script audits the file but does not extract, save, rotate, or use those keys.",
+  "candidateStats": {
+    "openAiLikeKeyCount": 34,
+    "urlCount": 17,
+    "urls": [
+      "https://img.shields.io/github/stars/alistaitsacle/free-llm-api-keys?style=for-the-badge&logo=github",
+      "https://github.com/alistaitsacle/free-llm-api-keys/stargazers",
+      "https://img.shields.io/github/last-commit/alistaitsacle/free-llm-api-keys?style=for-the-badge",
+      "https://github.com/alistaitsacle/free-llm-api-keys/commits",
+      "https://img.shields.io/badge/Available_Keys-34-brightgreen?style=for-the-badge",
+      "https://img.shields.io/badge/Models-90+-blue?style=for-the-badge",
+      "https://alistaitsacle.github.io/free-llm-api-keys/",
+      "https://alistaitsacle.github.io/free-llm-api-keys/",
+      "https://aiapiv2.pekpik.com/v1",
+      "https://aiapiv2.pekpik.com/v1/chat/completions",
+      "https://aiapiv2.pekpik.com/v1",
+      "https://aiapiv2.pekpik.com/v1",
+      "https://aiapiv2.pekpik.com/v1",
+      "https://github.com/Au1rxx/free-vpn-subscriptions",
+      "https://github.com/Au1rxx/proxykit",
+      "https://api.star-history.com/svg?repos=alistaitsacle/free-llm-api-keys&type=Date",
+      "https://star-history.com/#alistaitsacle/free-llm-api-keys&Date"
+    ]
+  },
+  "findings": [
+    {
+      "severity": "high",
+      "issue": "shell command",
+      "preview": "cURL"
+    },
+    {
+      "severity": "high",
+      "issue": "shell command",
+      "preview": "bash"
+    },
+    {
+      "severity": "high",
+      "issue": "shell command",
+      "preview": "curl"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-VYx...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-qeU...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-YS1...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-NMP...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-Mx4...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-ILE...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-FR8...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-DFi...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-oSp...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-jcK...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-jjH...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-owF...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-iWc...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-Uct...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-Xgj...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-jCU...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-AeQ...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-rYu...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-4yf...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "known api key shape",
+      "preview": "sk-34q...redacted"
+    },
+    {
+      "severity": "medium",
+      "issue": "unknown proxy/base url",
+      "preview": "base_url=\"https://"
+    },
+    {
+      "severity": "medium",
+      "issue": "unknown proxy/base url",
+      "preview": "baseURL: 'https://"
+    }
+  ]
+}

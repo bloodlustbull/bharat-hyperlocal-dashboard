@@ -17,18 +17,18 @@
   <div id="three-overlay">
     <div class="hero-random-floats" aria-hidden="true">
       <img class="hero-float-sprite sprite-01" src="assets/hero/items/grocery-item-02.png" alt="" />
-      <img class="hero-float-sprite sprite-02" src="assets/hero/items/grocery-item-04.png" alt="" />
-      <img class="hero-float-sprite sprite-03" src="assets/hero/items/grocery-item-06.png" alt="" />
-      <img class="hero-float-sprite sprite-04" src="assets/hero/items/grocery-item-07.png" alt="" />
-      <img class="hero-float-sprite sprite-05" src="assets/hero/items/grocery-item-08.png" alt="" />
-      <img class="hero-float-sprite sprite-06" src="assets/hero/items/grocery-item-09.png" alt="" />
-      <img class="hero-float-sprite sprite-07" src="assets/hero/items/grocery-item-10.png" alt="" />
-      <img class="hero-float-sprite sprite-08" src="assets/hero/items/grocery-item-11.png" alt="" />
-      <img class="hero-float-sprite sprite-09" src="assets/hero/items/grocery-item-03.png" alt="" />
-      <img class="hero-float-sprite sprite-10" src="assets/hero/items/grocery-item-05.png" alt="" />
+      <img class="hero-float-sprite sprite-02" src="assets/hero/items/grocery-item-03.png" alt="" />
+      <img class="hero-float-sprite sprite-03" src="assets/hero/items/grocery-item-04.png" alt="" />
+      <img class="hero-float-sprite sprite-04" src="assets/hero/items/grocery-item-05.png" alt="" />
+      <img class="hero-float-sprite sprite-05" src="assets/hero/items/grocery-item-06.png" alt="" />
+      <img class="hero-float-sprite sprite-06" src="assets/hero/items/grocery-item-07.png" alt="" />
+      <img class="hero-float-sprite sprite-07" src="assets/hero/items/grocery-item-08.png" alt="" />
+      <img class="hero-float-sprite sprite-08" src="assets/hero/items/grocery-item-09.png" alt="" />
+      <img class="hero-float-sprite sprite-09" src="assets/hero/items/grocery-item-10.png" alt="" />
+      <img class="hero-float-sprite sprite-10" src="assets/hero/items/grocery-item-11.png" alt="" />
       <img class="hero-float-sprite sprite-11" src="assets/hero/items/grocery-item-02.png" alt="" />
-      <img class="hero-float-sprite sprite-12" src="assets/hero/items/grocery-item-08.png" alt="" />
-      <img class="hero-float-sprite sprite-13" src="assets/hero/items/grocery-item-04.png" alt="" />
+      <img class="hero-float-sprite sprite-12" src="assets/hero/items/grocery-item-06.png" alt="" />
+      <img class="hero-float-sprite sprite-13" src="assets/hero/items/grocery-item-08.png" alt="" />
       <img class="hero-float-sprite sprite-14" src="assets/hero/items/grocery-item-10.png" alt="" />
     </div>
     <div id="intro-content">
@@ -62,7 +62,7 @@
     <div class="hero-fullscreen">
       <div class="landing-orb orb-a" aria-hidden="true"></div>
       <div class="landing-orb orb-b" aria-hidden="true"></div>
-      <div class="landing-orb orb-c" aria-hidden="true"></div>
+      <div class="landing-orb orb-c" aria-hidden="true"></div>z
       <div class="hero-grid-lines" aria-hidden="true"></div>
       <div class="landing-card hero-content">
         <div class="eyebrow-pill">
@@ -310,21 +310,25 @@
     </header>
 
     <nav class="tabbar" aria-label="Dashboard sections">
-      <button class="tab active" data-tab="market" data-assistant-section="market" data-assistant-label="Market">Market</button>
-      <button class="tab" data-tab="scorer" data-assistant-section="opportunity" data-assistant-label="Opportunity Engine">Opportunity Engine</button>
-      <button class="tab" data-tab="campaign" data-assistant-section="campaign" data-assistant-label="Campaign">Campaign</button>
-      <button class="tab" data-tab="video" data-assistant-section="video" data-assistant-label="Video Campaigns">Video Campaigns</button>
-      <button class="tab" data-tab="geo" data-assistant-section="geo" data-assistant-label="Geo Sales">Geo Sales</button>
-      <button class="tab" data-tab="planner" data-assistant-section="planner" data-assistant-label="Planner">Planner</button>
-      <button class="tab" data-tab="unit" data-assistant-section="unit" data-assistant-label="Unit Economics">Unit Economics</button>
-      <button class="tab" data-tab="report" data-assistant-section="report" data-assistant-label="Report">Report</button>
-      <button class="tab" data-tab="experiments" data-assistant-section="tracker" data-assistant-label="Tracker">Tracker</button>
-      <button class="tab" data-tab="sources" data-assistant-section="sources" data-assistant-label="Sources">Sources</button>
-      <button class="tab" data-tab="signals" data-assistant-section="signals" data-assistant-label="Signals">Signals</button>
+      <button class="tab active" data-tab="market">Market</button>
+      <button class="tab" data-tab="scorer">Opportunity Engine</button>
+      <button class="tab" data-tab="campaign">Campaign</button>
+      <button class="tab" data-tab="pricewatch">Price Watch</button>
+      <button class="tab" data-tab="video">Video Campaigns</button>
+      <button class="tab" data-tab="geo">Geo Sales</button>
+      <button class="tab" data-tab="planner">Planner</button>
+      <button class="tab" data-tab="unit">Unit Economics</button>
+      <button class="tab" data-tab="report">Report</button>
+      <button class="tab" data-tab="experiments">Tracker</button>
+      <button class="tab" data-tab="rag">Evidence RAG</button>
+      <button class="tab" data-tab="sources">Sources</button>
+      <button class="tab" data-tab="signals">Signals</button>
+      <button class="tab pipeline-tab" data-tab="pipeline">Pipeline <span class="pipeline-agent-indicator idle">idle</span></button>
+      <button class="tab" data-tab="observability">Live Ops <span id="navHealthDot" class="health-dot offline" title="Backend health"></span></button>
     </nav>
 
     <main>
-      <section id="market" class="panel active-panel" data-assistant-section="market" data-assistant-label="Market">
+      <section id="market" class="panel active-panel">
         <section class="kpi-strip" id="kpiStrip" aria-label="KPI benchmark cards"></section>
         <section id="kpiDetail" class="detail-drawer hidden"></section>
 
@@ -395,7 +399,7 @@
         </section>
       </section>
 
-      <section id="scorer" class="panel" data-assistant-section="opportunity" data-assistant-label="Opportunity Engine">
+      <section id="scorer" class="panel">
         <div class="section-title"><p class="eyebrow">Opportunity Engine</p><h2>Automated hyperlocal decision workflow</h2></div>
 
         <!-- Workflow timeline -->
@@ -494,6 +498,28 @@
           </article>
         </div>
 
+        <article class="card oe-consumer-signals-card">
+          <div class="section-title"><p class="eyebrow">Consumer Signal Classifier</p><h3>Review signals to marketing actions</h3></div>
+          <div class="form-grid slim">
+            <label>City<select id="csCity"></select></label>
+            <label>Category<select id="csCategory"></select></label>
+            <label>Signal type<select id="csSignalType">
+              <option>Product quality complaint</option>
+              <option>Packaging complaint</option>
+              <option>Value perception ("too expensive")</option>
+              <option>Taste/preference mismatch</option>
+              <option>Delivery issue (not marketing-relevant)</option>
+              <option>Positive signal - reorder intent</option>
+            </select></label>
+            <label>Volume this week<input id="csVolume" type="number" min="0" /></label>
+            <label class="span-two">Verbatim sample<textarea id="csVerbatim" rows="3" placeholder="Paste anonymized review text"></textarea></label>
+          </div>
+          <button class="primary-btn" id="csClassify">Classify and generate action</button>
+          <div id="csOutput" class="oe-brief consumer-signal-output">
+            <p class="note">Enter signal data above to generate a marketing-relevant action.</p>
+          </div>
+        </article>
+
         <!-- Learning Loop -->
         <article class="card oe-learning-card" id="oeLearningLoop">
           <div class="section-title"><p class="eyebrow">Learning Loop</p><h3>How results improve future decisions</h3></div>
@@ -521,7 +547,7 @@
         </article>
       </section>
 
-      <section id="campaign" class="panel" data-assistant-section="campaign" data-assistant-label="Campaign">
+      <section id="campaign" class="panel">
         <!-- A) Campaign Control Panel -->
         <article class="card ca-control-panel">
           <div class="section-title"><p class="eyebrow">Campaign Autopilot</p><h2>Turn opportunity into action</h2></div>
@@ -539,10 +565,22 @@
           <article class="card ca-draft-card">
             <div class="section-title"><p class="eyebrow">Campaign Draft</p><h3>Automated message drafts</h3></div>
             <span class="ca-draft-label">Drafts — review before use</span>
-            <div id="caDrafts" class="ca-draft-output"><p class="note">Configure your campaign above, then generate drafts.</p></div>
+            <div class="draft-grid">
+              <section class="draft-column">
+                <h4>English Draft</h4>
+                <div id="caDrafts" class="ca-draft-output"><p class="note">Configure your campaign above, then generate drafts.</p></div>
+              </section>
+              <section class="draft-column">
+                <h4 id="vernacularDraftLabel">Vernacular draft</h4>
+                <div id="vernacularDraftOutput" class="ca-draft-output vernacular-draft-output">
+                  <p class="note">Generate a campaign draft to see the language variant.</p>
+                </div>
+              </section>
+            </div>
             <div class="button-row ca-draft-actions">
               <button class="primary-btn" id="caGenerateDraft">Generate campaign draft</button>
-              <button class="secondary-btn" id="caCopyDraft">Copy draft</button>
+              <button class="secondary-btn" id="caCopyDraft">Copy English draft</button>
+              <button class="secondary-btn" id="caCopyVernacular">Copy vernacular draft</button>
               <button class="secondary-btn" id="caAddToBrief">Add to campaign brief</button>
               <button class="secondary-btn" id="caExportJson">Export campaign JSON</button>
             </div>
@@ -632,7 +670,7 @@
         </div>
       </section>
 
-      <section id="video" class="panel" data-assistant-section="video" data-assistant-label="Video Campaigns">
+      <section id="video" class="panel">
         <div class="section-title"><p class="eyebrow">Video Campaign Studio</p><h2>Design reels, track CTR, and guide area managers</h2></div>
         <article class="card video-control-panel">
           <div class="form-grid slim">
@@ -643,11 +681,6 @@
             <label>Video format<select id="videoFormatSelect"><option>Instagram Reel</option><option>YouTube Short</option><option>WhatsApp Status</option><option>Influencer UGC</option><option>Store demo clip</option></select></label>
             <label>Manager view<select id="videoManagerSelect"><option>Area manager</option><option>City growth lead</option><option>Brand manager</option><option>Performance marketer</option></select></label>
           </div>
-        </article>
-
-        <article class="card video-output-card">
-          <div class="section-title"><p class="eyebrow">Platform Video Outputs</p><h3>Instagram, YouTube, WhatsApp previews</h3></div>
-          <div id="videoPlatformOutputs" class="video-output-grid"></div>
         </article>
 
         <div class="grid two-col">
@@ -672,6 +705,11 @@
           </article>
         </div>
 
+        <article class="card video-output-card">
+          <div class="section-title"><p class="eyebrow">Platform Video Outputs</p><h3>Instagram, YouTube, and WhatsApp previews</h3></div>
+          <div id="videoPlatformOutputs" class="video-output-grid"></div>
+        </article>
+
         <article class="card video-database-card">
           <div class="section-title"><p class="eyebrow">User Database Lens</p><h3>What each manager should inspect</h3></div>
           <div id="videoUserDatabase" class="table-wrap"></div>
@@ -683,7 +721,7 @@
         </article>
       </section>
 
-      <section id="geo" class="panel" data-assistant-section="geo" data-assistant-label="Geo Sales">
+      <section id="geo" class="panel">
         <div class="section-title"><p class="eyebrow">Geo Sales Command Center</p><h2>Live area sales, video CTR, and manager action map</h2></div>
         <article class="card geo-control-panel">
           <div class="form-grid slim">
@@ -718,7 +756,7 @@
         </div>
       </section>
 
-      <section id="planner" class="panel" data-assistant-section="planner" data-assistant-label="Planner">
+      <section id="planner" class="panel">
         <div class="section-title"><p class="eyebrow">Experiment designer</p><h2>Structure a measured pilot</h2></div>
         <article class="card">
           <div class="form-grid">
@@ -739,7 +777,7 @@
         <div id="experimentPlanOutput" class="planner-output"></div>
       </section>
 
-      <section id="unit" class="panel" data-assistant-section="unit" data-assistant-label="Unit Economics">
+      <section id="unit" class="panel">
         <div class="section-title"><p class="eyebrow">Unit economics modeler</p><h2>User-adjustable assumption model</h2></div>
         <article class="card">
           <div class="form-grid">
@@ -753,7 +791,7 @@
         <div id="unitEconomicsOutput" class="kpi-strip"></div>
       </section>
 
-      <section id="report" class="panel" data-assistant-section="report" data-assistant-label="Report">
+      <section id="report" class="panel">
         <div class="section-title"><p class="eyebrow">Report generator</p><h2>Stakeholder-ready GTM brief</h2></div>
         <article class="card">
           <div class="form-grid">
@@ -779,7 +817,7 @@
         <article id="briefOutput" class="report-document"></article>
       </section>
 
-      <section id="experiments" class="panel" data-assistant-section="tracker" data-assistant-label="Tracker">
+      <section id="experiments" class="panel">
         <div class="section-title"><p class="eyebrow">Pilot tracker</p><h2>CSV-based campaign metrics</h2></div>
         <article class="card upload-card">
           <div><h3>Upload real pilot CSV</h3><p class="note">Use <code>data/campaign_template.csv</code>. CTR, CAC, CVR, repeat rate, and revenue stay unavailable until upload.</p></div>
@@ -789,12 +827,103 @@
         <div id="campaignDashboard" class="hidden"><div id="campaignKpis" class="kpi-strip"></div><div id="campaignChart" class="chart"></div><div id="campaignTable" class="table-wrap"></div></div>
       </section>
 
-      <section id="sources" class="panel" data-assistant-section="sources" data-assistant-label="Sources">
+      <section id="rag" class="panel">
+        <div class="section-title"><p class="eyebrow">Evidence RAG Layer</p><h2>Real-world scraping and AI brief console</h2></div>
+        <p class="note signal-disclaimer">This layer is wired for real evidence ingestion through a secure backend. Vendor API keys stay server-side; the browser only calls your configured RAG API endpoint.</p>
+
+        <article class="card rag-control-card">
+          <div class="section-title"><p class="eyebrow">Backend bridge</p><h3>Connect scraping + AI brief service</h3></div>
+          <div class="form-grid slim">
+            <label class="span-two">RAG API base URL<input id="ragApiUrlInput" type="url" placeholder="https://your-backend.example.com/api/rag" /></label>
+            <label>Evidence city<select id="ragCitySelect"></select></label>
+            <label>Evidence pack<select id="ragJobSelect"></select></label>
+          </div>
+          <div class="button-row">
+            <button class="primary-btn" id="ragGenerateBrief">Generate AI evidence brief</button>
+            <button class="secondary-btn" id="ragRunIngest">Request live ingestion</button>
+            <button class="secondary-btn" id="ragSaveEndpoint">Save endpoint</button>
+            <button class="secondary-btn" id="ragClearEndpoint">Clear endpoint</button>
+          </div>
+          <div id="ragStatus" class="rag-status"></div>
+        </article>
+
+        <div class="grid two-col">
+          <article class="card">
+            <div class="section-title"><p class="eyebrow">Connector matrix</p><h3>Production scraping adapters</h3></div>
+            <div id="ragConnectorGrid" class="rag-connector-grid"></div>
+          </article>
+          <article class="card">
+            <div class="section-title"><p class="eyebrow">Evidence jobs</p><h3>Hyderabad demand and competitor packs</h3></div>
+            <div id="ragJobList" class="rag-job-list"></div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">AI brief output</p><h3>Citation-first recommendation</h3></div>
+          <div id="ragBriefOutput" class="rag-brief-output"><p class="note">Connect a backend or generate a local evidence-pack brief from the current dashboard data.</p></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Evidence schema</p><h3>Backend payload contract</h3></div>
+          <div id="ragSchema" class="rag-schema"></div>
+        </article>
+
+        <article class="card pipeline-widget">
+          <div class="section-title"><p class="eyebrow">Live intelligence pipeline</p><h3>Agent health & activity</h3></div>
+          <div id="pipelineWidgetContent" class="pipeline-widget-content">
+            <p class="note">Backend not connected. Pipeline status requires backend.</p>
+          </div>
+        </article>
+      </section>
+
+      <section id="sources" class="panel">
         <div class="section-title"><p class="eyebrow">Source audit trail</p><h2>Verified sources and confidence tiers</h2></div>
         <div id="sourceTable" class="source-grid"></div>
       </section>
 
-      <section id="signals" class="panel" data-assistant-section="signals" data-assistant-label="Signals">
+      <section id="pricewatch" class="panel">
+        <div class="section-title"><p class="eyebrow">Competitor Price Surveillance</p><h2>SKU-level price gap monitor</h2></div>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Watchlist Input</p><h3>Add SKU to watchlist</h3></div>
+          <div class="form-grid slim">
+            <label>Your brand SKU name<input id="pwSku" type="text" placeholder="e.g. Bingo Mad Angles 160g" /></label>
+            <label>Your listed price<input id="pwYourPrice" type="number" min="0" step="0.01" /></label>
+            <label>Competitor price<input id="pwCompetitorPrice" type="number" min="0" step="0.01" /></label>
+            <label>Platform<select id="pwPlatform">
+              <option>Blinkit</option>
+              <option>Swiggy Instamart</option>
+              <option>Zepto</option>
+              <option>BigBasket Now</option>
+              <option>Other</option>
+            </select></label>
+            <label>City<select id="pwCity"></select></label>
+          </div>
+          <div class="button-row">
+            <button class="primary-btn" id="pwAddSku">Add SKU to watchlist</button>
+            <span id="pwStatus" class="note"></span>
+          </div>
+        </article>
+
+        <div class="grid two-col">
+          <article class="card">
+            <div class="section-title"><p class="eyebrow">Price Gap Analysis</p><h3>Manual weekly monitor</h3></div>
+            <div id="pwGapTable" class="table-wrap"></div>
+          </article>
+          <article class="card">
+            <div class="section-title"><p class="eyebrow">Gap Alerts</p><h3>Recommended pricing action</h3></div>
+            <div id="pwAlerts" class="price-alerts"><p class="note">Add SKUs above to see price gap alerts.</p></div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Update Log</p><h3>Weekly manual price movement</h3></div>
+          <p class="note">Enter prices manually each Monday. Date-stamped entries show how price gaps move over time. Scraping or APIs can be added later on the same UI.</p>
+          <div id="pwTrendChart" class="chart note">Manual trend chart placeholder - connect to CSV or backend later.</div>
+        </article>
+      </section>
+
+      <section id="signals" class="panel">
         <div class="section-title"><p class="eyebrow">Market signal layer</p><h2>Live Market Signal Snapshot</h2></div>
         <p class="note signal-disclaimer">Market signal snapshot — last updated from Tavily research (May 2025–May 2026). This is not a real-time API feed.</p>
 
@@ -862,6 +991,148 @@
           <button class="secondary-btn" id="signalExportJson">Export signals JSON</button>
         </div>
       </section>
+
+      <section id="pipeline" class="panel">
+        <div class="section-title"><p class="eyebrow">Multi-Agent Pipeline</p><h2>Live Intelligence System</h2></div>
+        <p class="note">Automated agents research, ingest, score, and generate briefs from live public data. Runs every 3 hours at $0 cost using free APIs (Reddit, Google News RSS, Google Trends RSS, Tavily free tier).</p>
+
+        <div class="pipeline-agent-grid" id="pipelineAgentGrid">
+          <div class="pipeline-agent-card" data-agent="ingestion">
+            <div class="pipeline-agent-header">
+              <h4>Ingestion Agent</h4>
+              <span class="pipeline-status-dot idle"></span>
+            </div>
+            <p class="pipeline-agent-desc">Pulls Reddit, Google News RSS, Google Trends RSS, and Tavily for all cities every 3 hours</p>
+            <div class="pipeline-agent-meta">
+              <span class="meta-label">Schedule:</span> Every 3 hours
+            </div>
+            <div class="pipeline-agent-stats">
+              <span>Runs: <strong class="run-count">0</strong></span>
+              <span>Items: <strong class="item-count">0</strong></span>
+              <span>Last: <strong class="last-run">never</strong></span>
+            </div>
+            <div class="pipeline-agent-error hidden"></div>
+            <button class="secondary-btn pipeline-run-btn" data-agent="ingestion">Run now</button>
+          </div>
+
+          <div class="pipeline-agent-card" data-agent="score">
+            <div class="pipeline-agent-header">
+              <h4>Score Agent</h4>
+              <span class="pipeline-status-dot idle"></span>
+            </div>
+            <p class="pipeline-agent-desc">Analyzes evidence store, computes live signal deltas for each city-language-category</p>
+            <div class="pipeline-agent-meta">
+              <span class="meta-label">Schedule:</span> After each ingestion
+            </div>
+            <div class="pipeline-agent-stats">
+              <span>Runs: <strong class="run-count">0</strong></span>
+              <span>Scores: <strong class="item-count">0</strong></span>
+              <span>Last: <strong class="last-run">never</strong></span>
+            </div>
+            <div class="pipeline-agent-error hidden"></div>
+            <button class="secondary-btn pipeline-run-btn" data-agent="score">Run now</button>
+          </div>
+
+          <div class="pipeline-agent-card" data-agent="brief">
+            <div class="pipeline-agent-header">
+              <h4>Brief Agent</h4>
+              <span class="pipeline-status-dot idle"></span>
+            </div>
+            <p class="pipeline-agent-desc">Auto-generates briefs from live signals when new data arrives</p>
+            <div class="pipeline-agent-meta">
+              <span class="meta-label">Schedule:</span> On demand or after score
+            </div>
+            <div class="pipeline-agent-stats">
+              <span>Runs: <strong class="run-count">0</strong></span>
+              <span>Briefs: <strong class="item-count">0</strong></span>
+              <span>Last: <strong class="last-run">never</strong></span>
+            </div>
+            <div class="pipeline-agent-error hidden"></div>
+            <button class="secondary-btn pipeline-run-btn" data-agent="brief">Run now</button>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="primary-btn" id="pipelineRunAll">Run all agents now</button>
+          <button class="secondary-btn" id="pipelineRefresh">Refresh status</button>
+        </div>
+        <div id="pipelineStatus" class="pipeline-status" data-tone="info"></div>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Pipeline Activity</p><h3>Live agent log</h3></div>
+          <div id="pipelineLog" class="pipeline-log"><p class="note">Waiting for pipeline activity...</p></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title"><p class="eyebrow">Score Deltas</p><h3>Live signal deltas by city</h3></div>
+          <div id="pipelineScoreDeltas" class="pipeline-score-grid"><p class="note">Run the Score Agent to see live signal deltas.</p></div>
+        </article>
+      </section>
+
+      <section id="observability" class="panel">
+        <div class="section-title"><p class="eyebrow">Production observability</p><h2>Live Operations Dashboard</h2></div>
+        <p class="note">All running calculations, endpoint latencies, data quality, pipeline health, alerts, brief cache, and rate limiting. Refreshes every 5 seconds. Backend exposure: <code>/healthz</code> · <code>/readyz</code> · <code>/metrics</code> · <code>/metrics/history</code> · <code>/alerts</code> · <code>/cache/brief</code> · <code>/rate-limit</code> · <code>ws://</code> for live push.</p>
+
+        <div class="obs-status-strip" id="obsStatusStrip">
+          <div class="obs-status-card"><div class="obs-status-label">Backend</div><div id="obsHealthBadge" class="obs-status-value offline">offline</div></div>
+          <div class="obs-status-card"><div class="obs-status-label">Uptime</div><div id="obsUptime" class="obs-status-value">—</div></div>
+          <div class="obs-status-card"><div class="obs-status-label">Total requests</div><div id="obsTotalReqs" class="obs-status-value">—</div></div>
+          <div class="obs-status-card"><div class="obs-status-label">Error rate</div><div id="obsErrorRate" class="obs-status-value">—</div></div>
+          <div class="obs-status-card"><div class="obs-status-label">Pipeline runs</div><div id="obsPipelineRuns" class="obs-status-value">—</div></div>
+          <div class="obs-status-card"><div class="obs-status-label">Latency p95</div><div id="obsP95" class="obs-status-value">—</div></div>
+        </div>
+
+        <div class="obs-ws-row">
+          <span class="obs-ws-label">Live push</span>
+          <span id="wsStatusDot" class="ws-dot disconnected" title="WebSocket disconnected">●</span>
+          <span id="wsLiveStats" class="ws-live-stats">connecting…</span>
+        </div>
+
+        <div class="obs-grid">
+          <article class="card obs-card">
+            <div class="section-title"><p class="eyebrow">Endpoint latency</p><h3>Per-endpoint p50 / p95 / p99</h3></div>
+            <div id="obsEndpointTable" class="obs-endpoint-table"></div>
+          </article>
+
+          <article class="card obs-card">
+            <div class="section-title"><p class="eyebrow">Data quality</p><h3>Evidence store freshness &amp; source diversity</h3></div>
+            <div id="obsDataQuality" class="obs-data-quality"></div>
+          </article>
+
+          <article class="card obs-card obs-card-wide">
+            <div class="section-title"><p class="eyebrow">Alerts</p><h3>Active alerts · auto-generated by backend</h3></div>
+            <div id="alertsPanel" class="alerts-panel"></div>
+          </article>
+
+          <article class="card obs-card">
+            <div class="section-title"><p class="eyebrow">Brief cache</p><h3>Server-side SEO brief cache</h3></div>
+            <div id="briefCacheInfo" class="info-line">Loading…</div>
+          </article>
+
+          <article class="card obs-card">
+            <div class="section-title"><p class="eyebrow">Rate limit</p><h3>Token bucket per IP + global</h3></div>
+            <div id="rateLimitInfo" class="info-line">Loading…</div>
+          </article>
+
+          <article class="card obs-card obs-card-wide">
+            <div class="section-title"><p class="eyebrow">Activity log</p><h3>Recent operations</h3></div>
+            <div id="obsActivityLog" class="obs-activity-log"></div>
+          </article>
+
+          <article class="card obs-card">
+            <div class="section-title"><p class="eyebrow">Pipeline health</p><h3>Multi-agent status</h3></div>
+            <div id="obsPipelineHealth" class="obs-pipeline-health"></div>
+          </article>
+        </div>
+
+        <div class="button-row">
+          <button class="secondary-btn" id="obsRefresh">Refresh now</button>
+          <button class="secondary-btn" id="obsCopyMetrics">Copy metrics JSON</button>
+          <button class="secondary-btn" id="obsOpenPrometheus">Open /metrics (Prometheus)</button>
+          <button class="secondary-btn" id="obsOpenHistory">Open /metrics/history</button>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -872,39 +1143,29 @@
     </div>
   </div>
 
-  <div id="voiceAssistantRoot" class="voice-assistant" aria-live="polite">
+  <div id="voiceAssistantRoot" class="voice-assistant" aria-live="polite" data-state="DISABLED">
     <button id="voiceTogglePanel" class="voice-orb-button" type="button" aria-label="Open Shelly voice assistant">
       <span class="voice-orb-core"></span>
     </button>
-    <section id="voiceAssistantPanel" class="voice-assistant-panel hidden" aria-label="Shelly voice assistant">
-      <header class="voice-panel-header">
+    <section id="voiceAssistantPanel" class="voice-assistant-panel hidden" aria-label="Shelly voice assistant panel">
+      <div class="voice-panel-header">
         <div>
-          <div class="voice-panel-title">Shelly</div>
-          <p id="voiceStateLabel">Disabled</p>
+          <strong class="voice-panel-title">Shelly</strong>
+          <p id="voiceStateLabel">disabled</p>
         </div>
-        <button id="voiceClosePanel" class="voice-icon-btn" type="button" aria-label="Collapse assistant">×</button>
-      </header>
-      <div class="voice-orb-large" aria-hidden="true">
-        <span></span>
+        <button id="voiceClosePanel" class="voice-icon-btn" type="button" aria-label="Close voice assistant panel">&times;</button>
       </div>
-      <div id="voiceWaveform" class="voice-waveform" aria-hidden="true">
-        <i></i><i></i><i></i><i></i><i></i>
-      </div>
+      <div class="voice-orb-large" aria-hidden="true"><span></span></div>
+      <div id="voiceWaveform" class="voice-waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
       <div class="voice-status-grid">
-        <div><span>Status</span><strong id="voiceStatusText">disabled</strong></div>
+        <div><span>Status</span><strong id="voiceStatusText">Disabled</strong></div>
         <div><span>Wake phrases</span><strong>Hey Shelly · Shelly · Yoo Shelly</strong></div>
       </div>
-      <div class="voice-transcript-box">
-        <span>You said</span>
-        <p id="voiceTranscript">Nothing yet.</p>
-      </div>
-      <div class="voice-response-box">
-        <span>Shelly</span>
-        <p id="voiceResponse">Enable the assistant, then say “Hey Shelly” to start. Say “stop” anytime.</p>
-      </div>
+      <div class="voice-transcript-box"><span>You said</span><p id="voiceTranscript">Waiting for permission.</p></div>
+      <div class="voice-response-box"><span>Shelly</span><p id="voiceResponse">Click Enable Voice Assistant once to start wake listening.</p></div>
       <div class="voice-controls">
-        <button id="voiceEnableBtn" class="primary-btn" type="button" data-assistant-action="enable_voice">Enable Voice Assistant</button>
-        <button id="voiceStopBtn" class="secondary-btn" type="button" data-assistant-action="stop_voice">Stop</button>
+        <button id="voiceEnableBtn" class="primary-btn" type="button">Enable Voice Assistant</button>
+        <button id="voiceStopBtn" class="secondary-btn" type="button">Stop</button>
         <label class="voice-mute-toggle"><input id="voiceMuteToggle" type="checkbox" /> Mute</label>
       </div>
       <p class="voice-hint">Say “Hey Shelly” to start. Say “stop” anytime.</p>

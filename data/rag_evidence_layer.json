@@ -1,0 +1,236 @@
+{
+  "version": "2026-05-11",
+  "purpose": "Production evidence-pack and RAG connector registry for Bharat Hyperlocal Dashboard. No synthetic market claims are included here; connectors describe real-world ingestion routes and required validation.",
+  "backendContract": {
+    "envVar": "BHARAT_RAG_API_URL",
+    "localStorageKey": "bharatRagApiUrl",
+    "briefEndpoint": "/brief",
+    "ingestEndpoint": "/ingest",
+    "evidenceEndpoint": "/evidence",
+    "auth": "Bearer token on backend only. Do not expose vendor API keys in the browser."
+  },
+  "evidenceSchema": {
+    "requiredFields": ["id", "city", "category", "source_type", "source_name", "source_url", "captured_at", "claim", "evidence_text", "confidence", "needs_validation", "tags"],
+    "confidenceRules": {
+      "A": "Primary source, company filing, official API, or platform-owned public data.",
+      "B": "Credible third-party source, established news/reporting, or reputable data provider output.",
+      "C": "Directional social/forum/creator signal or vendor/case-study source.",
+      "D": "Manual observation, incomplete data, or assumption requiring validation."
+    }
+  },
+  "connectors": [
+    {
+      "id": "tavily_research",
+      "name": "Tavily Search/Extract/Research",
+      "provider": "Tavily",
+      "status": "api_key_required",
+      "bestFor": ["local news", "ET/Inc42 expansion announcements", "public reports", "market signal discovery"],
+      "evidenceTypes": ["market_signals", "competitor_intelligence", "unit_economics"],
+      "confidenceDefault": "B",
+      "notes": "Use for discovery and extraction of public web pages. Good first pass for live signal ingestion. Free tier available at tavily.com (1000 searches/month)."
+    },
+    {
+      "id": "reddit_public",
+      "name": "Reddit Public JSON API",
+      "provider": "Reddit (free, no key)",
+      "status": "active",
+      "bestFor": ["consumer complaints", "q-commerce pain points", "delivery/app experience threads", "local community discussion"],
+      "evidenceTypes": ["consumer_voice", "competitor_intelligence"],
+      "confidenceDefault": "C",
+      "notes": "FREE — No API key needed. Uses Reddit's public JSON API. Search r/hyderabad, r/india, r/IndianStreetFood for local consumer voice. Treat as directional, not statistically representative."
+    },
+    {
+      "id": "google_news_rss",
+      "name": "Google News RSS Feed",
+      "provider": "Google (free, no key)",
+      "status": "active",
+      "bestFor": ["local news", "ET/Inc42 expansion announcements", "quick commerce news", "competitor announcements"],
+      "evidenceTypes": ["market_signals", "competitor_intelligence"],
+      "confidenceDefault": "B",
+      "notes": "FREE — No API key needed. Uses Google News RSS feed. Good for Indian q-commerce news and expansion announcements."
+    },
+    {
+      "id": "google_trends_rss",
+      "name": "Google Trends RSS Feed",
+      "provider": "Google (free, no key)",
+      "status": "active",
+      "bestFor": ["Google Trends: snacks delivery Hyderabad", "10 minute delivery seasonality", "regional trend comparison"],
+      "evidenceTypes": ["market_signals", "hyperlocal_demand_proof"],
+      "confidenceDefault": "B",
+      "notes": "FREE — No API key needed. Uses Google Trends RSS feed. Schedule weekly. Normalize interest over time, related queries, and geo interest."
+    },
+    {
+      "id": "page_fetch",
+      "name": "URL Page Fetch",
+      "provider": "Built-in (free, no key)",
+      "status": "active",
+      "bestFor": ["known URL extraction", "report fetching", "public page scraping"],
+      "evidenceTypes": ["evidence_pack", "brief_citations", "report_sources"],
+      "confidenceDefault": "B",
+      "notes": "FREE — No API key needed. Fetches any public URL and extracts text content. Use after discovery when URLs are known."
+    },
+    {
+      "id": "firecrawl_extract",
+      "name": "Firecrawl Scrape/Crawl/Extract",
+      "provider": "Firecrawl",
+      "status": "api_key_required",
+      "bestFor": ["LLM-ready markdown", "PDF/report extraction", "structured article extraction", "source screenshots"],
+      "evidenceTypes": ["evidence_pack", "brief_citations", "report_sources"],
+      "confidenceDefault": "B",
+      "notes": "Use after discovery when URLs are known. Store markdown chunks, screenshots, and extracted JSON in the evidence pack."
+    },
+    {
+      "id": "apify_google_trends",
+      "name": "Apify Google Trends Actor",
+      "provider": "Apify",
+      "status": "api_key_required",
+      "bestFor": ["Google Trends: snacks delivery Hyderabad", "10 minute delivery seasonality", "regional trend comparison"],
+      "evidenceTypes": ["market_signals", "hyperlocal_demand_proof"],
+      "confidenceDefault": "B",
+      "notes": "Schedule weekly. Normalize interest over time, related queries, and geo interest."
+    },
+    {
+      "id": "google_ads_keyword_planner",
+      "name": "Google Ads API Keyword Planner",
+      "provider": "Google Ads API",
+      "status": "api_key_required",
+      "bestFor": ["local keyword volume", "Telugu vs English keyword comparison", "category demand sizing"],
+      "evidenceTypes": ["market_signals", "vernacular_demand"],
+      "confidenceDefault": "A",
+      "notes": "Use official API rather than scraping Keyword Planner. Requires Google Ads account access."
+    },
+    {
+      "id": "reddit_api_apify",
+      "name": "Reddit API / Apify Reddit Actor",
+      "provider": "Reddit/Apify",
+      "status": "api_key_required",
+      "bestFor": ["consumer complaints", "q-commerce pain points", "delivery/app experience threads"],
+      "evidenceTypes": ["consumer_voice", "competitor_intelligence"],
+      "confidenceDefault": "C",
+      "notes": "Store snippets, subreddit, permalink, timestamp, and sentiment. Treat as directional, not statistically representative."
+    },
+    {
+      "id": "manual_competitor_app_audit",
+      "name": "Manual Competitor App Audit",
+      "provider": "Human review",
+      "status": "manual_upload",
+      "bestFor": ["Blinkit/Zepto/Instamart category pushes", "app banners", "snack SKU merchandising"],
+      "evidenceTypes": ["competitor_intelligence"],
+      "confidenceDefault": "D",
+      "notes": "No public API. Upload screenshots and observations with timestamp, location, device, and account context."
+    },
+    {
+      "id": "meta_ad_library",
+      "name": "Meta Ad Library / SearchAPI",
+      "provider": "Meta/SearchAPI",
+      "status": "api_key_required",
+      "bestFor": ["Telugu ads in Telangana", "current ad hooks", "Instagram/Reels creative intelligence"],
+      "evidenceTypes": ["vernacular_creative_intel", "competitor_intelligence"],
+      "confidenceDefault": "B",
+      "notes": "Use official Ad Library where possible. Capture ad copy, page, creative URL/thumbnail, active dates, language, and region."
+    },
+    {
+      "id": "youtube_data_api",
+      "name": "YouTube Data API / Apify YouTube Actor",
+      "provider": "Google/Apify",
+      "status": "api_key_required",
+      "bestFor": ["Telugu snack content", "engagement benchmarks", "hook mining"],
+      "evidenceTypes": ["vernacular_creative_intel"],
+      "confidenceDefault": "B",
+      "notes": "Use official YouTube API for search/stats where possible. Store title, channel, views, likes, comments, published date."
+    },
+    {
+      "id": "google_maps_dark_stores",
+      "name": "Bright Data or Apify Google Maps Scraper",
+      "provider": "Bright Data/Apify",
+      "status": "api_key_required",
+      "bestFor": ["dark-store location mapping", "local grocery store WhatsApp catalogs", "neighbourhood coverage"],
+      "evidenceTypes": ["hyperlocal_demand_proof", "operations_mapping"],
+      "confidenceDefault": "B",
+      "notes": "Use for public Maps listings only. Verify dark-store classification before showing as fact."
+    },
+    {
+      "id": "app_store_reviews",
+      "name": "App Store / Play Store Review Provider",
+      "provider": "Official exports or compliant review API",
+      "status": "api_key_required",
+      "bestFor": ["what is broken", "what is loved", "recent app complaints"],
+      "evidenceTypes": ["consumer_voice", "competitor_intelligence"],
+      "confidenceDefault": "C",
+      "notes": "Location filtering is only valid if source exposes it. Otherwise label Hyderabad relevance as inferred or unverified."
+    },
+    {
+      "id": "industry_reports",
+      "name": "Public Reports and Filings",
+      "provider": "CareEdge, Redseer, Blume, Swiggy/Eternal filings, media reports",
+      "status": "loaded_partial",
+      "bestFor": ["CAC anchors", "AOV", "GOV/GMV", "dark stores", "unit economics"],
+      "evidenceTypes": ["unit_economics", "market_signals"],
+      "confidenceDefault": "A",
+      "notes": "Prefer primary filings and official reports. Third-party blogs can support directional estimates only."
+    }
+  ],
+  "jobs": [
+    {
+      "id": "hyd_snacks_market_signals",
+      "title": "Hyderabad Snacks Market Signals",
+      "cadence": "weekly",
+      "connectors": ["apify_google_trends", "google_ads_keyword_planner", "tavily_research", "firecrawl_extract"],
+      "queries": ["snacks delivery Hyderabad", "10 minute delivery Hyderabad", "chips delivery Hyderabad", "Telugu snacks delivery"],
+      "outputTags": ["Hyderabad", "snacks", "market_signal", "search_demand"]
+    },
+    {
+      "id": "hyd_competitor_intel",
+      "title": "Hyderabad Competitor Intelligence",
+      "cadence": "weekly plus manual screenshots",
+      "connectors": ["manual_competitor_app_audit", "meta_ad_library", "app_store_reviews", "reddit_api_apify"],
+      "queries": ["Blinkit Hyderabad snacks", "Zepto Hyderabad snacks", "Swiggy Instamart Hyderabad snacks", "quick commerce complaints Hyderabad"],
+      "outputTags": ["Hyderabad", "competitor", "consumer_voice"]
+    },
+    {
+      "id": "hyd_hyperlocal_demand",
+      "title": "Hyperlocal Demand Proof",
+      "cadence": "monthly",
+      "connectors": ["google_maps_dark_stores", "tavily_research", "firecrawl_extract"],
+      "queries": ["Hyderabad quick commerce expansion dark stores", "Hyderabad q-commerce order density", "Blinkit Zepto Hyderabad expansion"],
+      "outputTags": ["Hyderabad", "dark_store", "neighbourhood", "demand_proof"]
+    },
+    {
+      "id": "telugu_creative_intel",
+      "title": "Telugu Creative Intelligence",
+      "cadence": "weekly",
+      "connectors": ["youtube_data_api", "meta_ad_library", "google_maps_dark_stores"],
+      "queries": ["Telugu snacks YouTube Shorts", "Telugu grocery ads Telangana", "Hyderabad grocery WhatsApp catalogue"],
+      "outputTags": ["Telugu", "creative", "vernacular"]
+    },
+    {
+      "id": "unit_economics_anchors",
+      "title": "Unit Economics Anchors",
+      "cadence": "monthly",
+      "connectors": ["industry_reports", "tavily_research", "firecrawl_extract"],
+      "queries": ["q-commerce CAC India benchmark", "Hyderabad food delivery AOV Swiggy earnings", "Meta CPM Telangana Instagram"],
+      "outputTags": ["unit_economics", "CAC", "AOV", "CPM"]
+    }
+  ],
+  "briefPromptTemplate": {
+    "system": "You are a GTM intelligence analyst. Use only supplied evidence chunks. If evidence is weak or absent, say what must be validated. Every recommendation must cite evidence IDs.",
+    "userFields": ["city", "language", "category", "platform", "objective", "channel", "budget", "time_window"],
+    "sections": ["Executive answer", "Evidence-backed market signal", "Competitor readout", "Vernacular creative angle", "WhatsApp sandbox flow", "Shadow pilot plan", "Unit economics guardrails", "Open validation gaps"]
+  },
+  "sampleEvidence": [
+    {
+      "id": "loaded-qcommerce-market-register",
+      "city": "India",
+      "category": "quick-commerce",
+      "source_type": "existing_dashboard_data",
+      "source_name": "Local public market data register",
+      "source_url": "data/public_market_data.json",
+      "captured_at": "2026-05-11",
+      "claim": "The dashboard already contains source-backed India quick-commerce metrics and confidence labels.",
+      "evidence_text": "Use data/public_market_data.json and data/market_signals_2025_2026.json as seed evidence until live connectors ingest fresh records.",
+      "confidence": "B",
+      "needs_validation": false,
+      "tags": ["seed", "market_signal", "evidence_pack"]
+    }
+  ]
+}

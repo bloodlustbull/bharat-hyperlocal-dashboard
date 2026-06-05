@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$port = 3000
+$port = 5500
 $url = "http://127.0.0.1:$port/index.html"
 
 Set-Location $projectRoot
@@ -26,6 +26,18 @@ function Test-PortOpen {
   }
 }
 
+function Test-DashboardServer {
+  param([string]$DashboardUrl)
+
+  try {
+    $response = Invoke-WebRequest -Uri $DashboardUrl -UseBasicParsing -TimeoutSec 3
+    return ($response.Content -match '/@vite/client')
+  }
+  catch {
+    return $false
+  }
+}
+
 if (-not (Test-Path (Join-Path $projectRoot 'node_modules'))) {
   Write-Host 'Installing dependencies first...'
   npm install
@@ -44,7 +56,14 @@ if (-not (Test-PortOpen -Port $port)) {
   }
 }
 else {
-  Write-Host "Dashboard server is already running on $url"
+  if (Test-DashboardServer -DashboardUrl $url) {
+    Write-Host "Dashboard server is already running on $url"
+  }
+  else {
+    Write-Host "Port $port is already being used, but it does not look like the Vite dashboard server."
+    Write-Host 'Close VS Code Live Server or any old local server using port 5500, then run Run-Dashboard.bat again.'
+    exit 1
+  }
 }
 
 Start-Process $url

@@ -3,6 +3,8 @@
   It loads local JSON files, applies platform themes, draws charts, and generates plans/reports.
 */
 
+import { generateSeoBriefContent, renderSeoBrief, downloadSeoPdf } from "./seo-brief.js";
+
 const FALLBACK_MARKET_DATA = { kpis: [], govSeries: [], darkStoreSeries: [], instamartSeries: [], metricCatalog: [], platformIntelligence: [], sources: [] };
 const FALLBACK_SEED_DATA = { allowedLanguages: ["English", "Telugu", "Tamil", "Hindi", "Marathi", "Kannada", "Malayalam", "Odia", "Punjabi", "Haryanvi"], categories: ["Grocery"], cities: [], categoryScores: {}, weights: { quickCommerceDensity: 0.2, categoryPurchaseFrequency: 0.15, vernacularContentGap: 0.15, platformMaturity: 0.15, whatsappConversionFit: 0.1, creatorSupply: 0.1, paymentLogisticsReadiness: 0.1, competitiveGap: 0.05 } };
 
@@ -16,7 +18,10 @@ let caCsvData = null;
 let caDraftData = null;
 let caMetrics = null;
 let caColumnMapping = null;
+let priceWatchList = [];
+let priceWatchLog = [];
 let marketSignals = null;
+let ragEvidenceLayer = null;
 let geoLiveData = null;
 let geoMapInstance = null;
 let geoMapLoadedForCity = null;
@@ -197,11 +202,199 @@ const BM_DIMENSIONS = {
   }
 };
 
-let bmSelectedBrand = null;
+const CITY_PERSONA_MAP = {
+  Hyderabad: {
+    hook: "Ghar ka swad, quick-commerce speed.",
+    priceAngle: "Value-conscious, mid-AOV households respond to simple savings and reliable replenishment.",
+    topCategories: ["Snacks & Beverages", "Dairy & Breakfast", "Personal Care"],
+    competitorGap: "Use local corridor tests around Kukatpally, Madhapur, and high-density apartment clusters before scaling.",
+    localTrigger: "Biryani nights, cricket evenings, and late snack runs are useful demand windows."
+  },
+  Chennai: {
+    hook: "Filter kaapi ready in minutes.",
+    priceAngle: "Quality-first households may resist aggressive discount language; lead with freshness and trust.",
+    topCategories: ["Grocery", "Dairy & Breakfast", "Household Essentials"],
+    competitorGap: "Use challenger messaging in select residential catchments instead of broad city-wide claims.",
+    localTrigger: "Morning tiffin and breakfast windows can anchor high-intent staple communication."
+  },
+  Bengaluru: {
+    hook: "Office se ghar tak, essentials in minutes.",
+    priceAngle: "Time-poor young professionals over-index on convenience, repeatability, and app-native offers.",
+    topCategories: ["Snacks & Beverages", "Dairy & Breakfast", "Electronics Accessories"],
+    competitorGap: "Avoid saturated central pockets for first tests; look for sharper wedges in north and east clusters.",
+    localTrigger: "Evening commute and late workday top-ups are strong conversion-led windows."
+  },
+  Pune: {
+    hook: "Kothrud se Kharadi tak, top-ups in minutes.",
+    priceAngle: "Deal-aware families still respond to reliability and convenient weekly top-ups.",
+    topCategories: ["Snacks & Beverages", "Household Essentials", "Dairy & Breakfast"],
+    competitorGap: "Test catchment-level challenger wedges before broad metro-style media plans.",
+    localTrigger: "Weekend grocery top-ups can drive higher basket size."
+  },
+  Vizag: {
+    hook: "Beach city speed, home delivery ease.",
+    priceAngle: "Mixed student and family audiences respond to practical convenience and reliability cues.",
+    topCategories: ["Snacks & Beverages", "Dairy & Breakfast", "Grocery"],
+    competitorGap: "Lower saturation means service reliability should be part of the message, not only discounts.",
+    localTrigger: "Evening and weekend snacking windows are useful first tests."
+  },
+  Gurgaon: {
+    hook: "From sector to society, essentials in minutes.",
+    priceAngle: "High-spend apartment cohorts respond to speed, premium convenience, and clear value.",
+    topCategories: ["Grocery", "Personal Care", "Household Essentials"],
+    competitorGap: "Segment by society clusters; NCR-wide claims will be too blunt for action.",
+    localTrigger: "Salary-week baskets, weekend family replenishment, and office-return windows are high intent."
+  },
+  Coimbatore: {
+    hook: "Daily essentials, local comfort, quick delivery.",
+    priceAngle: "Quality and reliability matter; avoid sounding like a metro-only discount blast.",
+    topCategories: ["Grocery", "Dairy & Breakfast", "Household Essentials"],
+    competitorGap: "Use Tamil-first cluster tests to find white space beyond Chennai-style assumptions.",
+    localTrigger: "Breakfast staples and evening household top-ups are practical test windows."
+  },
+  Nagpur: {
+    hook: "Family baskets and snack top-ups in minutes.",
+    priceAngle: "Value-led households respond to pack-size clarity and sensible bundles.",
+    topCategories: ["Snacks & Beverages", "Grocery", "Household Essentials"],
+    competitorGap: "Lower quick-commerce clutter makes education and reliability cues more important.",
+    localTrigger: "Weekend family baskets and evening snack windows are useful."
+  },
+  Kochi: {
+    hook: "Fresh essentials, fast local delivery.",
+    priceAngle: "Trust, freshness, and convenience should lead over heavy urgency.",
+    topCategories: ["Grocery", "Personal Care", "Dairy & Breakfast"],
+    competitorGap: "Malayalam-first communication can differentiate if service reliability is clear.",
+    localTrigger: "Morning household needs and weekend replenishment are good starting points."
+  },
+  Bhubaneswar: {
+    hook: "Local essentials at app speed.",
+    priceAngle: "Emerging quick-commerce users need value and reliability explained plainly.",
+    topCategories: ["Grocery", "Dairy & Breakfast", "Household Essentials"],
+    competitorGap: "Lower platform saturation creates room to shape category behavior early.",
+    localTrigger: "Evening top-ups and routine household replenishment can build habit."
+  },
+  Ludhiana: {
+    hook: "Family basket ready, fast and local.",
+    priceAngle: "Family-value messaging and bulk-friendly packs can work better than tiny discounts.",
+    topCategories: ["Grocery", "Household Essentials", "Snacks & Beverages"],
+    competitorGap: "Punjabi-localized pilots can stand out if they stay practical and not forced.",
+    localTrigger: "Weekend family baskets and festival-prep windows are useful."
+  },
+  Mysuru: {
+    hook: "Daily essentials with calm local convenience.",
+    priceAngle: "Reliability, freshness, and sensible value are stronger than loud urgency.",
+    topCategories: ["Grocery", "Dairy & Breakfast", "Personal Care"],
+    competitorGap: "Kannada-first creative can test local trust against metro-style English copy.",
+    localTrigger: "Morning staples and evening household top-ups are strong first tests."
+  }
+};
 
-function getSelectedBenchmark() {
-  return bmSelectedBrand;
-}
+const VERNACULAR_PHRASE_BANK = {
+  Telugu: {
+    reviewed: true,
+    greeting: "Namaskaram. Mee inti essentials minutes lo ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Tamil: {
+    reviewed: true,
+    greeting: "Vanakkam. Ungal veettu essentials minutes-il ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Hindi: {
+    reviewed: false,
+    greeting: "Namaste. Aapke ghar ke essentials minutes mein ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Marathi: {
+    reviewed: false,
+    greeting: "Namaskar. Tumchya gharche essentials minutes madhye ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Kannada: {
+    reviewed: false,
+    greeting: "Namaskara. Nimma mane essentials minutes nalli ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Malayalam: {
+    reviewed: false,
+    greeting: "Namaskaram. Ningalude veetile essentials minutes-il ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Odia: {
+    reviewed: false,
+    greeting: "Namaskar. Apananka ghara essentials minutes re ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Punjabi: {
+    reviewed: false,
+    greeting: "Sat sri akaal. Tuhade ghar de essentials minutes vich ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  },
+  Haryanvi: {
+    reviewed: false,
+    greeting: "Ram Ram. Ghar ke essentials minutes mein ready.",
+    urgency: "Limited-time local offer.",
+    value: "Fast delivery with clear savings today.",
+    cta: "Order now"
+  }
+};
+
+const SIGNAL_ACTION_MAP = {
+  "Product quality complaint": (city, category) => ({
+    marketingRelevance: "MEDIUM",
+    copyAction: `Avoid quality over-claims in ${city} ${category} copy until the issue is verified as fixed.`,
+    channelAction: "Route the core issue to ops or QA; only test improvement messaging with small cohorts after resolution.",
+    briefUpdate: `Quality complaints in ${city} for ${category}. Keep near-term copy factual and avoid unsupported quality claims.`
+  }),
+  "Packaging complaint": (city, category) => ({
+    marketingRelevance: "MEDIUM",
+    copyAction: `Avoid packaging-led visuals for ${category} in ${city}; lead with freshness, convenience, or availability instead.`,
+    channelAction: "Share the signal with product and ops, then retest packaging-led copy after a fix is confirmed.",
+    briefUpdate: `Packaging complaints in ${city} for ${category}. Avoid packaging as the primary creative hook.`
+  }),
+  'Value perception ("too expensive")': (city, category) => ({
+    marketingRelevance: "HIGH",
+    copyAction: `Lead with value-per-unit, pack-size, and basket-savings cues for ${category} in ${city}.`,
+    channelAction: "A/B test bundle offers against value-led non-discount copy before scaling.",
+    briefUpdate: `Price sensitivity signal in ${city} for ${category}. Recommend bundles, pack-size anchoring, or limited-time value communication.`
+  }),
+  "Taste/preference mismatch": (city, category) => ({
+    marketingRelevance: "HIGH",
+    copyAction: `Avoid generic authentic taste claims in ${city} ${category} copy; use familiar, local, or home-style language.`,
+    channelAction: "Reduce broad push in affected pockets and test adjusted messaging with smaller cohorts.",
+    briefUpdate: `Taste preference mismatch in ${city} for ${category}. Adjust hook, claims, and imagery before launch.`
+  }),
+  "Delivery issue (not marketing-relevant)": (city) => ({
+    marketingRelevance: "LOW",
+    copyAction: "Do not change top-of-funnel copy based only on last-mile issues.",
+    channelAction: "Route to ops/logistics and make sure marketing promises match the real service level.",
+    briefUpdate: `Delivery issues reported in ${city}. Treat as an operations input; keep marketing promises realistic.`
+  }),
+  "Positive signal - reorder intent": (city, category) => ({
+    marketingRelevance: "HIGH",
+    copyAction: `Lean into habit messaging for ${category} in ${city}: regulars, replenishment, and one-tap reorder.`,
+    channelAction: "Trigger reminder flows, reorder nudges, and retention offers for high-intent cohorts.",
+    briefUpdate: `Positive reorder intent in ${city} for ${category}. Add retention-led experiments to the brief.`
+  })
+};
+
+let bmSelectedBrand = null;
 
 function setSelectedBenchmark(brandId) {
   if (!BRAND_ICONS[brandId]) return;
@@ -515,7 +708,7 @@ function appendBenchmarkToBrief() {
   const benchmarkText = `Benchmark lens: ${platform.name} — ${dims ? dims.bestFit : platform.gtmImplication}. Caveat: ${dims ? dims.risk : (platform.risks || []).join("; ")}.`;
 
   if (!window._oeBriefData) {
-    generateBrief();
+    generateBriefStatic();
   }
 
   window._oeBriefData.benchmarkLens = benchmarkText;
@@ -601,6 +794,39 @@ async function loadJson(path, fallback) {
   }
 }
 
+function getBackendApiBase() {
+  return (localStorage.getItem("bharatRagApiUrl") || "http://127.0.0.1:8787").replace(/\/+$/, "") + "/api";
+}
+
+async function postBackend(endpoint, payload) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(`${getBackendApiBase()}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get("Retry-After") || "5", 10);
+      showToast("warn", `Rate limited by backend. Retry in ${retryAfter}s`);
+      throw new Error(`Rate limited (retry in ${retryAfter}s)`);
+    }
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new Error(`Backend ${endpoint} failed: ${response.status} ${text}`);
+    }
+    return response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function platformPayloadValue(platform) {
+  return platform?.id || platform?.name || "blinkit";
+}
+
 function getPlatforms() {
   const fromData = marketData.platformIntelligence?.length ? marketData.platformIntelligence : [];
   return PLATFORM_ORDER.map(id => fromData.find(platform => platform.id === id) || {
@@ -619,10 +845,6 @@ function getPlatforms() {
 
 function selectedPlatform() {
   return getPlatforms().find(platform => platform.id === $("platformSelect")?.value) || getPlatforms()[0];
-}
-
-function selectedTheme() {
-  return PLATFORM_THEMES[selectedPlatform()?.id] || PLATFORM_THEMES.blinkit;
 }
 
 function setView(viewId) {
@@ -663,6 +885,16 @@ function goToTab(tabName) {
   if (tabName === "campaign") renderCampaignAutopilot();
   if (tabName === "video") renderVideoCampaignStudio();
   if (tabName === "geo") renderGeoSalesCommandCenter();
+  if (tabName === "rag") renderRagLayer();
+  if (tabName === "pricewatch") {
+    populatePriceWatchControls();
+    renderPriceWatchTable();
+    renderPriceWatchAlerts();
+    renderPriceWatchTrend();
+  }
+  if (tabName === "pipeline") renderPipelineTab();
+  if (tabName === "observability") startObservabilityLoop();
+  else stopObservabilityLoop();
 }
 
 function enterDashboard(platformId) {
@@ -690,10 +922,6 @@ function updateTheme(platformId) {
   $("selectedPlatformName").textContent = platform.name;
   $("platformHeroBadge").textContent = theme.badge;
   $("platformGtmPosture").textContent = theme.posture;
-}
-
-function applyTheme(platformId) {
-  updateTheme(platformId);
 }
 
 function setActivePlatform(platformId) {
@@ -997,14 +1225,347 @@ function oeSignals() {
   const hasMetrics = (marketData.metricCatalog || []).length > 0;
   const hasCities = (seedData.cities || []).length > 0;
   const hasPlatformIntel = (marketData.platformIntelligence || []).length > 0;
+  const hasRagRegistry = !!ragEvidenceLayer?.connectors?.length;
+  const hasRagEndpoint = !!getRagApiUrl();
 
   rows.push({ name: "Public market data", status: hasSources && hasMetrics ? "loaded" : "partial" });
   rows.push({ name: "City-language seed data", status: hasCities ? "loaded" : "partial" });
   rows.push({ name: "Platform intelligence", status: hasPlatformIntel ? "loaded" : "partial" });
   rows.push({ name: "Campaign CSV", status: caCsvData ? "loaded" : "not-connected" });
-  rows.push({ name: "News / live market feed", status: "not-connected" });
-  rows.push({ name: "Google Trends / search demand", status: "not-connected" });
+  rows.push({ name: "RAG connector registry", status: hasRagRegistry ? "loaded" : "partial" });
+  rows.push({ name: "News / live market feed", status: hasRagEndpoint ? "partial" : "not-connected" });
+  rows.push({ name: "Google Trends / search demand", status: hasRagEndpoint ? "partial" : "not-connected" });
   return rows;
+}
+
+function getRagApiUrl() {
+  return (localStorage.getItem("bharatRagApiUrl") || "http://127.0.0.1:8787").trim().replace(/\/+$/, "");
+}
+
+async function ragFetch(path, { method = "GET", body = null, timeoutMs = 2000, fallback = null } = {}) {
+  const base = getRagApiUrl();
+  if (!base) return fallback;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const opts = { method, headers: { "Content-Type": "application/json" }, signal: controller.signal };
+    if (body) opts.body = JSON.stringify(body);
+    const response = await fetch(`${base}${path}`, opts);
+    if (!response.ok) return fallback;
+    return await response.json();
+  } catch {
+    return fallback;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function ragStatus(message, tone = "info") {
+  const el = $("ragStatus");
+  if (!el) return;
+  el.className = `rag-status ${tone}`;
+  el.textContent = message;
+}
+
+function selectedRagJob() {
+  const jobs = ragEvidenceLayer?.jobs || [];
+  return jobs.find(job => job.id === $("ragJobSelect")?.value) || jobs[0] || null;
+}
+
+function ragContext() {
+  const city = cityFor("citySelect");
+  const language = $("languageSelect")?.value || "Telugu";
+  const category = $("categorySelect")?.value || "Snacks";
+  const platform = getPlatforms().find(item => item.id === $("scorerPlatformSelect")?.value) || selectedPlatform();
+  const objective = $("objectiveSelect")?.value || "First order";
+  const channel = $("channelSelect")?.value || "WhatsApp broadcast";
+  return { city, language, category, platform, objective, channel, job: selectedRagJob() };
+}
+
+function populateRagControls() {
+  if (!$("ragCitySelect") || !$("ragJobSelect")) return;
+  const savedUrl = getRagApiUrl();
+  if ($("ragApiUrlInput")) $("ragApiUrlInput").value = savedUrl;
+  const currentCity = $("ragCitySelect").value;
+  const currentJob = $("ragJobSelect").value;
+  $("ragCitySelect").innerHTML = (seedData.cities || []).map(city => `<option value="${escapeHtml(city.city)}">${escapeHtml(city.city)}</option>`).join("");
+  const hydOption = [...$("ragCitySelect").options].find(option => option.value === "Hyderabad");
+  if (currentCity && [...$("ragCitySelect").options].some(option => option.value === currentCity)) $("ragCitySelect").value = currentCity;
+  else if (hydOption) $("ragCitySelect").value = "Hyderabad";
+  $("ragJobSelect").innerHTML = (ragEvidenceLayer?.jobs || []).map(job => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title)}</option>`).join("");
+  if (currentJob && [...$("ragJobSelect").options].some(option => option.value === currentJob)) $("ragJobSelect").value = currentJob;
+}
+
+function renderRagLayer() {
+  if (!$("ragConnectorGrid")) return;
+  populateRagControls();
+  const connectors = ragEvidenceLayer?.connectors || [];
+  const jobs = ragEvidenceLayer?.jobs || [];
+  const endpoint = getRagApiUrl();
+  const selectedCity = $("ragCitySelect")?.value || "Hyderabad";
+  const statusText = endpoint
+    ? `Backend endpoint saved: ${endpoint}. Live ingestion and AI brief requests will be sent there.`
+    : "No backend endpoint saved. The dashboard will show connector readiness and generate a local evidence-pack brief only.";
+  ragStatus(statusText, endpoint ? "ready" : "warn");
+
+  $("ragConnectorGrid").innerHTML = connectors.map(connector => {
+    const status = connector.status.replaceAll("_", " ");
+    return `
+      <div class="rag-connector-card">
+        <div class="rag-connector-top">
+          <strong>${escapeHtml(connector.name)}</strong>
+          <span class="rag-provider">${escapeHtml(connector.provider)}</span>
+        </div>
+        <span class="rag-status-pill ${escapeHtml(connector.status)}">${escapeHtml(status)}</span>
+        <p>${escapeHtml(connector.notes)}</p>
+        <div class="rag-tags">${(connector.bestFor || []).slice(0, 4).map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+        <small>Default confidence: ${escapeHtml(connector.confidenceDefault)}</small>
+      </div>
+    `;
+  }).join("");
+
+  const sectionTitle = document.querySelector("#ragJobList")?.closest(".card")?.querySelector("h3");
+  if (sectionTitle) sectionTitle.textContent = `${selectedCity} demand and competitor packs`;
+
+  $("ragJobList").innerHTML = jobs.map(job => {
+    const dynamicTitle = job.title.replace(/Hyderabad/gi, selectedCity);
+    const dynamicQueries = (job.queries || []).map(q => q.replace(/Hyderabad/gi, selectedCity));
+    const dynamicTags = (job.outputTags || []).map(t => t === "Hyderabad" ? selectedCity : t);
+    return `
+      <div class="rag-job-card">
+        <strong>${escapeHtml(dynamicTitle)}</strong>
+        <p>${escapeHtml(job.cadence)} · ${escapeHtml((job.connectors || []).join(", "))}</p>
+        <div class="rag-tags">${dynamicTags.map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+        <small>${escapeHtml(dynamicQueries.join(" | "))}</small>
+      </div>
+    `;
+  }).join("");
+
+  const schema = ragEvidenceLayer?.evidenceSchema;
+  $("ragSchema").innerHTML = schema ? `
+    <div class="rag-schema-grid">
+      <div><h4>Required fields</h4><p>${escapeHtml(schema.requiredFields.join(", "))}</p></div>
+      ${Object.entries(schema.confidenceRules || {}).map(([key, value]) => `<div><h4>${escapeHtml(key)} confidence</h4><p>${escapeHtml(value)}</p></div>`).join("")}
+    </div>
+  ` : `<p class="note">Evidence schema not loaded.</p>`;
+  renderPipelineWidget();
+}
+
+function localEvidenceBrief() {
+  const ctx = ragContext();
+  const job = ctx.job;
+  const selectedCity = $("ragCitySelect")?.value || ctx.city.city;
+  const score = calculateScore(ctx.city, ctx.language, ctx.category);
+  const sourceRows = oeEvidenceLedger(ctx.city, ctx.category).slice(0, 5);
+  const signalRows = (marketSignals?.signals || [])
+    .filter(signal => signal.confidence === "A" || signal.confidence === "B")
+    .slice(0, 4);
+  const validationGaps = [
+    "Google Trends, Keyword Planner, Meta Ad Library, YouTube, Reddit, Maps, and app-review data require backend ingestion before they can be cited as live evidence.",
+    "Competitor app merchandising should be uploaded as timestamped screenshots because Blinkit/Zepto/Instamart app surfaces do not expose a public API.",
+    `${selectedCity}-only conclusions must be separated from India-wide q-commerce benchmarks.`
+  ];
+
+  return {
+    generatedAt: new Date().toISOString(),
+    mode: "local_evidence_pack",
+    city: selectedCity,
+    language: ctx.language,
+    category: ctx.category,
+    platform: ctx.platform.name,
+    objective: ctx.objective,
+    channel: ctx.channel,
+    job: job?.title?.replace(/Hyderabad/gi, selectedCity) || "Evidence pack",
+    score: score.score,
+    confidence: score.confidence || "D",
+    sections: [
+      {
+        title: "Executive answer",
+        body: `${selectedCity} / ${ctx.language} / ${ctx.category} is ready for a narrow evidence-gated pilot, not an unqualified scale-up. Current opportunity score is ${score.score}/100 with ${score.confidence || "D"} confidence.`
+      },
+      {
+        title: "Evidence-backed market signal",
+        body: sourceRows.map(row => `${row.source}: ${row.what} (${row.confidence})`).join(" ")
+      },
+      {
+        title: "Live signal candidates",
+        body: signalRows.length ? signalRows.map(row => `${row.id}: ${row.signal_summary}`).join(" ") : "No loaded A/B confidence market signals are available yet."
+      },
+      {
+        title: "WhatsApp sandbox flow",
+        body: `Test ${ctx.language} copy through a backend WhatsApp sandbox. Track delivery, open, reply, click, conversion, unsubscribe, CAC proxy, and repeat rate before updating the score.`
+      },
+      {
+        title: "Shadow pilot plan",
+        body: `Run a 7-day shadow pilot for ${ctx.category} in ${selectedCity}. Use ${ctx.channel} as the primary channel and compare against app/category evidence ingested by ${job?.title?.replace(/Hyderabad/gi, selectedCity) || "the selected evidence job"}.`
+      },
+      {
+        title: "Open validation gaps",
+        body: validationGaps.join(" ")
+      }
+    ],
+    citations: [
+      ...(ragEvidenceLayer?.sampleEvidence || []),
+      ...signalRows.map(row => ({ id: row.id, source_name: row.source_name, source_url: row.source_url, confidence: row.confidence }))
+    ]
+  };
+}
+
+function renderRagBrief(brief) {
+  const output = $("ragBriefOutput");
+  if (!output) return;
+  if (brief.mode === "seo_brief") {
+    window.__currentSeoBrief = brief;
+    renderSeoBrief(brief, output, ragStatus);
+    return;
+  }
+  output.innerHTML = `
+    <div class="rag-brief-meta">
+      <span>${escapeHtml(brief.mode || "backend_ai")}</span>
+      <span>${escapeHtml(brief.city || "")}</span>
+      <span>${escapeHtml(brief.category || "")}</span>
+      <span>Score ${escapeHtml(brief.score ?? "n/a")}</span>
+    </div>
+    ${(brief.sections || []).map(section => `
+      <div class="rag-brief-section">
+        <h4>${escapeHtml(section.title)}</h4>
+        <p>${escapeHtml(section.body)}</p>
+      </div>
+    `).join("")}
+    <div class="rag-citations">
+      <h4>Citations</h4>
+      ${(brief.citations || []).map(cite => `<a href="${escapeHtml(cite.source_url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(cite.id || cite.source_name || "source")} · ${escapeHtml(cite.confidence || "")}</a>`).join("") || "<p class=\"note\">No citations returned.</p>"}
+    </div>
+  `;
+}
+
+async function postRag(path, payload, timeoutMs = 5000) {
+  const base = getRagApiUrl();
+  if (!base) throw new Error("RAG backend endpoint is not configured.");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${base}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error(`RAG backend returned ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function generateRagBrief() {
+  const ctx = ragContext();
+  const selectedCity = $("ragCitySelect")?.value || ctx.city?.city || "Hyderabad";
+  const selectedLanguage = $("languageSelect")?.value || ctx.language || "Telugu";
+  const selectedCategory = $("categorySelect")?.value || ctx.category || "Grocery";
+  const tStart = performance.now();
+
+  ragStatus(`Generating SEO brief for ${selectedCity} ${selectedLanguage} ${selectedCategory}...`, "info");
+
+  const enhancedCtx = {
+    ...ctx, city: ctx.city, selectedCity,
+    language: selectedLanguage, category: selectedCategory,
+    score: calculateScore(ctx.city, selectedLanguage, selectedCategory)?.score || 0,
+    confidence: calculateScore(ctx.city, selectedLanguage, selectedCategory)?.confidence || "D"
+  };
+  const signals = marketSignals?.signals || [];
+
+  // Step 1: Generate brief INSTANTLY from local data (no network calls)
+  let evidenceItems = ragEvidenceLayer?.sampleEvidence || [];
+  if (marketSignals?.signals?.length) {
+    evidenceItems.push(...marketSignals.signals.slice(0, 10).map(s => ({
+      id: s.id, claim: s.signal_summary, source_type: "market_signal",
+      source_name: s.source_name, source_url: s.source_url,
+      confidence: s.confidence, needs_validation: false, tags: ["market_signal"],
+      city: "", category: "", captured_at: s.date_published
+    })));
+  }
+  evidenceItems.push(...oeEvidenceLedger(ctx.city, ctx.category).slice(0, 5).map(row => ({
+    id: row.source, claim: row.what, source_type: "oe_ledger",
+    source_name: row.source, source_url: row.source_url,
+    confidence: row.confidence, needs_validation: false,
+    tags: [selectedCategory.toLowerCase()],
+    city: selectedCity, category: selectedCategory, captured_at: new Date().toISOString()
+  })));
+
+  const localBrief = generateSeoBriefContent(enhancedCtx, evidenceItems, signals, ragEvidenceLayer);
+  localBrief.mode = "seo_brief_local";
+  window.__currentSeoBrief = localBrief;
+  renderRagBrief(localBrief);
+  const localMs = (performance.now() - tStart).toFixed(0);
+  ragStatus(`SEO brief ready (${localMs}ms, local data, ${evidenceItems.length} items).`, "ready");
+
+  // Step 2: PARALLEL backend enrichment (2s timeout each, no blocking)
+  const endpoint = getRagApiUrl();
+  if (endpoint) {
+    const results = await Promise.allSettled([
+      postRag("/evidence", { city: selectedCity, category: selectedCategory }, 2000),
+      postRag("/brief", {
+        context: enhancedCtx,
+        localEvidence: { sampleEvidence: evidenceItems, marketSignals: signals }
+      }, 2000)
+    ]);
+    const stored = results[0].status === "fulfilled" ? results[0].value : null;
+    const backendBriefResp = results[1].status === "fulfilled" ? results[1].value : null;
+    let enhanced = false;
+    if (stored?.evidence?.length > evidenceItems.length) {
+      const backendBrief = generateSeoBriefContent(enhancedCtx, stored.evidence, signals, ragEvidenceLayer);
+      backendBrief.mode = "seo_brief_backend";
+      window.__currentSeoBrief = backendBrief;
+      renderRagBrief(backendBrief);
+      enhanced = true;
+    }
+    if (backendBriefResp && backendBriefResp.sections) {
+      window.__currentBackendBrief = backendBriefResp;
+      const cacheHit = backendBriefResp._cache === "hit";
+      showToast(cacheHit ? "info" : "success", `Backend brief ${cacheHit ? "loaded from cache" : "generated fresh"} (${backendBriefResp.sections.length} sections)`);
+    }
+    const totalMs = (performance.now() - tStart).toFixed(0);
+    if (enhanced) {
+      ragStatus(`SEO brief enhanced with backend evidence (${totalMs}ms total).`, "ready");
+    } else {
+      ragStatus(`SEO brief ready (${totalMs}ms). Click "Download PDF Report" for professional PDF.`, "ready");
+    }
+  }
+}
+
+async function requestRagIngest() {
+  const ctx = ragContext();
+  const selectedCity = $("ragCitySelect")?.value || ctx.city?.city || "Hyderabad";
+  const dynamicJob = ctx.job ? {
+    ...ctx.job,
+    title: ctx.job.title.replace(/Hyderabad/gi, selectedCity),
+    queries: (ctx.job.queries || []).map(q => q.replace(/Hyderabad/gi, selectedCity))
+  } : null;
+
+  const payload = {
+    job: dynamicJob,
+    city: selectedCity,
+    context: {
+      city: selectedCity,
+      language: ctx.language,
+      category: ctx.category,
+      platform: ctx.platform?.name || "",
+      objective: ctx.objective,
+      channel: ctx.channel
+    },
+    requestedAt: new Date().toISOString()
+  };
+  try {
+    ragStatus("Requesting live ingestion for " + selectedCity + "...", "info");
+    const response = await postRag(ragEvidenceLayer?.backendContract?.ingestEndpoint || "/ingest", payload);
+    const inserted = response.inserted || 0;
+    const sourceTypes = (response.evidence || []).reduce((acc, e) => { acc[e.source_type] = (acc[e.source_type] || 0) + 1; return acc; }, {});
+    const breakdown = Object.entries(sourceTypes).map(([k, v]) => `${k}: ${v}`).join(", ");
+    ragStatus(`Ingestion complete: ${inserted} records (${breakdown}). Click "Generate AI evidence brief" to curate the SEO report with this new data.`, "ready");
+  } catch (error) {
+    ragStatus(`${error.message} Save a backend URL to run live scraping.`, "warn");
+  }
 }
 
 function oeTimelineStep(score) {
@@ -1069,16 +1630,245 @@ function renderOeEvidence(city, category) {
   $("oeEvidenceLedger").innerHTML = rows.map(r => `<div class="oe-evidence-row"><span class="oe-evidence-source">${escapeHtml(r.source)}</span><span class="oe-evidence-what">${escapeHtml(r.what)}</span><span class="oe-evidence-conf conf-${r.confidence.toLowerCase()}">${r.confidence}</span></div>`).join("");
 }
 
-function renderOeSignals() {
-  const signals = oeSignals();
-  $("oeSignals").innerHTML = signals.map(s => {
-    const cls = s.status === "loaded" ? "loaded" : s.status === "partial" ? "partial" : "not-connected";
-    const label = s.status === "loaded" ? "Loaded" : s.status === "partial" ? "Partial" : "Not connected";
-    return `<div class="oe-signal-row"><span class="oe-signal-name">${escapeHtml(s.name)}</span><span class="oe-signal-status ${cls}">${label}</span></div>`;
+async function renderOeSignals() {
+  const container = $("oeSignals");
+  if (!container) return;
+  const city = cityFor("citySelect");
+  const category = $("categorySelect")?.value || "Grocery";
+  container.innerHTML = `<div class="oe-signal-row"><span class="oe-signal-name">Backend live signals</span><span class="oe-signal-status partial">Loading from backend...</span></div>`;
+  try {
+    const response = await postBackend("/signals", { city: city.city || "Hyderabad", category, limit: 8 });
+    const signals = response.signals || [];
+    if (!signals.length) {
+      container.innerHTML = `<p class="note">No live signals for ${escapeHtml(city.city || "this city")} ${escapeHtml(category)} yet. Run the Ingestion agent from the Pipeline tab to populate.</p>`;
+      return;
+    }
+    container.innerHTML = `
+      <div class="oe-signals-summary">
+        <span class="oe-signal-status loaded">${signals.length} signals</span>
+        <span class="oe-signal-status ${response.sources?.live_ingestion > 0 ? "loaded" : "partial"}">${response.sources?.live_ingestion || 0} live</span>
+        <span class="oe-signal-status partial">${response.sources?.market_research || 0} research</span>
+      </div>
+    ` + signals.map(signal => `
+      <div class="oe-signal-card">
+        <span class="signal-tag type-tag">${escapeHtml(signal.signal_type || "Market signal")}</span>
+        <strong>${escapeHtml((signal.headline || "").replace(/<[^>]*>/g, "").slice(0, 200))}</strong>
+        <p>${escapeHtml(signal.marketing_action || "")}</p>
+        <small>${escapeHtml(signal.urgency || "")} · ${escapeHtml(signal.source || "")} · ${escapeHtml(signal.brand || "")}</small>
+      </div>
+    `).join("");
+  } catch (error) {
+    console.warn("Backend signals failed.", error);
+    container.innerHTML = `<p class="note">Signals unavailable - check backend connection. <button class="secondary-btn" id="oeSignalsRetry">Retry</button></p>`;
+    $("oeSignalsRetry")?.addEventListener("click", () => renderOeSignals());
+  }
+}
+
+function populateConsumerSignalControls() {
+  const citySelect = $("csCity");
+  if (citySelect) {
+    citySelect.innerHTML = (seedData.cities || []).map(city => `<option value="${escapeHtml(city.city)}">${escapeHtml(city.city)}</option>`).join("");
+    if ($("citySelect")?.value) citySelect.value = $("citySelect").value;
+  }
+
+  const categorySelect = $("csCategory");
+  if (categorySelect) {
+    categorySelect.innerHTML = (seedData.categories || []).map(category => `<option>${escapeHtml(category)}</option>`).join("");
+    if ($("categorySelect")?.value) categorySelect.value = $("categorySelect").value;
+  }
+}
+
+function classifyConsumerSignal() {
+  const city = $("csCity")?.value || cityFor("citySelect").city || "Selected city";
+  const category = $("csCategory")?.value || $("categorySelect")?.value || "Grocery";
+  const type = $("csSignalType")?.value || "";
+  const volume = Number($("csVolume")?.value || 0);
+  const verbatim = $("csVerbatim")?.value.trim() || "";
+  const mapper = SIGNAL_ACTION_MAP[type];
+  const outputEl = $("csOutput");
+  if (!mapper || !outputEl) return;
+
+  const action = mapper(city, category);
+  const volumeLine = volume > 0
+    ? `${volume} signals this week - treat as ${volume >= 20 ? "city-level pattern" : "early signal"}.`
+    : "Volume not provided - treat as anecdotal until volume is logged.";
+
+  outputEl.innerHTML = `
+    <div class="oe-brief-field"><div class="oe-brief-field-label">Marketing relevance</div><div class="oe-brief-field-value">${escapeHtml(action.marketingRelevance)}</div></div>
+    <div class="oe-brief-field"><div class="oe-brief-field-label">Copy action</div><div class="oe-brief-field-value">${escapeHtml(action.copyAction)}</div></div>
+    <div class="oe-brief-field"><div class="oe-brief-field-label">Channel action</div><div class="oe-brief-field-value">${escapeHtml(action.channelAction)}</div></div>
+    <div class="oe-brief-field"><div class="oe-brief-field-label">Brief update flag</div><div class="oe-brief-field-value">${escapeHtml(action.briefUpdate)}</div></div>
+    <p class="note">${escapeHtml(volumeLine)}</p>
+    ${verbatim ? `<p class="note">Verbatim sample, anonymized:<br>${escapeHtml(verbatim)}</p>` : ""}
+    <button class="secondary-btn" id="csPushToBrief">Push to Campaign Brief</button>
+  `;
+
+  $("csPushToBrief")?.addEventListener("click", () => {
+    pushConsumerSignalToBrief(action.briefUpdate);
+    $("csPushToBrief").textContent = "Pushed to brief";
+    $("csPushToBrief").disabled = true;
+  });
+}
+
+function pushConsumerSignalToBrief(flagText) {
+  if (!window._oeBriefData) generateBriefStatic();
+  window._oeBriefData.consumerSignalFlag = flagText;
+
+  const briefEl = $("oeBrief");
+  if (!briefEl) return;
+
+  let signalField = briefEl.querySelector("[data-consumer-signal]");
+  if (!signalField) {
+    signalField = document.createElement("div");
+    signalField.dataset.consumerSignal = "true";
+    signalField.className = "oe-brief-field";
+    briefEl.appendChild(signalField);
+  }
+  signalField.innerHTML = `<div class="oe-brief-field-label">Consumer signal</div><div class="oe-brief-field-value">${escapeHtml(flagText)}</div>`;
+}
+
+function populatePriceWatchControls() {
+  const citySelect = $("pwCity");
+  if (!citySelect) return;
+  citySelect.innerHTML = (seedData.cities || []).map(city => `<option value="${escapeHtml(city.city)}">${escapeHtml(city.city)}</option>`).join("");
+  if ($("citySelect")?.value) citySelect.value = $("citySelect").value;
+}
+
+function computePriceGapAlert(yourPrice, competitorPrice, threshold = 0.10) {
+  const your = Number(yourPrice);
+  const competitor = Number(competitorPrice);
+  if (!your || !competitor) return null;
+
+  const gap = (competitor - your) / your;
+  const gapPercent = gap * 100;
+  const absGap = Math.abs(gap);
+  const competitorCheaper = gap < 0;
+
+  if (absGap < threshold) {
+    return {
+      severity: "low",
+      gapPercent: gapPercent.toFixed(1),
+      message: `Price gap of ${gapPercent.toFixed(1)}%. Within monitoring threshold.`
+    };
+  }
+
+  return {
+    severity: "high",
+    gapPercent: gapPercent.toFixed(1),
+    message: `Price gap of ${Math.abs(gapPercent).toFixed(1)}% detected. Competitor is ${competitorCheaper ? "cheaper" : "more expensive"}. ${competitorCheaper ? "Consider bundle offer, pack-size anchor, or price match in this city/platform." : "Pricing power window open; hold price and test value-led communication."}`
+  };
+}
+
+function renderPriceWatchTable() {
+  const container = $("pwGapTable");
+  if (!container) return;
+
+  if (!priceWatchList.length) {
+    container.innerHTML = `<p class="note">No SKUs added yet. Add a SKU above to see price gap analysis.</p>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>SKU</th><th>Platform</th><th>City</th><th>Your price</th><th>Competitor price</th><th>Gap</th></tr></thead>
+      <tbody>
+        ${priceWatchList.map((item, index) => {
+          const alert = computePriceGapAlert(item.yourPrice, item.competitorPrice) || {};
+          const severityClass = alert.severity === "high" ? "gap-high" : "gap-ok";
+          return `<tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.sku)}</td>
+            <td>${escapeHtml(item.platform)}</td>
+            <td>${escapeHtml(item.city)}</td>
+            <td>INR ${item.yourPrice.toFixed(2)}</td>
+            <td>INR ${item.competitorPrice.toFixed(2)}</td>
+            <td class="${severityClass}">${escapeHtml(alert.gapPercent || "--")}%</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderPriceWatchAlerts() {
+  const container = $("pwAlerts");
+  if (!container) return;
+
+  if (!priceWatchList.length) {
+    container.innerHTML = `<p class="note">Add SKUs to watchlist to see gap alerts.</p>`;
+    return;
+  }
+
+  container.innerHTML = priceWatchList.map(item => {
+    const alert = computePriceGapAlert(item.yourPrice, item.competitorPrice);
+    const backend = item.backendAlert;
+    if (!alert) return "";
+    return `<div class="price-alert price-alert-${alert.severity}">
+      <strong>${escapeHtml(item.sku)}</strong> - ${escapeHtml(item.platform)} - ${escapeHtml(item.city)}<br>
+      ${escapeHtml(backend ? `${backend.alert_level.toUpperCase()}: ${backend.recommendation} ${backend.suggested_action}` : alert.message)}
+    </div>`;
   }).join("");
 }
 
-function generateBrief() {
+function renderPriceWatchTrend() {
+  const container = $("pwTrendChart");
+  if (!container) return;
+
+  if (!priceWatchLog.length) {
+    container.textContent = "Manual trend chart placeholder - add SKU entries to start a dated update log.";
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="pw-log-list">
+      ${priceWatchLog.slice().reverse().map(entry => {
+        const alert = computePriceGapAlert(entry.yourPrice, entry.competitorPrice);
+        return `<div class="pw-log-row">
+          <span>${escapeHtml(entry.date)}</span>
+          <strong>${escapeHtml(entry.sku)}</strong>
+          <p>${escapeHtml(entry.city)} / ${escapeHtml(entry.platform)} - your INR ${entry.yourPrice.toFixed(2)}, competitor INR ${entry.competitorPrice.toFixed(2)}, gap ${escapeHtml(alert?.gapPercent || "--")}%</p>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+async function addPriceWatchSku() {
+  const sku = $("pwSku")?.value.trim();
+  const yourPrice = Number($("pwYourPrice")?.value);
+  const competitorPrice = Number($("pwCompetitorPrice")?.value);
+  const platform = $("pwPlatform")?.value || "";
+  const city = $("pwCity")?.value || "";
+  const status = $("pwStatus");
+
+  if (!sku || !yourPrice || !competitorPrice) {
+    if (status) status.textContent = "Enter SKU, your price, and competitor price.";
+    return;
+  }
+
+  const entry = { sku, yourPrice, competitorPrice, platform, city, date: new Date().toISOString().slice(0, 10), backendAlert: null };
+  try {
+    entry.backendAlert = await postBackend("/pricewatch", {
+      sku,
+      your_price: yourPrice,
+      competitor_price: competitorPrice,
+      city,
+      platform
+    });
+  } catch (error) {
+    console.warn("Backend pricewatch failed; using static price alert.", error);
+  }
+  priceWatchList.push(entry);
+  priceWatchLog.push(entry);
+
+  ["pwSku", "pwYourPrice", "pwCompetitorPrice"].forEach(id => { if ($(id)) $(id).value = ""; });
+  if (status) status.textContent = "SKU added to watchlist.";
+  renderPriceWatchTable();
+  renderPriceWatchAlerts();
+  renderPriceWatchTrend();
+}
+
+function generateBriefStatic() {
   const city = cityFor("citySelect");
   const language = $("languageSelect").value;
   const category = $("categorySelect").value;
@@ -1111,9 +1901,63 @@ function generateBrief() {
   $("oeValidationBanner").classList.add("hidden");
 }
 
+async function generateBrief() {
+  const city = cityFor("citySelect");
+  const language = $("languageSelect").value;
+  const category = $("categorySelect").value;
+  const platform = getPlatforms().find(item => item.id === $("scorerPlatformSelect").value) || selectedPlatform();
+  const objective = $("objectiveSelect").value;
+  const channel = ($("channelSelect")?.value) || "WhatsApp broadcast";
+  const payload = {
+    city: city.city,
+    language,
+    category,
+    platform: platformPayloadValue(platform),
+    objective,
+    channel,
+    offer: $("caOffer")?.value || "",
+    tone: $("caTone")?.value || "Local",
+    benchmarkPlatform: selectedPlatform()?.id || platformPayloadValue(platform)
+  };
+
+  const briefEl = $("oeBrief");
+  briefEl.innerHTML = `<p class="note">Generating AI brief from backend...</p>`;
+  try {
+    const response = await postBackend("/brief", payload);
+    window._oeBriefData = {
+      city: payload.city,
+      language,
+      category,
+      platform: platform.name,
+      objective,
+      channel,
+      backend: response,
+      generatedAt: new Date().toISOString()
+    };
+    const fields = [
+      ["Headline", response.brief_headline],
+      ["Strategic rationale", response.strategic_rationale],
+      ["City hook", response.city_hook],
+      ["English draft", response.english_draft],
+      ["Vernacular draft", response.vernacular_draft],
+      ["WhatsApp message", response.whatsapp_message],
+      ["Checklist", (response.checklist || []).join(" | ")],
+      ["Confidence", response.confidence_level]
+    ];
+    briefEl.innerHTML = fields.map(([label, value]) => `<div class="oe-brief-field"><div class="oe-brief-field-label">${escapeHtml(label)}</div><div class="oe-brief-field-value">${escapeHtml(value)}</div></div>`).join("");
+    $("oeValidationBanner").classList.add("hidden");
+  } catch (error) {
+    console.warn("Backend brief failed; using static brief.", error);
+    generateBriefStatic();
+  }
+}
+
 async function copyBrief() {
-  if (!window._oeBriefData) { generateBrief(); }
-  const text = window._oeBriefData.fields.map(f => `${f.label}: ${f.value}`).join("\n");
+  if (!window._oeBriefData) { await generateBrief(); }
+  if (!window._oeBriefData) return;
+  const text = window._oeBriefData.fields
+    ? window._oeBriefData.fields.map(f => `${f.label}: ${f.value}`).join("\n")
+    : $("oeBrief").innerText;
   try {
     await navigator.clipboard.writeText(text);
     $("oeCopyBrief").textContent = "Copied!";
@@ -1122,7 +1966,7 @@ async function copyBrief() {
 }
 
 function exportJson() {
-  if (!window._oeBriefData) { generateBrief(); }
+  if (!window._oeBriefData) { generateBriefStatic(); }
   const exportData = { ...window._oeBriefData };
   if (caDraftData) {
     exportData.campaign = {
@@ -1292,6 +2136,7 @@ function renderCampaignStatus() {
   const rows = [
     ["Public market data", "Loaded", "Sourced from CareEdge, Swiggy FY25, Economic Times, and Global Newswire."],
     ["Competitor data", "Partial / source-dependent", "Some platforms have stronger disclosed metrics than others."],
+    ["Evidence RAG", getRagApiUrl() ? "Backend configured" : "Backend endpoint needed", getRagApiUrl() ? "Scraping and AI brief requests can be routed to your secure backend." : "Connector registry is loaded, but live scraping requires a backend URL and server-side API keys."],
     ["Pilot campaign CSV", pilotCampaignUploaded ? "Uploaded" : "Awaiting upload", pilotCampaignUploaded ? "Campaign calculations now use uploaded CSV data." : "No campaign performance data has been uploaded yet. Dashboard plans experiments but does not claim results."],
     ["Report export", "Ready", "Stakeholder-ready executive reports can be generated and exported."],
     ["Missing data", "Requires independent source", "BigBasket Now and Dunzo public metrics require stronger public sources."]
@@ -1594,7 +2439,7 @@ function renderCALocalization(ctx) {
   `).join("");
 }
 
-function generateCampaignDraft() {
+function generateCampaignDraftStatic() {
   const ctx = caGetContext();
   if (!ctx.city.city) { $("caDrafts").innerHTML = `<p class="note">Select market first — choose a city in the Opportunity Engine.</p>`; return; }
   if (!ctx.caObjective) { $("caDrafts").innerHTML = `<p class="note">Select a campaign objective above to generate drafts.</p>`; return; }
@@ -1612,23 +2457,25 @@ function generateCampaignDraft() {
   const offer = ctx.caOffer || "No discount";
   const tone = ctx.caTone;
   const isVernacular = ["Telugu", "Tamil", "Marathi", "Kannada", "Malayalam", "Odia", "Punjabi", "Haryanvi"].includes(ctx.language);
+  const persona = CITY_PERSONA_MAP[cityName];
+  const personaHook = persona?.hook || "10-minute delivery that fits local daily life.";
 
   let primary, short, cta, followup, reminder, unsubscribe;
 
   if (obj === "Awareness") {
-    primary = `${cat.charAt(0).toUpperCase() + cat.slice(1)} delivery is now live in ${cityName}. Explore available options near you.`;
+    primary = `${personaHook} ${cat.charAt(0).toUpperCase() + cat.slice(1)} delivery is now live in ${cityName}. Explore available options near you.`;
     short = `${cat.charAt(0).toUpperCase() + cat.slice(1)} in ${cityName} — tap to explore.`;
     cta = "Explore now";
     followup = `Still looking for ${cat} options in ${cityName}? Here are this week's picks.`;
     reminder = `Your ${cat} delivery is available in ${cityName}. Open the app to browse.`;
   } else if (obj === "Trial" || obj === "Conversion") {
-    primary = `Need ${cat} fast in ${cityName}? Try a quick local convenience run today. ${offer !== "No discount" ? offer + " for first orders." : ""}`.trim();
+    primary = `${personaHook} Need ${cat} fast in ${cityName}? Try a quick local convenience run today. ${offer !== "No discount" ? offer + " for first orders." : ""}`.trim();
     short = `${cat.charAt(0).toUpperCase() + cat.slice(1)} in ${cityName} — first order offer inside.`;
     cta = "Order now";
     followup = `Your ${cat} order is a tap away. ${offer !== "No discount" ? offer + " still available." : "Fast delivery in your area."}`;
     reminder = `${cat.charAt(0).toUpperCase() + cat.slice(1)} delivery reminder — your offer expires soon.`;
   } else if (obj === "Retention" || obj === "Repeat purchase") {
-    primary = `Welcome back. Your regular ${cat} order is ready to reorder in one tap.`;
+    primary = `${personaHook} Welcome back. Your regular ${cat} order is ready to reorder in one tap.`;
     short = `Reorder your ${cat} essentials in ${cityName}.`;
     cta = "Reorder now";
     followup = `Haven't ordered ${cat} this week? Your usual items are in stock.`;
@@ -1636,12 +2483,14 @@ function generateCampaignDraft() {
   } else if (obj === "Win-back") {
     primary = `It's been a while. Your ${cat} delivery in ${cityName} is still here — come back with a fresh offer.`;
     short = `We miss you — ${cat} delivery in ${cityName}, with a comeback offer.`;
+    primary = `${personaHook} ${primary}`;
     cta = "Come back";
     followup = `Your local ${cat} selection has expanded. Browse what's new in ${cityName}.`;
     reminder = `Last chance — your win-back offer for ${cat} delivery expires today.`;
   } else {
     primary = `${cat.charAt(0).toUpperCase() + cat.slice(1)} delivery in ${cityName} — explore what's available near you.`;
     short = `${cat} delivery in ${cityName} — tap to explore.`;
+    primary = `${personaHook} ${primary}`;
     cta = "Try now";
     followup = `More ${cat} options available in ${cityName} this week.`;
     reminder = `Your ${cat} delivery reminder for ${cityName}.`;
@@ -1675,6 +2524,13 @@ function generateCampaignDraft() {
     offer,
     tone,
     messageDrafts: { primary, short, cta, followup, reminder, unsubscribe },
+    cityPersona: persona ? {
+      hook: persona.hook,
+      priceAngle: persona.priceAngle,
+      topCategories: persona.topCategories,
+      competitorGap: persona.competitorGap,
+      localTrigger: persona.localTrigger
+    } : null,
     score: result.score,
     confidence,
     validationWarnings,
@@ -1688,7 +2544,12 @@ function generateCampaignDraft() {
     { label: "CTA", value: cta },
     { label: "Follow-up message", value: followup },
     { label: "Reminder message", value: reminder },
-    { label: "Unsubscribe line", value: unsubscribe }
+    { label: "Unsubscribe line", value: unsubscribe },
+    ...(persona ? [
+      { label: "City trigger", value: persona.localTrigger },
+      { label: "Price angle", value: persona.priceAngle },
+      { label: "Competitor gap", value: persona.competitorGap }
+    ] : [])
   ];
 
   $("caDrafts").innerHTML = fields.map(f => `
@@ -1703,11 +2564,114 @@ function generateCampaignDraft() {
     </div>
   ` : "");
 
+  renderVernacularDraftVariant(ctx.language, caDraftData.messageDrafts, caDraftData);
   window._oeBriefData = window._oeBriefData || null;
 }
 
+async function generateCampaignDraft() {
+  const ctx = caGetContext();
+  if (!ctx.city.city) { $("caDrafts").innerHTML = `<p class="note">Select market first - choose a city in the Opportunity Engine.</p>`; return; }
+  if (!ctx.caObjective) { $("caDrafts").innerHTML = `<p class="note">Select a campaign objective above to generate drafts.</p>`; return; }
+  if (!ctx.caChannel) { $("caDrafts").innerHTML = `<p class="note">Select a channel above to generate drafts.</p>`; return; }
+
+  $("caDrafts").innerHTML = `<p class="note">Generating AI campaign drafts from backend...</p>`;
+  if ($("vernacularDraftOutput")) $("vernacularDraftOutput").innerHTML = `<p class="note">Waiting for backend localization...</p>`;
+
+  const payload = {
+    city: ctx.city.city,
+    language: ctx.language,
+    category: ctx.category,
+    objective: ctx.caObjective,
+    channel: ctx.caChannel,
+    offer: ctx.caOffer,
+    tone: ctx.caTone
+  };
+
+  try {
+    const response = await postBackend("/campaign", payload);
+    const primary = response.drafts?.[0]?.copy || "";
+    const short = response.drafts?.[1]?.copy || "";
+    const followup = response.drafts?.[2]?.copy || "";
+    caDraftData = {
+      city: payload.city,
+      useCase: payload.category,
+      language: payload.language,
+      benchmark: ctx.platform.name,
+      objective: payload.objective,
+      channel: payload.channel,
+      offer: payload.offer || "No discount",
+      tone: payload.tone,
+      messageDrafts: {
+        primary,
+        short,
+        cta: response.cta || "Order now",
+        followup,
+        reminder: response.localization_note || "",
+        unsubscribe: payload.channel === "WhatsApp" || payload.channel === "SMS" ? "Reply STOP to opt out of future messages." : "Manage notification preferences in app settings."
+      },
+      backend: response,
+      validationWarnings: response.do_not_say || [],
+      generatedAt: new Date().toISOString()
+    };
+    $("caDrafts").innerHTML = (response.drafts || []).map(draft => `
+      <div class="ca-draft-field">
+        <div class="ca-draft-field-label">${escapeHtml(draft.label)} · ${escapeHtml(draft.char_count)} chars</div>
+        <div class="ca-draft-field-value">${escapeHtml(draft.copy)}</div>
+      </div>
+    `).join("") + `
+      <div class="ca-draft-field">
+        <div class="ca-draft-field-label">Do not say</div>
+        <div class="ca-draft-field-value">${(response.do_not_say || []).map(item => escapeHtml(item)).join("<br>")}</div>
+      </div>
+    `;
+    if ($("vernacularDraftLabel")) $("vernacularDraftLabel").textContent = `${payload.language} backend localization`;
+    if ($("vernacularDraftOutput")) $("vernacularDraftOutput").innerHTML = `
+      <div class="ca-draft-field">
+        <div class="ca-draft-field-label">Localization note</div>
+        <div class="ca-draft-field-value">${escapeHtml(response.localization_note || "Review final copy with a native speaker.")}</div>
+      </div>
+    `;
+  } catch (error) {
+    console.warn("Backend campaign failed; using static campaign draft.", error);
+    generateCampaignDraftStatic();
+  }
+}
+
+function renderVernacularDraftVariant(language, drafts, draftData) {
+  const container = $("vernacularDraftOutput");
+  const labelEl = $("vernacularDraftLabel");
+  if (!container || !labelEl) return;
+
+  const bank = VERNACULAR_PHRASE_BANK[language];
+  if (!bank) {
+    labelEl.textContent = "Vernacular draft";
+    labelEl.classList.remove("warning");
+    container.innerHTML = `<p class="note">No phrase bank is mapped for ${escapeHtml(language)} yet. Use the English draft and validate with a native speaker.</p>`;
+    return;
+  }
+
+  labelEl.textContent = `${language} draft - ${bank.reviewed ? "reviewed phrase bank" : "native-speaker review needed"}`;
+  labelEl.classList.toggle("warning", !bank.reviewed);
+
+  const offer = draftData?.offer && draftData.offer !== "No discount" ? `Offer: ${draftData.offer}.` : bank.value;
+  const lines = [
+    bank.greeting,
+    bank.urgency,
+    offer,
+    drafts?.primary || "",
+    `CTA: ${bank.cta || drafts?.cta || "Order now"}`,
+    bank.reviewed ? "Phrase bank reviewed; still check final brand/legal copy." : "Verify wording with a native speaker before launch."
+  ].filter(Boolean);
+
+  container.innerHTML = lines.map(line => `
+    <div class="ca-draft-field">
+      <div class="ca-draft-field-value">${escapeHtml(line)}</div>
+    </div>
+  `).join("");
+}
+
 async function copyCampaignDraft() {
-  if (!caDraftData) { generateCampaignDraft(); }
+  if (!caDraftData) { await generateCampaignDraft(); }
   if (!caDraftData) return;
   const drafts = caDraftData.messageDrafts;
   const text = [
@@ -1728,14 +2692,14 @@ async function copyCampaignDraft() {
   try {
     await navigator.clipboard.writeText(text);
     $("caCopyDraft").textContent = "Copied!";
-    setTimeout(() => { $("caCopyDraft").textContent = "Copy draft"; }, 2000);
+    setTimeout(() => { $("caCopyDraft").textContent = "Copy English draft"; }, 2000);
   } catch(e) { console.warn("Clipboard write failed", e); }
 }
 
 function caAddToBrief() {
-  if (!caDraftData) { generateCampaignDraft(); }
+  if (!caDraftData) { generateCampaignDraftStatic(); }
   if (!caDraftData) return;
-  if (!window._oeBriefData) { generateBrief(); }
+  if (!window._oeBriefData) { generateBriefStatic(); }
   if (!window._oeBriefData) return;
 
   const lens = `[Campaign: ${caDraftData.objective} via ${caDraftData.channel}] Primary: "${caDraftData.messageDrafts.primary}" CTA: "${caDraftData.messageDrafts.cta}"`;
@@ -1768,7 +2732,7 @@ function caAddToBrief() {
 }
 
 function exportCampaignJson() {
-  if (!caDraftData) { generateCampaignDraft(); }
+  if (!caDraftData) { generateCampaignDraftStatic(); }
   if (!caDraftData) return;
   const exportData = {
     ...caDraftData,
@@ -2089,6 +3053,8 @@ function resetCampaign() {
   $("caCsvUpload").value = "";
   $("caLearningNote").value = "";
   $("caDrafts").innerHTML = `<p class="note">Configure your campaign above, then generate drafts.</p>`;
+  if ($("vernacularDraftLabel")) $("vernacularDraftLabel").textContent = "Vernacular draft";
+  if ($("vernacularDraftOutput")) $("vernacularDraftOutput").innerHTML = `<p class="note">Generate a campaign draft to see the language variant.</p>`;
   $("caTrackerEmpty").classList.remove("hidden");
   $("caTrackerDashboard").classList.add("hidden");
   const colMapping = $("caColumnMapping");
@@ -2903,7 +3869,7 @@ function selectedMulti(id) {
   return Array.from($(id).selectedOptions).map(option => option.value);
 }
 
-function renderExperimentPlan() {
+function renderExperimentPlanStatic() {
   const city = cityFor("plannerCitySelect");
   const language = $("plannerLanguageSelect").value;
   const category = $("plannerCategorySelect").value;
@@ -2928,6 +3894,46 @@ function renderExperimentPlan() {
   $("experimentPlanOutput").innerHTML = rows.map(([label, value]) => `<div class="planner-row"><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div>`).join("");
 }
 
+async function generateBackendExperimentPlan() {
+  const city = cityFor("plannerCitySelect");
+  const language = $("plannerLanguageSelect").value;
+  const category = $("plannerCategorySelect").value;
+  const platform = getPlatforms().find(item => item.id === $("plannerPlatformSelect").value) || selectedPlatform();
+  const payload = {
+    platform: platformPayloadValue(platform),
+    city: city.city,
+    language,
+    category,
+    objective: $("plannerObjectiveSelect").value,
+    budget: $("plannerBudgetSelect").value,
+    duration: $("plannerDurationSelect").value,
+    offer: $("plannerOfferSelect").value,
+    channels: selectedMulti("plannerChannelSelect")
+  };
+  $("experimentPlanOutput").innerHTML = `<div class="planner-row"><span>Status</span><p>Generating backend experiment plan...</p></div>`;
+  try {
+    const response = await postBackend("/planner", payload);
+    const rows = [
+      ["Hypothesis", response.hypothesis],
+      ["Test group", response.test_group],
+      ["Control group", response.control_group],
+      ["KPIs", (response.kpis || []).map(kpi => `${kpi.role}: ${kpi.name} ${kpi.target}`).join(" | ")],
+      ["Timeline", response.timeline],
+      ["Budget split", Object.entries(response.budget_split || {}).map(([key, value]) => `${key}: ${value}%`).join(", ")],
+      ["Success threshold", response.success_threshold],
+      ["Failure threshold", response.failure_threshold]
+    ];
+    $("experimentPlanOutput").innerHTML = rows.map(([label, value]) => `<div class="planner-row"><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div>`).join("");
+  } catch (error) {
+    console.warn("Backend planner failed; using static experiment plan.", error);
+    renderExperimentPlanStatic();
+  }
+}
+
+function renderExperimentPlan() {
+  renderExperimentPlanStatic();
+}
+
 function primaryKpi(objective) {
   if (objective.includes("Awareness")) return "CTR and reach";
   if (objective.includes("Repeat")) return "Repeat order rate";
@@ -2936,7 +3942,7 @@ function primaryKpi(objective) {
   return "CVR, CAC, first orders";
 }
 
-function renderUnitEconomics() {
+function renderUnitEconomicsStatic() {
   const aov = Number($("unitAovInput").value || 0);
   const margin = Number($("unitMarginInput").value || 0) / 100;
   const repeat = Number($("unitRepeatInput").value || 0);
@@ -2957,6 +3963,36 @@ function renderUnitEconomics() {
   $("unitEconomicsOutput").innerHTML = cards.map(([label, value, caption]) => `<article class="kpi-card"><div class="kpi-label">${escapeHtml(label)}</div><div class="kpi-value">${escapeHtml(value)}</div><div class="kpi-caption">${escapeHtml(caption)}</div></article>`).join("");
 }
 
+let unitEconomicsRequestId = 0;
+
+async function renderUnitEconomics() {
+  const requestId = ++unitEconomicsRequestId;
+  const payload = {
+    aov: Number($("unitAovInput").value || 0),
+    margin_pct: Number($("unitMarginInput").value || 0),
+    repeat_orders_month: Number($("unitRepeatInput").value || 0),
+    cac: Number($("unitCacInput").value || 0),
+    lifetime_months: Number($("unitLifetimeInput").value || 0)
+  };
+  try {
+    const response = await postBackend("/uniteconomics", payload);
+    if (requestId !== unitEconomicsRequestId) return;
+    const cards = [
+      ["LTV", `INR ${formatNumber(Math.round(response.ltv))}`, "Backend calculation"],
+      ["LTV:CAC", `${Number(response.ltv_cac_ratio).toFixed(2)}x`, "LTV / CAC"],
+      ["CAC payback", `${Number(response.payback_months).toFixed(2)} months`, "CAC / monthly contribution"],
+      ["Monthly contribution/user", `INR ${formatNumber(Math.round(response.contribution_margin))}`, "AOV x margin x repeat"],
+      ["True ROAS", `${Number(response.true_roas).toFixed(2)}x`, "LTV / CAC"],
+      ["Verdict", response.verdict, (response.warning_flags || []).join(", ") || "No warning flags"]
+    ];
+    $("unitEconomicsOutput").innerHTML = cards.map(([label, value, caption]) => `<article class="kpi-card"><div class="kpi-label">${escapeHtml(label)}</div><div class="kpi-value">${escapeHtml(value)}</div><div class="kpi-caption">${escapeHtml(caption)}</div></article>`).join("");
+  } catch (error) {
+    if (requestId !== unitEconomicsRequestId) return;
+    console.warn("Backend unit economics failed; using static calculation.", error);
+    renderUnitEconomicsStatic();
+  }
+}
+
 function reportInputs() {
   return {
     platform: getPlatforms().find(item => item.id === $("reportPlatformSelect").value) || selectedPlatform(),
@@ -2971,7 +4007,7 @@ function reportInputs() {
   };
 }
 
-function renderReport() {
+function renderReportStatic() {
   const data = reportInputs();
   const score = calculateScore(data.city, data.language, data.category).score;
   const pilotNote = pilotCampaignUploaded ? "Pilot CSV uploaded; review tracker before claiming outcomes." : "Pilot data not uploaded. Do not claim CAC reduction, conversion lift, or revenue impact.";
@@ -2996,6 +4032,49 @@ function renderReport() {
   lastReportMarkdown = $("briefOutput").innerText;
   reportExportReady = true;
   renderCampaignStatus();
+}
+
+function markdownToReportHtml(markdown) {
+  const lines = String(markdown || "").split(/\r?\n/);
+  return lines.map(line => {
+    if (line.startsWith("### ")) return `<h3>${escapeHtml(line.slice(4))}</h3>`;
+    if (line.startsWith("## ")) return `<h2>${escapeHtml(line.slice(3))}</h2>`;
+    if (/^\d+\.\s+/.test(line)) return `<p><strong>${escapeHtml(line)}</strong></p>`;
+    if (line.startsWith("- ")) return `<p>• ${escapeHtml(line.slice(2))}</p>`;
+    if (!line.trim()) return "";
+    return `<p>${escapeHtml(line)}</p>`;
+  }).join("");
+}
+
+async function generateBackendReport() {
+  const data = reportInputs();
+  const payload = {
+    platform: platformPayloadValue(data.platform),
+    city: data.city.city,
+    language: data.language,
+    category: data.category,
+    objective: data.objective,
+    offer: data.offer,
+    tone: data.tone,
+    channels: data.channels,
+    notes: data.notes
+  };
+  $("briefOutput").innerHTML = `<p class="note">Generating backend executive report...</p>`;
+  try {
+    const response = await postBackend("/report", payload);
+    lastReportMarkdown = response.markdown || "";
+    lastReportHtml = `<section class="report-section">${markdownToReportHtml(lastReportMarkdown)}</section>`;
+    $("briefOutput").innerHTML = lastReportHtml;
+    reportExportReady = true;
+    renderCampaignStatus();
+  } catch (error) {
+    console.warn("Backend report failed; using static report.", error);
+    renderReportStatic();
+  }
+}
+
+function renderReport() {
+  renderReportStatic();
 }
 
 function reportSection(title, items) {
@@ -3141,8 +4220,8 @@ function attachEvents() {
   });
   $("benchmarkLensSelect").addEventListener("change", renderPlatformIntelligence);
   ["marketMetricSelect", "marketViewSelect"].forEach(id => $(id).addEventListener("change", renderMarketPulse));
-  [["citySelect", "languageSelect"], ["plannerCitySelect", "plannerLanguageSelect"], ["reportCitySelect", "reportLanguageSelect"], ["videoCitySelect", "videoLanguageSelect"]].forEach(([cityId, langId]) => $(cityId).addEventListener("change", () => { updateLanguageOptions(cityId, langId); renderScore(); renderExperimentPlan(); renderReport(); renderCampaignAutopilot(); renderBenchmarkCockpit(); renderVideoCampaignStudio(); }));
-  ["languageSelect", "categorySelect", "scorerPlatformSelect", "objectiveSelect"].forEach(id => $(id).addEventListener("change", () => { renderScore(); renderCampaignAutopilot(); renderBenchmarkCockpit(); renderVideoCampaignStudio(); }));
+  [["citySelect", "languageSelect"], ["plannerCitySelect", "plannerLanguageSelect"], ["reportCitySelect", "reportLanguageSelect"], ["videoCitySelect", "videoLanguageSelect"]].forEach(([cityId, langId]) => $(cityId).addEventListener("change", () => { updateLanguageOptions(cityId, langId); populateConsumerSignalControls(); populatePriceWatchControls(); renderScore(); renderOeSignals(); renderExperimentPlan(); renderReport(); renderCampaignAutopilot(); renderBenchmarkCockpit(); renderVideoCampaignStudio(); }));
+  ["languageSelect", "categorySelect", "scorerPlatformSelect", "objectiveSelect"].forEach(id => $(id).addEventListener("change", () => { populateConsumerSignalControls(); renderScore(); renderOeSignals(); renderCampaignAutopilot(); renderBenchmarkCockpit(); renderVideoCampaignStudio(); }));
   $("channelSelect")?.addEventListener("change", () => { renderScore(); });
   $("oeGenerateBrief").addEventListener("click", generateBrief);
   $("oeCopyBrief").addEventListener("click", copyBrief);
@@ -3152,6 +4231,13 @@ function attachEvents() {
   ["caObjective", "caChannel", "caOffer", "caTone"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", renderCampaignAutopilot); });
   $("caGenerateDraft").addEventListener("click", generateCampaignDraft);
   $("caCopyDraft").addEventListener("click", copyCampaignDraft);
+  $("caCopyVernacular")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("vernacularDraftOutput")?.innerText || "");
+      $("caCopyVernacular").textContent = "Copied!";
+      setTimeout(() => { $("caCopyVernacular").textContent = "Copy vernacular draft"; }, 2000);
+    } catch(e) { console.warn("Clipboard write failed", e); }
+  });
   $("caAddToBrief").addEventListener("click", caAddToBrief);
   $("caExportJson").addEventListener("click", exportCampaignJson);
   $("caViewColumns").addEventListener("click", () => { const panel = $("caColumnMapping"); if (panel) panel.classList.toggle("hidden"); });
@@ -3169,11 +4255,11 @@ function attachEvents() {
   ["videoPlatformSelect", "videoLanguageSelect", "videoCategorySelect", "videoFormatSelect", "videoManagerSelect"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", renderVideoCampaignStudio); });
   ["geoCitySelect", "geoRangeSelect", "geoMetricSelect", "geoChannelSelect"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", renderGeoSalesCommandCenter); });
   ["plannerPlatformSelect", "plannerLanguageSelect", "plannerCategorySelect", "plannerObjectiveSelect", "plannerBudgetSelect", "plannerDurationSelect", "plannerOfferSelect", "plannerChannelSelect"].forEach(id => $(id).addEventListener("change", renderExperimentPlan));
-  $("generateExperimentPlan").addEventListener("click", renderExperimentPlan);
+  $("generateExperimentPlan").addEventListener("click", generateBackendExperimentPlan);
   ["unitAovInput", "unitMarginInput", "unitRepeatInput", "unitCacInput", "unitLifetimeInput"].forEach(id => $(id).addEventListener("input", renderUnitEconomics));
   ["reportPlatformSelect", "reportLanguageSelect", "reportCategorySelect", "reportObjectiveSelect", "offerInput", "toneSelect", "channelMixSelect", "reportNotesInput"].forEach(id => $(id).addEventListener("change", renderReport));
   $("reportNotesInput").addEventListener("input", renderReport);
-  $("generateReport").addEventListener("click", renderReport);
+  $("generateReport").addEventListener("click", generateBackendReport);
   $("clearReport").addEventListener("click", clearReport);
   $("copyBrief").addEventListener("click", async () => { try { await navigator.clipboard.writeText($("briefOutput").innerText); $("copyBrief").textContent = "Copied!"; setTimeout(() => { $("copyBrief").textContent = "Copy"; }, 2000); } catch(e) { console.warn("Clipboard write failed", e); } });
   $("downloadHtmlReport").addEventListener("click", () => downloadText("bharat-hyperlocal-gtm-report.html", `<!doctype html><html><body>${lastReportHtml}</body></html>`, "text/html"));
@@ -3186,6 +4272,26 @@ function attachEvents() {
     reader.onload = event => renderCampaignData(parseCsv(event.target.result));
     reader.readAsText(file);
   });
+  $("ragSaveEndpoint")?.addEventListener("click", () => {
+    const value = ($("ragApiUrlInput")?.value || "").trim().replace(/\/+$/, "");
+    if (value) localStorage.setItem("bharatRagApiUrl", value);
+    renderRagLayer();
+    renderOeSignals();
+    renderCampaignStatus();
+  });
+  $("ragClearEndpoint")?.addEventListener("click", () => {
+    localStorage.removeItem("bharatRagApiUrl");
+    if ($("ragApiUrlInput")) $("ragApiUrlInput").value = "";
+    renderRagLayer();
+    renderOeSignals();
+    renderCampaignStatus();
+  });
+  $("ragGenerateBrief")?.addEventListener("click", generateRagBrief);
+  $("ragRunIngest")?.addEventListener("click", requestRagIngest);
+  $("ragJobSelect")?.addEventListener("change", renderRagLayer);
+  $("ragCitySelect")?.addEventListener("change", renderRagLayer);
+  $("csClassify")?.addEventListener("click", classifyConsumerSignal);
+  $("pwAddSku")?.addEventListener("click", addPriceWatchSku);
   window.addEventListener("resize", renderMarketPulse);
   document.querySelectorAll("#oeTimeline .oe-step").forEach(step => {
     step.addEventListener("click", () => navigateOeStep(Number(step.dataset.step)));
@@ -3217,13 +4323,613 @@ function attachEvents() {
   geoRefreshTimer = setInterval(() => {
     if ($("geo")?.classList.contains("active-panel")) renderGeoSalesCommandCenter();
   }, 30000);
+
+  // Pipeline event listeners
+  $("pipelineRunAll")?.addEventListener("click", async () => {
+    const btn = $("pipelineRunAll");
+    btn.textContent = "Running all agents...";
+    btn.disabled = true;
+    setPipelineStatus("Triggering all agents on backend...", "info");
+    const result = await triggerPipelineAgent("all");
+    btn.textContent = "Run all agents now";
+    btn.disabled = false;
+    if (result) {
+      const newEv = result.newEvidence ?? result.lastIngestionResult?.newEvidence ?? result.ingestion?.newEvidence ?? 0;
+      const totalEv = result.totalRecords ?? result.lastIngestionResult?.totalRecords ?? result.ingestion?.totalRecords ?? 0;
+      const deltas = result.deltasCount ?? result.lastScoreResult?.deltas?.length ?? result.score?.deltas?.length ?? 0;
+      const briefs = result.briefsCount ?? result.lastBriefResult?.briefsGenerated ?? result.brief?.briefsGenerated ?? 0;
+      const mode = result.lastIngestionResult?.mode || result.ingestion?.mode || "live";
+      setPipelineStatus(`All agents complete (${mode} mode): ${newEv} new evidence / ${totalEv} total, ${deltas} score deltas, ${briefs} briefs.`, "success");
+    } else {
+      setPipelineStatus("Could not reach backend. Is it running on http://127.0.0.1:8787?", "error");
+    }
+    renderPipelineAgents();
+    renderPipelineLog();
+  });
+  $("pipelineRefresh")?.addEventListener("click", () => {
+    renderPipelineAgents();
+    renderPipelineLog();
+    setPipelineStatus("Status refreshed.", "info");
+  });
+  document.querySelectorAll(".pipeline-run-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const agent = btn.dataset.agent;
+      const originalText = btn.textContent;
+      btn.textContent = "Running...";
+      btn.disabled = true;
+      setPipelineStatus(`Triggering ${agent} agent...`, "info");
+      const result = await triggerPipelineAgent(agent);
+      btn.textContent = originalText;
+      btn.disabled = false;
+      if (result) {
+        const newEv = result.newEvidence ?? result.totalRecords ?? 0;
+        const deltas = result.deltas?.length ?? result.scoreCount ?? 0;
+        const briefs = result.briefs?.length ?? result.briefsGenerated ?? 0;
+        const summary = agent === "ingestion" ? `${newEv} new evidence / ${result.totalRecords || 0} total`
+          : agent === "score" ? `${deltas} score deltas (top: ${result.highestDelta?.signalDelta || 0})`
+          : agent === "brief" ? `${briefs} briefs generated`
+          : "completed";
+        setPipelineStatus(`${agent} agent: ${summary}.`, "success");
+      } else {
+        setPipelineStatus(`Could not reach backend for ${agent} agent. Is it running on http://127.0.0.1:8787?`, "error");
+      }
+      renderPipelineAgents();
+      renderPipelineLog();
+    });
+  });
+
+  // Observability event listeners
+  $("obsRefresh")?.addEventListener("click", () => renderObservability());
+  $("obsCopyMetrics")?.addEventListener("click", async () => {
+    const m = await getObservabilityMetrics();
+    if (m) {
+      await navigator.clipboard.writeText(JSON.stringify(m, null, 2));
+      const btn = $("obsCopyMetrics");
+      const orig = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = orig, 1500);
+    }
+  });
+  $("obsOpenPrometheus")?.addEventListener("click", () => {
+    const base = getRagApiUrl();
+    if (base) window.open(`${base}/metrics`, "_blank");
+  });
+  $("obsOpenHistory")?.addEventListener("click", () => {
+    const base = getRagApiUrl();
+    if (base) window.open(`${base}/metrics/history?windowMs=86400000`, "_blank");
+  });
+}
+
+function setPipelineStatus(message, tone = "info") {
+  const el = $("pipelineStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.setAttribute("data-tone", tone);
+  if (tone === "info" || tone === "success") {
+    setTimeout(() => { if (el.textContent === message) el.setAttribute("data-tone", ""); }, 6000);
+  }
+}
+
+// ===== PIPELINE / MULTI-AGENT =====
+
+async function getPipelineStatus() {
+  const base = getRagApiUrl();
+  if (!base) return null;
+  try {
+    const c = new AbortController(); const t = setTimeout(() => c.abort(), 5000);
+    const r = await fetch(`${base}/pipeline`, { signal: c.signal }); clearTimeout(t);
+    if (!r.ok) return null; return await r.json();
+  } catch { return null; }
+}
+
+async function triggerPipelineAgent(agent) {
+  const base = getRagApiUrl();
+  if (!base) return null;
+  try {
+    const c = new AbortController(); const t = setTimeout(() => c.abort(), 300000); // 5min for agent runs
+    const r = await fetch(`${base}/pipeline/run`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ agent }), signal: c.signal });
+    clearTimeout(t); if (!r.ok) return null; return await r.json();
+  } catch { return null; }
+}
+
+async function getPipelineLog(limit = 50) {
+  const base = getRagApiUrl();
+  if (!base) return [];
+  try {
+    const c = new AbortController(); const t = setTimeout(() => c.abort(), 5000);
+    const r = await fetch(`${base}/pipeline/log?limit=${limit}`, { signal: c.signal }); clearTimeout(t);
+    if (!r.ok) return []; return await r.json();
+  } catch { return []; }
+}
+
+function renderPipelineTab() {
+  renderPipelineAgents();
+  renderPipelineLog();
+}
+
+function renderPipelineAgents() {
+  const grid = $("pipelineAgentGrid");
+  if (!grid) return;
+  const statusEl = document.querySelector('.tab[data-tab="pipeline"] .pipeline-agent-indicator');
+  getPipelineStatus().then(status => {
+    if (!status || !status.agents) {
+      document.querySelectorAll(".pipeline-agent-card").forEach(c => {
+        c.querySelector(".pipeline-status-dot").className = "pipeline-status-dot offline";
+        c.querySelector(".run-count").textContent = "—";
+        c.querySelector(".item-count").textContent = "—";
+        c.querySelector(".last-run").textContent = "offline";
+      });
+      if (statusEl) statusEl.className = "pipeline-agent-indicator offline";
+      return;
+    }
+    for (const [name, agent] of Object.entries(status.agents)) {
+      const card = document.querySelector(`.pipeline-agent-card[data-agent="${name}"]`);
+      if (!card) continue;
+      card.querySelector(".pipeline-status-dot").className = `pipeline-status-dot ${agent.status}`;
+      card.querySelector(".run-count").textContent = agent.runCount || 0;
+      card.querySelector(".item-count").textContent = agent.itemsProcessed || 0;
+      card.querySelector(".last-run").textContent = agent.lastRun ? new Date(agent.lastRun).toLocaleString("en-IN") : "never";
+      const errEl = card.querySelector(".pipeline-agent-error");
+      if (agent.lastError) { errEl.textContent = agent.lastError; errEl.classList.remove("hidden"); }
+      else errEl.classList.add("hidden");
+    }
+    // Score deltas
+    if (status.lastScoreResult?.deltas) {
+      renderScoreDeltas(status.lastScoreResult.deltas);
+    }
+    if (statusEl) statusEl.className = `pipeline-agent-indicator ${Object.values(status.agents).some(a => a.status === "running") ? "running" : "idle"}`;
+  });
+}
+
+function renderPipelineLog() {
+  const container = $("pipelineLog");
+  if (!container) return;
+  getPipelineLog(30).then(entries => {
+    if (!entries.length) { container.innerHTML = '<p class="note">No pipeline activity yet. Run an agent to see logs.</p>'; return; }
+    container.innerHTML = entries.map(e => {
+      const ts = new Date(e.timestamp).toLocaleTimeString("en-IN");
+      const cls = e.type === "error" ? "log-error" : e.type === "warn" ? "log-warn" : "log-info";
+      return `<div class="pipeline-log-entry ${cls}"><span class="log-time">${ts}</span><span class="log-agent">[${e.agent}]</span><span class="log-msg">${escapeHtml(e.message)}</span></div>`;
+    }).join("");
+  });
+}
+
+function renderScoreDeltas(deltas) {
+  const container = $("pipelineScoreDeltas");
+  if (!container || !deltas.length) return;
+  container.innerHTML = deltas.slice(0, 10).map(d => {
+    const pct = Math.min(100, (d.signalDelta / 20) * 100);
+    const label = d.signalDelta >= 15 ? "Strong" : d.signalDelta >= 10 ? "Moderate" : d.signalDelta >= 5 ? "Weak" : "Minimal";
+    return `<div class="score-delta-card">
+      <div class="score-delta-header"><strong>${escapeHtml(d.city)}</strong><span>${escapeHtml(d.category)}</span></div>
+      <div class="score-delta-bar"><div class="score-delta-fill" style="width:${pct}%"></div></div>
+      <div class="score-delta-meta">
+        <span class="delta-label">${label} (${d.signalDelta > 0 ? "+" : ""}${d.signalDelta})</span>
+        <span>${d.totalEvidence} items · ${d.sourceDiversity} sources</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderPipelineWidget() {
+  const container = $("pipelineWidgetContent");
+  if (!container) return;
+  const base = getRagApiUrl();
+  if (!base) {
+    container.innerHTML = '<p class="note">Save a backend endpoint to see live pipeline status here.</p>';
+    return;
+  }
+  getPipelineStatus().then(status => {
+    if (!status || !status.agents) {
+      container.innerHTML = '<p class="note">Pipeline backend not responding.</p>';
+      return;
+    }
+    container.innerHTML = Object.entries(status.agents).map(([name, agent]) => `
+      <div class="pipeline-mini-card">
+        <div class="pipeline-mini-header">
+          <span class="pipeline-status-dot ${agent.status}"></span>
+          <strong>${name}</strong>
+        </div>
+        <div class="pipeline-mini-stats">
+          <span>${agent.runCount || 0} runs</span>
+          <span>${agent.itemsProcessed || 0} items</span>
+          <span class="last">${agent.lastRun ? new Date(agent.lastRun).toLocaleString("en-IN") : "never"}</span>
+        </div>
+      </div>
+    `).join("");
+  });
+}
+
+// ===== OBSERVABILITY DASHBOARD =====
+
+let observabilityTimer = null;
+let observabilityLastFetch = null;
+
+async function getObservabilityMetrics() {
+  const base = getRagApiUrl();
+  if (!base) return null;
+  try {
+    const c = new AbortController(); const t = setTimeout(() => c.abort(), 3000);
+    const r = await fetch(`${base}/metrics`, { signal: c.signal }); clearTimeout(t);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+async function getHealthStatus() {
+  const base = getRagApiUrl();
+  if (!base) return { status: "offline" };
+  try {
+    const c = new AbortController(); const t = setTimeout(() => c.abort(), 3000);
+    const r = await fetch(`${base}/healthz`, { signal: c.signal }); clearTimeout(t);
+    if (!r.ok) return { status: r.status === 503 ? "unhealthy" : "degraded", response: r.status };
+    return await r.json();
+  } catch { return { status: "offline" }; }
+}
+
+function formatUptime(sec) {
+  if (!sec && sec !== 0) return "—";
+  if (sec < 60) return `${sec}s`;
+  if (sec < 3600) return `${Math.floor(sec/60)}m ${sec%60}s`;
+  const h = Math.floor(sec/3600);
+  const m = Math.floor((sec%3600)/60);
+  return `${h}h ${m}m`;
+}
+
+function formatRelative(ms) {
+  if (!ms && ms !== 0) return "—";
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms/1000).toFixed(1)}s`;
+  if (ms < 3600000) return `${Math.floor(ms/60000)}m`;
+  return `${Math.floor(ms/3600000)}h`;
+}
+
+function renderObservability() {
+  const strip = $("obsStatusStrip");
+  if (!strip) return;
+
+  Promise.all([getHealthStatus(), getObservabilityMetrics(), getPipelineStatus()]).then(([health, metrics, pipeline]) => {
+    const isOnline = health?.status === "healthy" || health?.status === "degraded";
+    const dot = $("navHealthDot");
+    if (dot) {
+      dot.className = `health-dot ${health?.status || "offline"}`;
+    }
+
+    const badge = $("obsHealthBadge");
+    if (badge) {
+      badge.textContent = health?.status || "offline";
+      badge.className = `obs-status-value ${health?.status || "offline"}`;
+    }
+
+    $("obsUptime").textContent = formatUptime(metrics?.uptimeSec);
+    $("obsTotalReqs").textContent = metrics?.total?.requests ?? "—";
+    const errEl = $("obsErrorRate");
+    if (errEl) {
+      const errRate = metrics?.total?.errorRate ?? "0";
+      errEl.textContent = `${errRate}%`;
+      const errNum = parseFloat(errRate);
+      errEl.className = `obs-status-value ${errNum > 5 ? "unhealthy" : errNum > 0 ? "degraded" : "healthy"}`;
+    }
+    $("obsPipelineRuns").textContent = metrics?.total?.pipelineRuns ?? "—";
+    $("obsP95").textContent = metrics?.latency?.p95Ms != null ? `${metrics.latency.p95Ms}ms` : "—";
+
+    // Endpoint latency table
+    const epTable = $("obsEndpointTable");
+    if (epTable && metrics?.endpoints) {
+      epTable.innerHTML = `
+        <table>
+          <thead><tr><th>Endpoint</th><th>Method</th><th>Count</th><th>p50</th><th>p95</th><th>p99</th><th>Avg</th><th>Errors</th><th>Last</th></tr></thead>
+          <tbody>
+          ${metrics.endpoints.slice(0, 20).map(e => {
+            const status = e.errors > 0 ? "error" : e.p95Ms > 1000 ? "warn" : "ok";
+            const last = e.lastCalled ? new Date(e.lastCalled).toLocaleTimeString("en-IN") : "—";
+            return `<tr>
+              <td class="endpoint-path">${escapeHtml(e.path)}</td>
+              <td>${e.method}</td>
+              <td>${e.count}</td>
+              <td>${e.p50Ms}ms</td>
+              <td>${e.p95Ms}ms</td>
+              <td>${e.p99Ms}ms</td>
+              <td>${e.avgMs}ms</td>
+              <td class="${status}">${e.errors} (${e.errorRate}%)</td>
+              <td>${last}</td>
+            </tr>`;
+          }).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Data quality
+    const dq = $("obsDataQuality");
+    if (dq && health?.checks) {
+      const ev = health.checks.evidence_store;
+      const disk = health.checks.disk;
+      const files = health.checks.files || [];
+      const requiredFiles = files.filter(f => f.required);
+      const filesOk = requiredFiles.every(f => f.status === "ok");
+      const totalFileMb = (files.reduce((s,f) => s + (f.sizeBytes||0), 0) / 1024 / 1024).toFixed(1);
+      dq.innerHTML = `
+        <div class="dq-card">
+          <div class="dq-label">Evidence records</div>
+          <div class="dq-value">${ev?.recordCount ?? 0}</div>
+          <div class="dq-bar"><div class="dq-bar-fill" style="width:${Math.min(100, (ev?.recordCount||0)/20)}%"></div></div>
+        </div>
+        <div class="dq-card">
+          <div class="dq-label">Evidence freshness</div>
+          <div class="dq-value">${formatRelative(ev?.ageMs)} ago</div>
+          <div class="dq-bar"><div class="dq-bar-fill" style="width:${ev?.freshness === "fresh" ? 90 : ev?.freshness === "stale" ? 40 : 10}%"></div></div>
+        </div>
+        <div class="dq-card">
+          <div class="dq-label">Required data files</div>
+          <div class="dq-value">${requiredFiles.length}/${requiredFiles.length} ${filesOk ? "✓" : "✗"}</div>
+          <div class="dq-bar"><div class="dq-bar-fill" style="width:${filesOk ? 100 : 50}%"></div></div>
+        </div>
+        <div class="dq-card">
+          <div class="dq-label">Total data size</div>
+          <div class="dq-value">${totalFileMb} MB</div>
+          <div class="dq-bar"><div class="dq-bar-fill" style="width:60%"></div></div>
+        </div>
+        <div class="dq-card">
+          <div class="dq-label">Disk writable</div>
+          <div class="dq-value">${disk?.status === "ok" ? "Yes" : "No"}</div>
+          <div class="dq-bar"><div class="dq-bar-fill" style="width:${disk?.status === "ok" ? 100 : 5}%"></div></div>
+        </div>
+        <div class="dq-card">
+          <div class="dq-label">Health check</div>
+          <div class="dq-value">${health.responseTimeMs ?? 0}ms</div>
+          <div class="dq-bar"><div class="dq-bar-fill" style="width:${Math.min(100, (health.responseTimeMs||0)/5)}%"></div></div>
+        </div>
+      `;
+    }
+
+    // Activity log (synthesize from metrics + pipeline)
+    const act = $("obsActivityLog");
+    if (act) {
+      const activities = [];
+      if (metrics?.endpoints) {
+        for (const e of metrics.endpoints.slice(0, 15)) {
+          activities.push({
+            time: e.lastCalled,
+            method: e.method,
+            path: e.path,
+            duration: e.lastDurationMs,
+            status: e.lastStatus
+          });
+        }
+      }
+      if (pipeline?.lastIngestionResult) {
+        activities.push({
+          time: Date.now() - 1000,
+          method: "AGENT",
+          path: "ingestion",
+          duration: pipeline.lastIngestionResult.durationMs || 0,
+          status: 200,
+          extra: `${pipeline.lastIngestionResult.newEvidence} new / ${pipeline.lastIngestionResult.totalRecords} total`
+        });
+      }
+      if (pipeline?.lastScoreResult) {
+        activities.push({
+          time: Date.now() - 500,
+          method: "AGENT",
+          path: "score",
+          duration: pipeline.lastScoreResult.durationMs || 0,
+          status: 200,
+          extra: `${pipeline.lastScoreResult.deltas?.length || 0} deltas`
+        });
+      }
+      activities.sort((a,b) => (b.time||0) - (a.time||0));
+      if (!activities.length) {
+        act.innerHTML = `<p class="note">No activity yet. Run an agent or hit an endpoint.</p>`;
+      } else {
+        act.innerHTML = activities.slice(0, 25).map(a => {
+          const ts = a.time ? new Date(a.time).toLocaleTimeString("en-IN") : "—";
+          const statusCls = a.status >= 500 ? "error" : a.status >= 400 ? "warn" : "ok";
+          return `<div class="obs-activity-entry">
+            <span class="act-time">${ts}</span>
+            <span class="act-method">${a.method}</span>
+            <span class="act-path">${escapeHtml(a.path)} ${a.extra ? `<small>(${escapeHtml(a.extra)})</small>` : ""}</span>
+            <span class="act-duration"><span class="act-status ${statusCls}">${a.status}</span> ${a.duration}ms</span>
+          </div>`;
+        }).join("");
+      }
+    }
+
+    // Pipeline health
+    const ph = $("obsPipelineHealth");
+    if (ph && pipeline?.agents) {
+      ph.innerHTML = Object.entries(pipeline.agents).map(([name, agent]) => {
+        const statusColor = agent.status === "online" || agent.status === "idle" ? "#22c55e" :
+          agent.status === "running" ? "#f59e0b" :
+          agent.status === "error" ? "#ef4444" : "#6b7280";
+        return `<div class="obs-pipeline-agent">
+          <div class="pa-name"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${statusColor};margin-right:6px;"></span>${escapeHtml(name)}</div>
+          <div class="pa-stat">${agent.status} · ${agent.runCount||0} runs · ${agent.itemsProcessed||0} items</div>
+          <div class="pa-stat">${agent.lastRun ? `Last: ${new Date(agent.lastRun).toLocaleString("en-IN")}` : "Never run"}</div>
+          ${agent.lastError ? `<div class="pa-stat" style="color:#f87171;">⚠ ${escapeHtml(agent.lastError)}</div>` : ""}
+        </div>`;
+      }).join("");
+    }
+
+    observabilityLastFetch = Date.now();
+  });
+  loadAlerts();
+  loadRateLimitInfo();
+  loadBriefCacheStats();
+}
+
+function startObservabilityLoop() {
+  if (observabilityTimer) clearInterval(observabilityTimer);
+  renderObservability();
+  observabilityTimer = setInterval(renderObservability, 5000);
+}
+
+function stopObservabilityLoop() {
+  if (observabilityTimer) clearInterval(observabilityTimer);
+  observabilityTimer = null;
+}
+
+let wsClient = null;
+let wsReconnectTimer = null;
+let wsConnected = false;
+let lastAlertsCount = 0;
+
+function connectWebSocket() {
+  if (wsClient && (wsClient.readyState === WebSocket.OPEN || wsClient.readyState === WebSocket.CONNECTING)) return;
+  const base = (localStorage.getItem("bharatRagApiUrl") || "http://127.0.0.1:8787").replace(/\/+$/, "");
+  const wsUrl = base.replace(/^http/, "ws") + "/ws";
+  try {
+    wsClient = new WebSocket(wsUrl);
+  } catch (e) {
+    console.warn("[ws] connect failed:", e.message);
+    scheduleWsReconnect();
+    return;
+  }
+  wsClient.onopen = () => {
+    wsConnected = true;
+    console.log("[ws] connected to", wsUrl);
+    const dot = $("wsStatusDot");
+    if (dot) { dot.className = "ws-dot connected"; dot.title = "WebSocket connected"; }
+  };
+  wsClient.onmessage = (evt) => {
+    try {
+      const msg = JSON.parse(evt.data);
+      handleWsMessage(msg);
+    } catch {}
+  };
+  wsClient.onclose = () => {
+    wsConnected = false;
+    const dot = $("wsStatusDot");
+    if (dot) { dot.className = "ws-dot disconnected"; dot.title = "WebSocket disconnected"; }
+    scheduleWsReconnect();
+  };
+  wsClient.onerror = (e) => {
+    console.warn("[ws] error:", e?.message || e);
+  };
+}
+
+function scheduleWsReconnect() {
+  if (wsReconnectTimer) return;
+  wsReconnectTimer = setTimeout(() => {
+    wsReconnectTimer = null;
+    connectWebSocket();
+  }, 5000);
+}
+
+function handleWsMessage(msg) {
+  if (!msg || !msg.type) return;
+  if (msg.type === "snapshot" || msg.type === "subscribed") {
+    if (msg.alerts) {
+      const newCount = msg.alerts.count || 0;
+      if (newCount > lastAlertsCount) {
+        for (const a of msg.alerts.alerts.slice(0, newCount - lastAlertsCount)) {
+          showToast(a.severity === "critical" ? "error" : "warn", `Alert: ${a.message}`);
+        }
+        lastAlertsCount = newCount;
+      }
+      renderAlertsPanel(msg.alerts);
+    }
+    if (msg.metrics) {
+      const wsStats = $("wsLiveStats");
+      if (wsStats) {
+        wsStats.innerHTML = `<span class="ws-stat">WS: <b>${wsConnected ? "live" : "offline"}</b></span><span class="ws-stat">p95: <b>${msg.metrics.latency?.p95Ms ?? "—"}ms</b></span><span class="ws-stat">runs: <b>${msg.metrics.total?.pipelineRuns ?? 0}</b></span>`;
+      }
+    }
+  } else if (msg.type === "event" && msg.result) {
+    const r = msg.result;
+    if (r.newEvidence !== undefined) {
+      showToast("success", `Pipeline run: ${r.newEvidence} new evidence / ${r.totalRecords} total`);
+    }
+  }
+}
+
+async function loadAlerts() {
+  const data = await ragFetch("/alerts", { timeoutMs: 2000, fallback: null });
+  if (data) renderAlertsPanel(data);
+}
+
+function renderAlertsPanel(alertsData) {
+  const panel = $("alertsPanel");
+  if (!panel) return;
+  if (!alertsData || !alertsData.alerts?.length) {
+    panel.innerHTML = `<p class="note">No active alerts. System healthy.</p>`;
+    return;
+  }
+  panel.innerHTML = `
+    <div class="alerts-header">
+      <span class="alerts-count">${alertsData.count} active</span>
+      <span class="alerts-crit">${alertsData.critical} critical</span>
+      <span class="alerts-warn">${alertsData.warning} warning</span>
+      <button class="btn-mini" id="ackAllAlerts">Ack all</button>
+    </div>
+    <div class="alerts-list">
+      ${alertsData.alerts.slice(0, 10).map(a => `
+        <div class="alert-item ${a.severity}">
+          <span class="alert-sev">${a.severity.toUpperCase()}</span>
+          <span class="alert-rule">${escapeHtml(a.rule)}</span>
+          <span class="alert-msg">${escapeHtml(a.message)}</span>
+          <span class="alert-time">${new Date(a.timestamp).toLocaleTimeString("en-IN")}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+  $("ackAllAlerts")?.addEventListener("click", ackAllAlerts);
+}
+
+async function ackAllAlerts() {
+  await ragFetch("/alerts/ack", { method: "POST", body: { id: "all" }, timeoutMs: 2000, fallback: null });
+  await loadAlerts();
+}
+
+function showToast(tone, message) {
+  let toastContainer = $("toastContainer");
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "toastContainer";
+    toastContainer.className = "toast-container";
+    document.body.appendChild(toastContainer);
+  }
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${tone}`;
+  toast.textContent = message;
+  toastContainer.appendChild(toast);
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+async function loadRateLimitInfo() {
+  const data = await ragFetch("/rate-limit", { timeoutMs: 2000, fallback: null });
+  if (data) {
+    const el = $("rateLimitInfo");
+    if (el) el.innerHTML = `Rate limit: <b>${data.perIp.capacity} req/IP</b> · <b>${data.perIp.activeIps}</b> active IPs · global <b>${data.global.tokens}/${data.global.capacity}</b>`;
+  }
+}
+
+async function loadBriefCacheStats() {
+  const data = await ragFetch("/cache/brief", { timeoutMs: 2000, fallback: null });
+  if (data) {
+    const el = $("briefCacheInfo");
+    if (el) el.innerHTML = `Brief cache: <b>${data.size}</b> entries · <b>${data.hits}</b> hits · <b>${data.misses}</b> misses · <b>${data.evictions}</b> evictions`;
+  }
 }
 
 async function init() {
-  marketData = await loadJson("data/public_market_data.json", FALLBACK_MARKET_DATA);
-  seedData = await loadJson("data/city_language_seed.json", FALLBACK_SEED_DATA);
+  const [market, seed, rag] = await Promise.all([
+    loadJson("data/public_market_data.json", FALLBACK_MARKET_DATA),
+    loadJson("data/city_language_seed.json", FALLBACK_SEED_DATA),
+    loadJson("data/rag_evidence_layer.json", { connectors: [], jobs: [], sampleEvidence: [] })
+  ]);
+  marketData = market;
+  seedData = seed;
+  ragEvidenceLayer = rag;
   populatePlatformControls();
   populateSeedControls();
+  populateConsumerSignalControls();
+  populatePriceWatchControls();
+  populateRagControls();
   const savedNote = localStorage.getItem("caLearningNote");
   if (savedNote && $("caLearningNote")) $("caLearningNote").value = savedNote;
   setActivePlatform("blinkit");
@@ -3241,7 +4947,11 @@ async function init() {
   renderUnitEconomics();
   renderReport();
   renderOeSignals();
+  renderPriceWatchTable();
+  renderPriceWatchAlerts();
+  renderPriceWatchTrend();
   renderBenchmarkCockpit();
+  renderRagLayer();
   attachEvents();
   if ($("three-overlay") && !$("three-overlay").classList.contains("hidden")) {
     setView(null);
@@ -3249,12 +4959,20 @@ async function init() {
     showLanding();
   }
   await loadMarketSignals();
+  getHealthStatus().then(h => {
+    const dot = $("navHealthDot");
+    if (dot) dot.className = `health-dot ${h.status || "offline"}`;
+  }).catch(() => {});
+
+  connectWebSocket();
+  Promise.all([loadAlerts(), loadRateLimitInfo(), loadBriefCacheStats()]);
 }
 
 window.enterDashboard = enterDashboard;
-  window.showBrandMap = showBrandMap;
-  window.showLanding = showLanding;
-  init();
+window.goToDashboardTab = showTab;
+window.showBrandMap = showBrandMap;
+window.showLanding = showLanding;
+init();
 
 const SIGNAL_TYPE_LABELS = {
   "GOV/GMV/revenue update": "GOV / Revenue",

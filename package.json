@@ -8,9 +8,18 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "start": "npm run dev",
+    "start": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1",
+    "stop": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1 -Stop",
+    "restart": "powershell -ExecutionPolicy Bypass -File scripts/start-all.ps1 -Restart",
+    "presync": "node scripts/sync-data-files.mjs",
+    "prebuild": "node scripts/sync-data-files.mjs",
+    "rag:server": "node backend/server.js",
+    "security:scan": "node scripts/security-scan.mjs",
+    "keys:audit": "node scripts/fetch-keys.js",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test test/*.test.mjs",
+    "test:rag": "node --test test/rag-layer.test.mjs"
   },
   "repository": {
     "type": "git",
@@ -27,9 +36,12 @@
   "dependencies": {
     "cannon-es": "^0.20.0",
     "gsap": "^3.15.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lil-gui": "^0.21.0",
     "stats.js": "^0.17.0",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@gltf-transform/cli": "^4.3.0",

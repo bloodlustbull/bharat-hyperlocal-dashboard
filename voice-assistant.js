@@ -1,16 +1,9 @@
 /*
   Shelly Voice Assistant
 
-  Prototype note:
-  This uses the browser Web Speech API for wake listening and commands. That is useful for a local
-  prototype, but it is not reliable enough for true always-on wake-word detection.
-
-  Production TODO:
-  - Replace WakeWordEngine with Picovoice Porcupine Web, another on-device wake-word engine,
-    or a server-side streaming speech pipeline.
-  - Add voice activity detection for cleaner command boundaries.
-  - Add streaming AI responses and true barge-in.
-  - Move real AI reasoning to POST /api/assistant. Never expose API keys in frontend code.
+  Uses the browser Web Speech API for wake listening and commands.
+  For AI responses, calls the RAG backend /api/assistant endpoint.
+  Falls back to deterministic local responses if the backend is unavailable.
 */
 
 (function () {
@@ -30,6 +23,7 @@
 
   const WAKE_PHRASES = ["hey shelly", "shelly", "yoo shelly"];
   const STOP_PHRASES = ["stop", "cancel", "shut up", "pause", "go silent", "stop listening", "enough", "never mind"];
+  const STOP_PATTERNS = STOP_PHRASES.map(phrase => new RegExp(`(^|\\s)${phrase.replace(/\s+/g, "\\s+")}(\\s|$)`, "i"));
 
   class WakeWordEngine {
     constructor(phrases) {
@@ -42,10 +36,14 @@
   }
 
   class VoiceAssistant {
+    getDefaultBackendUrl() {
+      return (localStorage.getItem("bharatRagApiUrl") || "http://127.0.0.1:8787").replace(/\/+$/, "") + "/assistant";
+    }
+
     constructor(options = {}) {
       this.options = {
         assistantName: "Shelly",
-        backendUrl: "/api/assistant",
+        backendUrl: this.getDefaultBackendUrl(),
         commandTimeoutMs: 9000,
         apiTimeoutMs: 7000,
         returnToWakeAfterStop: false,
@@ -241,6 +239,7 @@
 
       const routed = this.routeCommand(text);
       if (routed?.handled) {
+        if (routed.response) this.ui.response.textContent = routed.response;
         this.speak(routed.response || "Done.");
         return;
       }
@@ -268,20 +267,50 @@
       const command = normalizeTranscript(text);
       if (this.detectStopCommand(command)) return { handled: true, response: "" };
 
+      const brandAction = getBrandActionFromCommand(command);
+      const isNavigationIntent = /\b(open|show|take|go|switch|move|navigate)\b/.test(command);
+      if (brandAction && (isNavigationIntent || command.includes("dashboard"))) {
+        const tabName = getTabFromCommand(command) || "market";
+        return { handled: true, response: this.runPageAction(brandAction, { tabName }) };
+      }
+
+      const tabIntent = getTabFromCommand(command);
+      if (tabIntent && isNavigationIntent) {
+        return { handled: true, response: openDashboardTab(tabIntent) };
+      }
+
       const sectionMap = [
         ["open dashboard", "market"],
+        ["show dashboard", "market"],
+        ["go to dashboard", "market"],
+        ["take me to dashboard", "market"],
         ["go to home", "market"],
+        ["take me home", "market"],
         ["show campaign metrics", "campaign"],
         ["open campaign", "campaign"],
+        ["go to campaign", "campaign"],
+        ["take me to campaign", "campaign"],
         ["show video", "video"],
         ["open video", "video"],
+        ["go to video", "video"],
+        ["take me to video", "video"],
+        ["open video campaigns", "video"],
+        ["show video campaigns", "video"],
+        ["take me to video campaigns", "video"],
         ["show geo", "geo"],
         ["open geo", "geo"],
+        ["go to geo", "geo"],
+        ["take me to geo", "geo"],
+        ["open geo sales", "geo"],
+        ["show geo sales", "geo"],
         ["show brand selector", "brand_selector"],
+        ["open brand selector", "brand_selector"],
         ["show signals", "signals"],
         ["open signals", "signals"],
+        ["take me to signals", "signals"],
         ["show report", "report"],
         ["open report", "report"],
+        ["take me to report", "report"],
       ];
 
       const match = sectionMap.find(([phrase]) => command.includes(phrase));
@@ -325,8 +354,15 @@
       };
     }
 
+    getAssistantUrl() {
+      const saved = localStorage.getItem("bharatRagApiUrl");
+      if (saved) return saved.replace(/\/+$/, "") + "/assistant";
+      return this.options.backendUrl;
+    }
+
     async callAssistantBrain(text, pageContext, signal) {
-      const response = await fetch(this.options.backendUrl, {
+      const url = this.getAssistantUrl();
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, pageContext, assistantState: this.state }),
@@ -490,8 +526,8 @@
         || null;
     }
 
-    runPageAction(actionName) {
-      return runPageAction(actionName);
+    runPageAction(actionName, options = {}) {
+      return runPageAction(actionName, options);
     }
 
     queue(fn, delay) {
@@ -530,10 +566,22 @@
 
   function containsStopPhrase(text) {
     const normalized = normalizeTranscript(text);
-    return STOP_PHRASES.some(phrase => normalized.includes(phrase));
+    return STOP_PATTERNS.some(pattern => pattern.test(normalized));
+  }
+
+  function getBrandActionFromCommand(command) {
+    if (/\bblinkit\b/.test(command)) return "switch_blinkit";
+    if (/\bzepto\b/.test(command)) return "switch_zepto";
+    if (/\b(swiggy|instamart|swiggy instamart)\b/.test(command)) return "switch_instamart";
+    if (/\b(bigbasket|big basket|bigbasket now|bb now)\b/.test(command)) return "switch_bigbasket_now";
+    if (/\bdunzo\b/.test(command)) return "switch_dunzo";
+    return "";
   }
 
   function scrollToAssistantSection(sectionName) {
+    if (document.getElementById(sectionName)?.classList.contains("panel") || document.querySelector(`.tab[data-tab="${CSS.escape(sectionName)}"]`)) {
+      return openDashboardTab(sectionName);
+    }
     const tab = document.querySelector(`.tab[data-assistant-section="${CSS.escape(sectionName)}"], .tab[data-tab="${CSS.escape(sectionName)}"]`);
     if (tab) {
       tab.click();
@@ -548,22 +596,78 @@
     return `I could not find the ${sectionName} section.`;
   }
 
-  function runPageAction(actionName) {
+  function getTabFromCommand(command) {
+    const tabAliases = [
+      ["market", /\b(market|dashboard|home|main|overview|pulse)\b/],
+      ["scorer", /\b(opportunity|score|scorer|engine)\b/],
+      ["video", /\b(video|videos|reel|reels|youtube|instagram|shorts)\b/],
+      ["campaign", /\b(campaign|campaigns|whatsapp|message|messages)\b/],
+      ["geo", /\b(geo|map|maps|sales|area|location|locations)\b/],
+      ["planner", /\b(planner|plan|experiment|pilot)\b/],
+      ["unit", /\b(unit|economics|cac|ltv)\b/],
+      ["report", /\b(report|brief|summary)\b/],
+      ["experiments", /\b(tracker|tracking|csv|experiment data|pilot data)\b/],
+      ["sources", /\b(sources|source|audit)\b/],
+      ["signals", /\b(signals|signal|news|market signals)\b/],
+    ];
+    return tabAliases.find(([, pattern]) => pattern.test(command))?.[0] || "";
+  }
+
+  function ensureDashboardVisible(preferredBrand = "") {
+    const dashboard = document.getElementById("dashboardView");
+    const currentBrand = document.body.dataset.platform || "blinkit";
+    const brandId = preferredBrand || currentBrand || "blinkit";
+
+    if (typeof window.enterDashboard === "function") {
+      window.enterDashboard(brandId);
+      return true;
+    }
+
+    document.getElementById("three-overlay")?.classList.add("hidden");
+    document.getElementById("three-container")?.classList.add("hidden");
+    ["landingView", "brandMapView"].forEach(id => document.getElementById(id)?.classList.remove("view-active"));
+    if (dashboard) {
+      dashboard.style.display = "";
+      dashboard.classList.add("view-active");
+      return true;
+    }
+    return false;
+  }
+
+  function openDashboardTab(tabName, preferredBrand = "") {
+    ensureDashboardVisible(preferredBrand);
+    if (typeof window.goToDashboardTab === "function") {
+      window.goToDashboardTab(tabName);
+    } else {
+      document.querySelectorAll(".tab").forEach(button => button.classList.toggle("active", button.dataset.tab === tabName));
+      document.querySelectorAll(".panel").forEach(panel => panel.classList.toggle("active-panel", panel.id === tabName));
+    }
+
+    const tab = document.querySelector(`.tab[data-tab="${CSS.escape(tabName)}"]`);
+    const panel = document.getElementById(tabName);
+    panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return `Opened ${tab?.textContent?.trim() || tabName}.`;
+  }
+
+  function runPageAction(actionName, options = {}) {
     if (actionName === "show_brand_selector" && typeof window.showBrandMap === "function") {
       window.showBrandMap();
       return "Opening the brand selector.";
     }
     const brandMap = {
-      switch_blinkit: "blinkit",
-      switch_zepto: "zepto",
-      switch_instamart: "instamart",
+      switch_blinkit: { id: "blinkit", label: "Blinkit" },
+      switch_zepto: { id: "zepto", label: "Zepto" },
+      switch_instamart: { id: "instamart", label: "Swiggy Instamart" },
+      switch_bigbasket_now: { id: "bigbasket_now", label: "BigBasket Now" },
+      switch_dunzo: { id: "dunzo", label: "Dunzo" },
     };
     if (brandMap[actionName]) {
-      if (typeof window.enterDashboard === "function") {
-        window.enterDashboard(brandMap[actionName]);
-        return `Switched to ${brandMap[actionName].replace("_", " ")}.`;
+      ensureDashboardVisible(brandMap[actionName].id);
+      if (options.tabName && options.tabName !== "market") {
+        const tabResponse = openDashboardTab(options.tabName, brandMap[actionName].id);
+        return `${brandMap[actionName].label}: ${tabResponse}`;
       }
-      return "Brand switching is not ready yet.";
+      return `Opened ${brandMap[actionName].label} dashboard.`;
     }
     return "I could not run that page action.";
   }

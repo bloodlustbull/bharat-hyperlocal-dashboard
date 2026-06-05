@@ -1,4 +1,50 @@
-my-landing-page/
 node_modules/
 dist/
 public/data/
+logs/
+
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+data/evidence_pack.local.json
+data/brief_cache.json
+data/metrics_history.json
+data/pipeline_state.json
+data/.write_test
+data/*.local.json
+data/runtime/
+public/data/.write_test
+
+.vite/
+vite-dev.log
+vite-dev.err.log
+*.log
+
+scripts/run-portal.cmd
+Open-Dashboard.url
+Run-Dashboard.bat
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Editors / dev prompts
+CODEX_PROMPT.md
+opencode.json
+
+# Audit screenshots
+audit_*.png
+localhost_audit_*.png
+
+# Build artifacts
+__pycache__/
+*.pyc

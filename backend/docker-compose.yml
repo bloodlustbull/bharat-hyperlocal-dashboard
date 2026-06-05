@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+  orchestrator:
+    build:
+      context: ./orchestrator
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      REDIS_URL: redis://redis:6379/0
+      SIGNAL_AGENT_URL: http://signal-agent:8001
+      DATA_DIR: /app/data
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data:ro
+    depends_on:
+      signal-agent:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - bharat_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  signal-agent:
+    build:
+      context: ./signal_agent
+    env_file:
+      - .env
+    expose:
+      - "8001"
+    networks:
+      - bharat_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health').read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - bharat_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - bharat_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bharat -d bharat_gtm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  bharat_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

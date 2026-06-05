@@ -57,10 +57,12 @@ Run-Dashboard.bat
 It starts the dashboard on the fixed local address:
 
 ```text
-http://127.0.0.1:3000/index.html
+http://127.0.0.1:5500/index.html
 ```
 
-Use this instead of the VS Code Live Server extension. If your laptop sleeps or VS Code is closed, run `Run-Dashboard.bat` again and the same link will work. Do not use the old Live Server `5500` link; VS Code can take that port over.
+Use `Run-Dashboard.bat` instead of manually starting the VS Code Live Server extension. If your laptop sleeps or VS Code is closed, run `Run-Dashboard.bat` again and the same link will work.
+
+If the launcher says port `5500` is already being used by something else, stop VS Code Live Server and run the launcher again.
 
 Optional Windows auto-start:
 
@@ -72,7 +74,7 @@ That installs a Windows Startup shortcut so the local dashboard server starts au
 
 ---
 
-## Old VS Code Live Server method
+## Avoid the old VS Code Live Server method
 
 ### Step 1: Open the folder
 
@@ -87,6 +89,22 @@ File → Open Folder → bharat-hyperlocal-dashboard
 Simple explanation: you are telling VS Code, “This is my project folder.”
 
 ---
+
+The project now uses Vite for a more reliable local dashboard server. Live Server can still take over port `5500`, which is why the link may break after sleep or after VS Code restarts.
+
+Use this instead:
+
+```text
+Run-Dashboard.bat
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5500/index.html
+```
+
+<!-- Old Live Server notes kept only for reference.
 
 ### Step 2: Install Live Server extension
 
@@ -111,6 +129,8 @@ Open with Live Server
 A browser window should open.
 
 Simple explanation: this opens the dashboard like a website, but it is running only on your laptop.
+
+-->
 
 ---
 
